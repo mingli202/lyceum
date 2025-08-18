@@ -10,6 +10,9 @@ export default defineSchema({
 
   profiles: defineTable({
     userId: v.id("users"),
+    following: v.array(v.id("users")),
+    followers: v.array(v.id("users")),
+    clubs: v.array(v.id("clubs")),
 
     birthday: v.string(),
     displayName: v.string(),
@@ -19,8 +22,6 @@ export default defineSchema({
     bio: v.optional(v.string()),
     city: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    following: v.array(v.id("users")),
-    followers: v.array(v.id("users")),
     academicYear: v.number(),
   }).index("by_userId", ["userId"]),
 
@@ -36,6 +37,13 @@ export default defineSchema({
     authorId: v.id("users"),
     comments: v.id("comments"),
     likes: v.array(v.id("users")),
+    club: v.union(
+      v.object({
+        id: v.id("clubs"),
+        private: v.boolean(),
+      }),
+      v.null(),
+    ),
 
     description: v.string(),
     imageUrl: v.string(),
@@ -78,4 +86,35 @@ export default defineSchema({
       }),
     ),
   }).index("by_userId", ["userId"]),
+
+  events: defineTable({
+    userId: v.id("users"),
+
+    date: v.string(),
+    description: v.string(),
+    location: v.string(),
+    title: v.string(),
+  }).index("by_userId", ["userId"]),
+
+  clubs: defineTable({
+    events: v.array(v.id("events")),
+    followers: v.array(v.id("users")),
+    members: v.array(v.id("users")),
+    posts: v.array(v.id("posts")),
+
+    name: v.string(),
+    description: v.string(),
+    imageUrl: v.optional(v.string()),
+    private: v.boolean(),
+    category: v.union(
+      v.literal("Academic"),
+      v.literal("Social"),
+      v.literal("Sports"),
+      v.literal("Cultural"),
+      v.literal("Recreational"),
+      v.literal("Arts"),
+      v.literal("Volunteer"),
+      v.literal("Other"),
+    ),
+  }),
 });
