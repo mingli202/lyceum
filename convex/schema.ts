@@ -13,6 +13,7 @@ export default defineSchema({
     following: v.array(v.id("users")),
     followers: v.array(v.id("users")),
     clubs: v.array(v.id("clubs")),
+    chats: v.array(v.id("chats")),
 
     birthday: v.string(),
     displayName: v.string(),
@@ -105,6 +106,7 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     imageUrl: v.optional(v.string()),
+    alloweMemberPost: v.boolean(),
     private: v.boolean(),
     category: v.union(
       v.literal("Academic"),
@@ -117,4 +119,16 @@ export default defineSchema({
       v.literal("Other"),
     ),
   }),
+
+  chats: defineTable({
+    title: v.string(),
+    members: v.array(v.id("users")),
+  }),
+
+  messages: defineTable({
+    chatId: v.id("chats"),
+    senderId: v.id("users"),
+
+    content: v.string(),
+  }).index("by_chatId_senderId", ["chatId", "senderId"]),
 });
