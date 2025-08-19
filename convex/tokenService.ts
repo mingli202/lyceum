@@ -3,13 +3,13 @@ import z from "zod";
 const publicKeyBase64 = process.env.RSA_PUBLIC_KEY!;
 const privateKeyBase64 = process.env.RSA_PRIVATE_KEY!;
 
-export const Payload = z.object({
+const Payload = z.object({
   userId: z.string(),
   privileges: z.array(z.string()),
 });
 
 // more on claims: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
-export const Claims = z.object({
+const Claims = z.object({
   iss: z.string(), // issuer
   sub: z.string(), // subject
   aud: z.string(), // audience
@@ -17,14 +17,14 @@ export const Claims = z.object({
   iat: z.number(), // issued at
 });
 
-export const Token = z.object({
+const Token = z.object({
   payload: Payload,
   claims: Claims,
 });
 
-export type Token = z.infer<typeof Token>;
-export type Payload = z.infer<typeof Payload>;
-export type Claims = z.infer<typeof Claims>;
+type Token = z.infer<typeof Token>;
+type Payload = z.infer<typeof Payload>;
+type Claims = z.infer<typeof Claims>;
 
 export async function hashPassword(
   password: string,
