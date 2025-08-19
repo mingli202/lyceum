@@ -1,7 +1,30 @@
-import { Payload, Token } from "../shared/types";
+import z from "zod";
 
 const publicKeyBase64 = process.env.RSA_PUBLIC_KEY!;
 const privateKeyBase64 = process.env.RSA_PRIVATE_KEY!;
+
+export const Payload = z.object({
+  userId: z.string(),
+  privileges: z.array(z.string()),
+});
+
+// more on claims: https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
+export const Claims = z.object({
+  iss: z.string(), // issuer
+  sub: z.string(), // subject
+  aud: z.string(), // audience
+  exp: z.number(), // expiration
+  iat: z.number(), // issued at
+});
+
+export const Token = z.object({
+  payload: Payload,
+  claims: Claims,
+});
+
+export type Token = z.infer<typeof Token>;
+export type Payload = z.infer<typeof Payload>;
+export type Claims = z.infer<typeof Claims>;
 
 export async function hashPassword(
   password: string,
@@ -85,7 +108,7 @@ export async function issueToken(userId: string): Promise<string> {
       iss: "campusclip.api",
       sub: userId,
       aud: "campusclip.api",
-      exp: Math.floor(Date.now() / 1000) + 10, // add 10 seconds
+      exp: Math.floor(Date.now() / 1000) + 10, // add 10 seconds for testing
       iat: Math.floor(Date.now() / 1000),
     },
   };
