@@ -1,10 +1,25 @@
-import { internalQuery } from "./_generated/server";
-import { v } from "convex/values";
-import { Claims, Payload, Token } from "../shared/types";
-import { internal } from "./_generated/api";
+import { Payload, Token } from "../shared/types";
 
 const publicKeyBase64 = process.env.RSA_PUBLIC_KEY!;
 const privateKeyBase64 = process.env.RSA_PRIVATE_KEY!;
+
+export async function hashPassword(
+  password: string,
+  salt: string,
+): Promise<string> {
+  const passwordWithSalt = new TextEncoder().encode(password + salt);
+
+  const hashedPassword = await crypto.subtle.digest(
+    { name: "SHA-256" },
+    passwordWithSalt,
+  );
+
+  const hashedPasswordString = btoa(
+    String.fromCharCode(...new Uint8Array(hashedPassword)),
+  );
+
+  return hashedPasswordString;
+}
 
 async function getKeys(): Promise<{
   publicKey: CryptoKey;
@@ -80,7 +95,9 @@ export async function issueToken(userId: string): Promise<string> {
 }
 
 // return payload if valid
-async function _verifyToken(tokenString: string): Promise<Payload | null> {
+export async function verifyToken(
+  tokenString: string,
+): Promise<Payload | null> {
   const decryptedToken = await decrypt(tokenString);
   if (!decryptedToken) {
     return null;
@@ -108,23 +125,3 @@ async function _verifyToken(tokenString: string): Promise<Payload | null> {
 
   return token.payload;
 }
-
-// if valid, return new token
-export const verifyToken = internalQuery({
-  args: { tokenString: v.string() },
-  handler: async (ctx, args): Promise<string | null> => {
-    const payload = await _verifyToken(args.tokenString);
-
-    if (!payload) {
-      return null;
-    }
-
-    const exists = await ctx.runQuery(internal.utils.checkIfUserExists, {
-      userId: payload.userId,
-    });
-
-    const token = await issueToken(payload.userId);
-
-    return exists ? token : null;
-  },
-});
