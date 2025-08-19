@@ -9,6 +9,7 @@ export default async function UserLayout({
   const isLoggedIn = await login();
 
   if (!isLoggedIn.ok) {
+    console.log("redirecting");
     redirect("/");
   }
 

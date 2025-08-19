@@ -11,3 +11,8 @@ export type Event = Doc<"events">;
 export type Club = Doc<"clubs">;
 export type Chat = Doc<"chats">;
 export type Message = Doc<"messages">;
+
+export type Credentials = {
+  email: string;
+  password: string;
+};

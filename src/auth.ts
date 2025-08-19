@@ -1,6 +1,6 @@
 "use server";
 
-import { Credentials } from "../shared/types";
+import { Credentials } from "@/types";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../convex/_generated/api";
 import { cookies } from "next/headers";
