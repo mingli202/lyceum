@@ -4,7 +4,7 @@ import { useLayoutEffect, useState } from "react";
 import Login from "./login";
 import { login } from "@/actions/auth";
 import { useRouter } from "next/navigation";
-import LoadingSpinner from "@/ui/loadingSpinner";
+import { LoadingSpinner } from "@/components/ui";
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
