@@ -5,9 +5,16 @@ import { fetchAction } from "convex/nextjs";
 import { cookies } from "next/headers";
 import { api } from "../../convex/_generated/api";
 
+export type LoginOptions = {
+  credentials?: Credentials;
+  setCookies?: boolean; // can't set cookies in server components
+};
+
 export async function login(
-  credentials?: Credentials,
+  options: LoginOptions = {},
 ): Promise<{ ok: boolean }> {
+  const { credentials, setCookies: storeToken } = options;
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
 
@@ -23,11 +30,12 @@ export async function login(
   }
 
   if (newToken) {
-    // const encryptedToken = await encryptionService.encrypt(newToken);
-    cookieStore.set("token", newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    });
+    if (storeToken) {
+      cookieStore.set("token", newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      });
+    }
     return { ok: true };
   }
 
@@ -42,7 +50,6 @@ export async function registerUser(
   if (token) {
     const cookieStore = await cookies();
 
-    // const encryptedToken = await encryptionService.encrypt(token);
     cookieStore.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

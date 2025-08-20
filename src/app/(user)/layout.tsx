@@ -6,7 +6,7 @@ export default async function UserLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isLoggedIn = await login();
+  const isLoggedIn = await login({ setCookies: false });
 
   if (!isLoggedIn.ok) {
     console.log("redirecting");
