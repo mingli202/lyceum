@@ -1,7 +1,9 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { hashPassword, issueToken, verifyToken } from "./tokenService";
 import { Id } from "./_generated/dataModel";
+
+import { TokenService } from "../shared/services/tokenService";
+import { hashPassword } from "./utils";
 
 export const registerUser = mutation({
   args: { email: v.string(), password: v.string() },
@@ -20,19 +22,16 @@ export const registerUser = mutation({
       return null;
     }
 
-    const salt = btoa(
-      String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))),
-    );
-
-    const hashedPasswordString = await hashPassword(password, salt);
+    const { hashedPassword, salt } = await hashPassword(password);
 
     const userId = await ctx.db.insert("users", {
       email,
-      password: hashedPasswordString,
+      password: hashedPassword,
       salt,
     });
 
-    const token = await issueToken(userId);
+    const tokenService = await TokenService.new();
+    const token = await tokenService.sign({ userId, privileges: [] });
     return token;
   },
 });
@@ -54,13 +53,14 @@ export const loginWithCredentials = query({
     }
 
     const salt = user.salt;
-    const hashedPasswordString = await hashPassword(password, salt);
+    const { hashedPassword } = await hashPassword(password, salt);
 
-    if (hashedPasswordString !== user.password) {
+    if (hashedPassword !== user.password) {
       return null;
     }
 
-    const token = await issueToken(user._id);
+    const tokenService = await TokenService.new();
+    const token = await tokenService.sign({ userId: user._id, privileges: [] });
     return token;
   },
 });
@@ -69,7 +69,8 @@ export const loginWithToken = query({
   args: { token: v.string() },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args): Promise<string | null> => {
-    const payload = await verifyToken(args.token);
+    const tokenService = await TokenService.new();
+    const payload = await tokenService.verify(args.token);
 
     if (!payload) {
       return null;
@@ -81,8 +82,10 @@ export const loginWithToken = query({
         .withIndex("by_id", (q) => q.eq("_id", payload.userId as Id<"users">))
         .unique()) !== null;
 
-    const token = await issueToken(payload.userId);
-
-    return exists ? token : null;
+    if (exists) {
+      return await tokenService.sign(payload);
+    } else {
+      return null;
+    }
   },
 });
