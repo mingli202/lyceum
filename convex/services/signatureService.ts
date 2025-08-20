@@ -30,24 +30,28 @@ export class SignatureService {
     return new SignatureService(publicKey, privateKey);
   }
 
-  async sign(base64Value: string): Promise<string> {
-    const signed = await crypto.subtle.sign(
+  async sign(data: string): Promise<string> {
+    const signature = await crypto.subtle.sign(
       { name: "RSA-PSS", saltLength: 32 },
       this.#privateKey,
-      Buffer.from(base64Value, "base64"),
+      new TextEncoder().encode(data),
     );
 
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(signed)));
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
 
     return base64;
   }
 
-  async verify(base64Signature: string, base64Data: string): Promise<boolean> {
+  async verify(base64Signature: string, data: string): Promise<boolean> {
+    const signature = Uint8Array.from(atob(base64Signature), (c) =>
+      c.charCodeAt(0),
+    );
+
     return await crypto.subtle.verify(
       { name: "RSA-PSS", saltLength: 32 },
       this.#publicKey,
-      Buffer.from(base64Signature, "base64"),
-      Buffer.from(base64Data, "base64"),
+      signature,
+      new TextEncoder().encode(data),
     );
   }
 }
