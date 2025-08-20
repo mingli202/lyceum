@@ -6,6 +6,7 @@ export default defineSchema({
     email: v.string(),
     password: v.string(), // hashed
     salt: v.string(),
+    privileges: v.array(v.string()),
   }).index("by_email", ["email"]),
 
   profiles: defineTable({
