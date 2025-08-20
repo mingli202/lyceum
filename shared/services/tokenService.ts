@@ -1,10 +1,6 @@
 import z from "zod";
-import { EncryptionService } from "./encryptionService";
 import { SignatureService } from "./signatureService";
-import { en } from "zod/locales";
 
-const publicKey = process.env.RSA_PUBLIC_KEY!;
-const privateKey = process.env.RSA_PRIVATE_KEY!;
 const signingPublicKey = process.env.RSA_SIGNING_PUBLIC_KEY!;
 const signingPrivateKey = process.env.RSA_SIGNING_PRIVATE_KEY!;
 
@@ -39,28 +35,19 @@ export type Claims = z.infer<typeof Claims>;
 export type Token = z.infer<typeof Token>;
 
 export class TokenService {
-  #encryptionService: EncryptionService;
   #signatureService: SignatureService;
 
-  constructor(
-    encryptionService: EncryptionService,
-    signatureService: SignatureService,
-  ) {
-    this.#encryptionService = encryptionService;
+  constructor(signatureService: SignatureService) {
     this.#signatureService = signatureService;
   }
 
   static async new(): Promise<TokenService> {
-    const encryptionService = await EncryptionService.new(
-      publicKey,
-      privateKey,
-    );
     const signatureService = await SignatureService.new(
       signingPublicKey,
       signingPrivateKey,
     );
 
-    return new TokenService(encryptionService, signatureService);
+    return new TokenService(signatureService);
   }
 
   async sign(payload: Payload): Promise<string> {
@@ -77,45 +64,36 @@ export class TokenService {
       iat: Math.floor(Date.now() / 1000),
     };
 
-    const encryptedHeader = await this.#encryptionService.encrypt(
-      JSON.stringify(header),
-    );
+    const encodedHeader = btoa(JSON.stringify(header));
 
     const token: Token = {
       payload,
       claims,
     };
 
-    const encryptedToken = await this.#encryptionService.encrypt(
-      JSON.stringify(token),
-    );
+    const encodedToken = btoa(JSON.stringify(token));
 
-    const signedToken = await this.#signatureService.sign(encryptedToken);
+    const signedToken = await this.#signatureService.sign(encodedToken);
 
     // jwt format
-    return `${encryptedHeader}.${encryptedToken}.${signedToken}`;
+    return `${encodedHeader}.${encodedToken}.${signedToken}`;
   }
 
   async verify(tokenString: string): Promise<Payload | null> {
-    const [_, encryptedToken, signedToken] = tokenString.split(".");
+    const [_, encodedToken, signedToken] = tokenString.split(".");
 
     const validSignature = await this.#signatureService.verify(
       signedToken,
-      encryptedToken,
+      encodedToken,
     );
 
     if (!validSignature) {
       return null;
     }
 
-    const decryptedToken =
-      await this.#encryptionService.decrypt(encryptedToken);
+    const decodedToken = JSON.parse(atob(encodedToken));
 
-    if (!decryptedToken) {
-      return null;
-    }
-
-    const res = Token.safeParse(JSON.parse(decryptedToken));
+    const res = Token.safeParse(JSON.parse(decodedToken));
 
     if (!res.success) {
       return null;
@@ -137,29 +115,4 @@ export class TokenService {
 
     return token.payload;
   }
-}
-
-export async function generateSalt(): Promise<string> {
-  const array = new Uint32Array(4);
-  crypto.getRandomValues(array);
-  const salt = array.join("");
-  return salt;
-}
-
-export async function hashPassword(
-  password: string,
-  salt: string,
-): Promise<string> {
-  const passwordWithSalt = new TextEncoder().encode(password + salt);
-
-  const hashedPassword = await crypto.subtle.digest(
-    { name: "SHA-256" },
-    passwordWithSalt,
-  );
-
-  const hashedPasswordString = btoa(
-    String.fromCharCode(...new Uint8Array(hashedPassword)),
-  );
-
-  return hashedPasswordString;
 }
