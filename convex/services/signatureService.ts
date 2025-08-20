@@ -13,7 +13,7 @@ export class SignatureService {
   ): Promise<SignatureService> {
     const publicKey = await crypto.subtle.importKey(
       "spki",
-      Buffer.from(publicKeyString, "base64"),
+      Uint8Array.from(atob(publicKeyString), (c) => c.charCodeAt(0)),
       { name: "RSA-PSS", hash: "SHA-256" },
       false,
       ["verify"],
@@ -21,7 +21,7 @@ export class SignatureService {
 
     const privateKey = await crypto.subtle.importKey(
       "pkcs8",
-      Buffer.from(privateKeyString, "base64"),
+      Uint8Array.from(atob(privateKeyString), (c) => c.charCodeAt(0)),
       { name: "RSA-PSS", hash: "SHA-256" },
       false,
       ["sign"],
