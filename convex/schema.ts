@@ -49,6 +49,7 @@ export default defineSchema({
 
     description: v.string(),
     imageUrl: v.string(),
+    timestamp: v.string(),
   }).index("by_authorId", ["authorId"]),
 
   comments: defineTable({
@@ -57,6 +58,7 @@ export default defineSchema({
     postId: v.union(v.id("posts"), v.null()),
 
     content: v.string(),
+    timestamp: v.string(),
   }).index("by_postId", ["postId"]),
 
   replies: defineTable({
@@ -65,6 +67,7 @@ export default defineSchema({
     postId: v.id("posts"),
 
     text: v.string(),
+    timestamp: v.string(),
   }).index("by_commentId", ["commentId"]),
 
   notifications: defineTable({
@@ -87,6 +90,7 @@ export default defineSchema({
         replyId: v.id("replies"),
       }),
     ),
+    timestamp: v.string(),
   }).index("by_userId", ["userId"]),
 
   events: defineTable({
