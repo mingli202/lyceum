@@ -1,15 +1,15 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
-import { TokenService } from "../shared/services/tokenService";
+import { TokenService } from "./services/tokenService";
 import { hashPassword } from "./utils";
 
-export const registerUser = mutation({
-  args: { email: v.string(), password: v.string() },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, args): Promise<string | null> => {
-    const { email, password } = args;
+export const registerUser = internalMutation({
+  args: { email: v.string(), password: v.string(), salt: v.string() },
+  returns: v.union(v.id("users"), v.null()),
+  handler: async (ctx, args): Promise<Id<"users"> | null> => {
+    const { email, password, salt } = args;
 
     // emails must be unique
     const exists =
@@ -22,17 +22,13 @@ export const registerUser = mutation({
       return null;
     }
 
-    const { hashedPassword, salt } = await hashPassword(password);
-
     const userId = await ctx.db.insert("users", {
       email,
-      password: hashedPassword,
+      password,
       salt,
     });
 
-    const tokenService = await TokenService.new();
-    const token = await tokenService.sign({ userId, privileges: [] });
-    return token;
+    return userId;
   },
 });
 

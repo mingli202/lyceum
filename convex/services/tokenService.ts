@@ -76,7 +76,8 @@ export class TokenService {
     const signedToken = await this.#signatureService.sign(encodedToken);
 
     // jwt format
-    return `${encodedHeader}.${encodedToken}.${signedToken}`;
+    const jwt = `${encodedHeader}.${encodedToken}.${signedToken}`;
+    return jwt;
   }
 
   async verify(tokenString: string): Promise<Payload | null> {

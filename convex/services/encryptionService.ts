@@ -11,7 +11,7 @@ export class EncryptionService {
     const publicKey = await crypto.subtle.importKey(
       "spki",
       Uint8Array.from(atob(publicKeyString), (t) => t.charCodeAt(0)),
-      { name: "RSA-PSS", hash: "SHA-256" },
+      { name: "RSA-OAEP", hash: "SHA-256" },
       false,
       ["encrypt"],
     );
@@ -19,7 +19,7 @@ export class EncryptionService {
     const privateKey = await crypto.subtle.importKey(
       "pkcs8",
       Uint8Array.from(atob(privateKeyString), (t) => t.charCodeAt(0)),
-      { name: "RSA-PSS", hash: "SHA-256" },
+      { name: "RSA-OAEP", hash: "SHA-256" },
       false,
       ["decrypt"],
     );
