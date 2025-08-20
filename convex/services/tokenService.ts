@@ -24,6 +24,7 @@ export const Claims = z.object({
   iat: z.number(), // issued at
 });
 
+// this is not actually the JWT format, but it'll work for our purposes
 const Token = z.object({
   payload: Payload,
   claims: Claims,
