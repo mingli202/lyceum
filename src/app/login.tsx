@@ -116,26 +116,29 @@ export default function Login() {
             />
           </div>
         )}
-        {error && <div className="mt-4 text-sm text-red-600">{error}</div>}
-        <button
-          className="text-sm font-medium text-indigo-600 hover:cursor-pointer hover:text-indigo-500"
-          type="button"
-        >
-          Forgot your password?
-        </button>
-
+        {error && <div className="text-sm text-red-600">{error}</div>}
         <button
           type="submit"
-          className="bg-primary hover:bg-primary-600 block w-full rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+          className="bg-primary hover:bg-primary-600 block w-full rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm hover:cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
         >
           {isRegistering ? "Register" : "Sign in"}
         </button>
-        <button
-          className="text hover:text-primary-600 text-sm hover:cursor-pointer"
-          onClick={() => setIsRegistering(!isRegistering)}
-        >
-          {isRegistering ? "Already have an account?" : "Create an account"}
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            className="text-sm font-medium text-indigo-600 hover:cursor-pointer hover:text-indigo-500"
+            type="button"
+            onClick={() => alert("Not implemented")}
+          >
+            Forgot your password?
+          </button>
+
+          <button
+            className="text hover:text-primary-600 text-sm hover:cursor-pointer"
+            onClick={() => setIsRegistering(!isRegistering)}
+          >
+            {isRegistering ? "Login to account" : "Create an account"}
+          </button>
+        </div>
       </form>
     </section>
   );
