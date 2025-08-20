@@ -1,9 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-
-import { TokenService } from "./services/tokenService";
-import { hashPassword } from "./utils";
 
 export const registerUser = internalMutation({
   args: { email: v.string(), password: v.string(), salt: v.string() },
@@ -26,6 +23,7 @@ export const registerUser = internalMutation({
       email,
       password,
       salt,
+      privileges: [],
     });
 
     return userId;
@@ -33,11 +31,17 @@ export const registerUser = internalMutation({
 });
 
 // new token on successful login
-export const loginWithCredentials = query({
-  args: { email: v.string(), password: v.string() },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, args): Promise<string | null> => {
-    const { email, password } = args;
+export const getUserCredentials = internalQuery({
+  args: { email: v.string() },
+  returns: v.union(
+    v.object({ storedPasswordHash: v.string(), storedSalt: v.string() }),
+    v.null(),
+  ),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ storedPasswordHash: string; storedSalt: string } | null> => {
+    const { email } = args;
 
     const user = await ctx.db
       .query("users")
@@ -48,40 +52,23 @@ export const loginWithCredentials = query({
       return null;
     }
 
-    const salt = user.salt;
-    const { hashedPassword } = await hashPassword(password, salt);
-
-    if (hashedPassword !== user.password) {
-      return null;
-    }
-
-    const tokenService = await TokenService.new();
-    const token = await tokenService.sign({ userId: user._id, privileges: [] });
-    return token;
+    return { storedPasswordHash: user.password, storedSalt: user.salt };
   },
 });
 
-export const loginWithToken = query({
-  args: { token: v.string() },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, args): Promise<string | null> => {
-    const tokenService = await TokenService.new();
-    const payload = await tokenService.verify(args.token);
+export const getUserPrivileges = internalQuery({
+  args: { userId: v.id("users") },
+  returns: v.union(v.array(v.string()), v.null()),
+  handler: async (ctx, args): Promise<string[] | null> => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_id", (q) => q.eq("_id", args.userId as Id<"users">))
+      .unique();
 
-    if (!payload) {
+    if (!user) {
       return null;
     }
 
-    const exists =
-      (await ctx.db
-        .query("users")
-        .withIndex("by_id", (q) => q.eq("_id", payload.userId as Id<"users">))
-        .unique()) !== null;
-
-    if (exists) {
-      return await tokenService.sign(payload);
-    } else {
-      return null;
-    }
+    return user.privileges;
   },
 });

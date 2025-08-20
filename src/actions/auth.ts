@@ -1,15 +1,9 @@
 "use server";
 
 import { Credentials } from "@/types";
-import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { fetchAction } from "convex/nextjs";
 import { cookies } from "next/headers";
 import { api } from "../../convex/_generated/api";
-import { EncryptionService } from "../../shared/services/encryptionService";
-
-const publicKey = process.env.RSA_PUBLIC_KEY!;
-const privateKey = process.env.RSA_PRIVATE_KEY!;
-
-const encryptionService = await EncryptionService.new(publicKey, privateKey);
 
 export async function login(
   credentials?: Credentials,
@@ -20,16 +14,17 @@ export async function login(
   let newToken: string | null = null;
 
   if (credentials) {
-    newToken = await fetchQuery(api.auth.loginWithCredentials, credentials);
+    newToken = await fetchAction(api.actions.loginWithCredentials, credentials);
   } else if (token) {
-    newToken = await fetchQuery(api.auth.loginWithToken, {
+    newToken = await fetchAction(api.actions.validateTokenWithPrivileges, {
       token: token.value,
+      requestedPrivileges: [],
     });
   }
 
   if (newToken) {
-    const encryptedToken = await encryptionService.encrypt(newToken);
-    cookieStore.set("token", encryptedToken, {
+    // const encryptedToken = await encryptionService.encrypt(newToken);
+    cookieStore.set("token", newToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     });
@@ -42,13 +37,13 @@ export async function login(
 export async function registerUser(
   credentials: Credentials,
 ): Promise<{ ok: boolean }> {
-  const token = await fetchMutation(api.auth.registerUser, credentials);
+  const token = await fetchAction(api.actions.registerUser, credentials);
 
   if (token) {
     const cookieStore = await cookies();
 
-    const encryptedToken = await encryptionService.encrypt(token);
-    cookieStore.set("token", encryptedToken, {
+    // const encryptedToken = await encryptionService.encrypt(token);
+    cookieStore.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     });
