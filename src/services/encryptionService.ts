@@ -30,7 +30,7 @@ export class EncryptionService {
   async decrypt(value: string): Promise<string | null> {
     const decrypted = await crypto.subtle
       .decrypt(
-        { name: "RSA-PSS" },
+        { name: "RSA-OAEP" },
         this.#privateKey,
         Uint8Array.from(atob(value), (t) => t.charCodeAt(0)),
       )
@@ -42,7 +42,7 @@ export class EncryptionService {
 
   async encrypt(value: string): Promise<string> {
     const encrypted = await crypto.subtle.encrypt(
-      { name: "RSA-PSS" },
+      { name: "RSA-OAEP" },
       this.#publicKey,
       new TextEncoder().encode(value),
     );
