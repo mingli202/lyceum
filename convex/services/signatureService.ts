@@ -13,7 +13,7 @@ export class SignatureService {
   ): Promise<SignatureService> {
     const publicKey = await crypto.subtle.importKey(
       "spki",
-      Uint8Array.from(atob(publicKeyString), (t) => t.charCodeAt(0)),
+      Buffer.from(publicKeyString, "base64"),
       { name: "RSA-PSS", hash: "SHA-256" },
       false,
       ["verify"],
@@ -21,7 +21,7 @@ export class SignatureService {
 
     const privateKey = await crypto.subtle.importKey(
       "pkcs8",
-      Uint8Array.from(atob(privateKeyString), (t) => t.charCodeAt(0)),
+      Buffer.from(privateKeyString, "base64"),
       { name: "RSA-PSS", hash: "SHA-256" },
       false,
       ["sign"],
@@ -30,13 +30,11 @@ export class SignatureService {
     return new SignatureService(publicKey, privateKey);
   }
 
-  async sign(value: string): Promise<string> {
-    const textEncoder = new TextEncoder();
-
+  async sign(base64Value: string): Promise<string> {
     const signed = await crypto.subtle.sign(
       { name: "RSA-PSS", saltLength: 32 },
       this.#privateKey,
-      textEncoder.encode(value),
+      Buffer.from(base64Value, "base64"),
     );
 
     const base64 = btoa(String.fromCharCode(...new Uint8Array(signed)));
@@ -44,12 +42,12 @@ export class SignatureService {
     return base64;
   }
 
-  async verify(signature: string, data: string): Promise<boolean> {
+  async verify(base64Signature: string, base64Data: string): Promise<boolean> {
     return await crypto.subtle.verify(
       { name: "RSA-PSS", saltLength: 32 },
       this.#publicKey,
-      Uint8Array.from(atob(signature), (t) => t.charCodeAt(0)),
-      Uint8Array.from(atob(data), (t) => t.charCodeAt(0)),
+      Buffer.from(base64Signature, "base64"),
+      Buffer.from(base64Data, "base64"),
     );
   }
 }

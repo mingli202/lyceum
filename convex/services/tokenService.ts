@@ -75,11 +75,14 @@ export class TokenService {
 
     const signedToken = await this.#signatureService.sign(encodedToken);
 
-    // jwt format
+    // jwt format but it's actually our own variant
     const jwt = `${encodedHeader}.${encodedToken}.${signedToken}`;
     return jwt;
   }
 
+  /**
+   * Verifies the token and returns the payload if valid.
+   * */
   async verify(tokenString: string): Promise<Payload | null> {
     const [_, encodedToken, signedToken] = tokenString.split(".");
 
@@ -94,7 +97,7 @@ export class TokenService {
 
     const decodedToken = JSON.parse(atob(encodedToken));
 
-    const res = Token.safeParse(JSON.parse(decodedToken));
+    const res = Token.safeParse(decodedToken);
 
     if (!res.success) {
       return null;
