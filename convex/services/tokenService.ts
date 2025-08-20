@@ -60,7 +60,7 @@ export class TokenService {
       iss: "campusclip.api",
       sub: payload.userId,
       aud: "campusclip.api",
-      exp: Math.floor(Date.now() / 1000) + 10, // add 10 seconds for testing
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 * 4, // add 4 months ~ average semester length
       iat: Math.floor(Date.now() / 1000),
     };
 

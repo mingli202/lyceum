@@ -62,7 +62,6 @@ export const validateTokenWithPrivileges = action({
   handler: async (ctx, args): Promise<string | null> => {
     const tokenService = await TokenService.new();
     const payload = await tokenService.verify(args.token);
-    console.log("payload:", payload);
 
     if (!payload) {
       return null;
