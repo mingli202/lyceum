@@ -1,5 +1,6 @@
 import { login } from "@/actions/auth";
 import { redirect } from "next/navigation";
+import Navbar from "./Navbar";
 
 export default async function UserLayout({
   children,
@@ -13,5 +14,10 @@ export default async function UserLayout({
     redirect("/");
   }
 
-  return children;
+  return (
+    <div className="flex h-full w-full">
+      <Navbar />
+      {children}
+    </div>
+  );
 }
