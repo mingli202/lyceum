@@ -1,4 +1,4 @@
-import { login } from "@/auth";
+import { login } from "@/actions/auth";
 import { redirect } from "next/navigation";
 
 export default async function UserLayout({
