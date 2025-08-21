@@ -17,7 +17,7 @@ export default function NavBar() {
   const pathName = usePathname() ?? "";
 
   return (
-    <section className="flex h-full flex-col gap-2 p-4">
+    <section className="bg-background flex h-full flex-col gap-2 border-r border-slate-200 p-4 backdrop-blur-sm">
       <div className="h-12 w-52 shrink-0 ring-1 ring-black">
         Logo placeholder
       </div>
