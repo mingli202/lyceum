@@ -61,15 +61,15 @@ export const validateTokenWithPrivileges = action({
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args): Promise<string | null> => {
     const tokenService = await TokenService.new();
-    const payload = await tokenService.verify(args.token);
+    const customClaims = await tokenService.verify(args.token);
 
-    if (!payload) {
+    if (!customClaims) {
       return null;
     }
 
     // if user wants privileges, check if they are allowed
     if (args.requestedPrivileges.length > 0) {
-      const userId = payload.userId as Id<"users">;
+      const userId = customClaims.userId as Id<"users">;
 
       const userPrivileges = await ctx.runQuery(
         internal.auth.getUserPrivileges,
@@ -91,7 +91,7 @@ export const validateTokenWithPrivileges = action({
       }
     }
 
-    const token = await tokenService.sign(payload);
+    const token = await tokenService.sign(customClaims);
 
     return token;
   },

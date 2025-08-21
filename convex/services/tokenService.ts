@@ -9,8 +9,7 @@ export const Header = z.object({
   typ: z.string(),
 });
 
-export const Payload = z.object({
-  // custom claims
+export const CustomClaims = z.object({
   userId: z.string(),
   privileges: z.array(z.string()),
 });
@@ -24,16 +23,15 @@ export const Claims = z.object({
   iat: z.number(), // issued at
 });
 
-// this is not actually the JWT format, but it'll work for our purposes
-const Token = z.object({
-  payload: Payload,
-  claims: Claims,
+export const Payload = z.object({
+  ...Claims.shape,
+  ...CustomClaims.shape,
 });
 
 export type Header = z.infer<typeof Header>;
-export type Payload = z.infer<typeof Payload>;
+export type CustomClaims = z.infer<typeof CustomClaims>;
 export type Claims = z.infer<typeof Claims>;
-export type Token = z.infer<typeof Token>;
+export type Payload = z.infer<typeof Payload>;
 
 export class TokenService {
   #signatureService: SignatureService;
@@ -51,7 +49,7 @@ export class TokenService {
     return new TokenService(signatureService);
   }
 
-  async sign(payload: Payload): Promise<string> {
+  async sign(customClaims: CustomClaims): Promise<string> {
     const header: Header = {
       alg: "RS256",
       typ: "JWT",
@@ -59,7 +57,7 @@ export class TokenService {
 
     const claims: Claims = {
       iss: "campusclip.api",
-      sub: payload.userId,
+      sub: customClaims.userId,
       aud: "campusclip.api",
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 * 4, // add 4 months ~ average semester length
       iat: Math.floor(Date.now() / 1000),
@@ -67,9 +65,9 @@ export class TokenService {
 
     const encodedHeader = btoa(JSON.stringify(header));
 
-    const token: Token = {
-      payload,
-      claims,
+    const token: Payload = {
+      ...claims,
+      ...customClaims,
     };
 
     const encodedToken = btoa(JSON.stringify(token));
@@ -82,9 +80,9 @@ export class TokenService {
   }
 
   /**
-   * Verifies the token and returns the payload if valid.
+   * Verifies the token and returns the custom claims if valid.
    * */
-  async verify(tokenString: string): Promise<Payload | null> {
+  async verify(tokenString: string): Promise<CustomClaims | null> {
     const [_, encodedToken, signedToken] = tokenString.split(".");
 
     const validSignature = await this.#signatureService.verify(
@@ -98,26 +96,29 @@ export class TokenService {
 
     const decodedToken = JSON.parse(atob(encodedToken));
 
-    const res = Token.safeParse(decodedToken);
+    const res = Payload.safeParse(decodedToken);
 
     if (!res.success) {
       return null;
     }
 
     const token = res.data;
-    const userId = res.data.payload.userId;
 
     // check claims
-    const claims = res.data.claims;
     if (
-      claims.iss !== "campusclip.api" ||
-      claims.aud !== "campusclip.api" ||
-      claims.sub !== userId ||
-      claims.exp < Math.floor(Date.now() / 1000)
+      token.iss !== "campusclip.api" ||
+      token.aud !== "campusclip.api" ||
+      token.sub !== token.userId ||
+      token.exp < Math.floor(Date.now() / 1000)
     ) {
       return null;
     }
 
-    return token.payload;
+    const customClaims: CustomClaims = {
+      userId: token.userId,
+      privileges: token.privileges,
+    };
+
+    return customClaims;
   }
 }
