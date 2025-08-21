@@ -9,12 +9,42 @@ export default defineSchema({
     privileges: v.array(v.string()),
   }).index("by_email", ["email"]),
 
+  classes: defineTable({
+    code: v.string(),
+
+    chat: v.id("chats"),
+    students: v.array(v.id("users")),
+
+    title: v.string(),
+    professor: v.string(),
+    university: v.string(),
+  }).index("by_code", ["code"]),
+
+  userTasks: defineTable({
+    userId: v.id("users"),
+    classId: v.id("classes"),
+
+    dueDate: v.string(),
+    title: v.string(),
+    status: v.union(
+      v.literal("completed"),
+      v.literal("pending"),
+      v.literal("dropped"),
+      v.literal("onHold"),
+    ),
+    type: v.union(v.literal("exam"), v.literal("assignment")),
+    scoreObtained: v.number(),
+    scoreTotal: v.number(),
+    weight: v.number(),
+  }).index("by_userId_classId", ["userId", "classId"]),
+
   profiles: defineTable({
     userId: v.id("users"),
     following: v.array(v.id("users")),
     followers: v.array(v.id("users")),
     clubs: v.array(v.id("clubs")),
     chats: v.array(v.id("chats")),
+    classes: v.array(v.id("classes")),
 
     birthday: v.string(),
     displayName: v.string(),
