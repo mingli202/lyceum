@@ -1,33 +1,24 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
-import Login from "./login";
-import { login } from "@/actions/auth";
-import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui";
+import { useConvexAuth } from "convex/react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-  const [isLoading, setIsLoading] = useState(true);
+  const auth = useConvexAuth();
   const router = useRouter();
 
-  useLayoutEffect(() => {
-    (async () => {
-      const res = await login();
-      if (res.ok) {
-        router.push("/dashboard");
-      } else {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
+  if (auth.isAuthenticated) {
+    router.push("/user/dashboard");
+  }
 
-  if (isLoading) {
+  if (auth.isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <LoadingSpinner />
+        <LoadingSpinner />;
       </div>
     );
   }
 
-  return <Login />;
+  return <div className="h-full w-full">Welcome to Campus Clip</div>;
 }
