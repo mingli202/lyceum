@@ -1,24 +1,35 @@
 "use client";
 
 import { LoadingSpinner } from "@/components/ui";
+import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "next/navigation";
+import { useLayoutEffect } from "react";
 
 export default function Page() {
   const auth = useConvexAuth();
   const router = useRouter();
 
-  if (auth.isAuthenticated) {
-    router.push("/user/dashboard");
+  useLayoutEffect(() => {
+    if (auth.isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [auth.isAuthenticated]);
+
+  if (auth.isLoading || auth.isAuthenticated) {
+    return <LoadingSpinner />;
   }
 
-  if (auth.isLoading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <LoadingSpinner />;
-      </div>
-    );
-  }
-
-  return <div className="h-full w-full">Welcome to Campus Clip</div>;
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center">
+      <div>TODO: HERO PAGE</div>
+      <h1 className="text-3xl font-bold">Welcome to Campus Clip</h1>
+      <p>The plateform that clips together every area of your life!</p>
+      <SignInButton>
+        <button className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
+          Sign in to get started
+        </button>
+      </SignInButton>
+    </div>
+  );
 }
