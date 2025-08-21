@@ -31,7 +31,7 @@ export const loginWithCredentials = action({
   args: { email: v.string(), password: v.string() },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args): Promise<string | null> => {
-    const creds = await ctx.runQuery(internal.auth.getUserCredentials, {
+    const creds = await ctx.runQuery(internal.auth.getUserPasswordFromEmail, {
       email: args.email,
     });
 
@@ -67,21 +67,18 @@ export const validateTokenWithPrivileges = action({
       return null;
     }
 
+    // check for privileges and if user exists as well
+    const userId = customClaims.userId as Id<"users">;
+    const userPrivileges = await ctx.runQuery(internal.auth.getUserPrivileges, {
+      userId,
+    });
+
+    if (!userPrivileges) {
+      return null;
+    }
+
     // if user wants privileges, check if they are allowed
     if (args.requestedPrivileges.length > 0) {
-      const userId = customClaims.userId as Id<"users">;
-
-      const userPrivileges = await ctx.runQuery(
-        internal.auth.getUserPrivileges,
-        {
-          userId,
-        },
-      );
-
-      if (!userPrivileges) {
-        return null;
-      }
-
       if (
         args.requestedPrivileges.some(
           (priviledge) => !userPrivileges.includes(priviledge),

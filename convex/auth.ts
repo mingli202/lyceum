@@ -30,8 +30,7 @@ export const registerUser = internalMutation({
   },
 });
 
-// new token on successful login
-export const getUserCredentials = internalQuery({
+export const getUserPasswordFromEmail = internalQuery({
   args: { email: v.string() },
   returns: v.union(
     v.object({ storedPasswordHash: v.string(), storedSalt: v.string() }),
@@ -60,10 +59,7 @@ export const getUserPrivileges = internalQuery({
   args: { userId: v.id("users") },
   returns: v.union(v.array(v.string()), v.null()),
   handler: async (ctx, args): Promise<string[] | null> => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_id", (q) => q.eq("_id", args.userId as Id<"users">))
-      .unique();
+    const user = await ctx.db.get<"users">(args.userId);
 
     if (!user) {
       return null;
