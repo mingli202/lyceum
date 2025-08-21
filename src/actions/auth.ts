@@ -13,7 +13,7 @@ export type LoginOptions = {
 export async function login(
   options: LoginOptions = {},
 ): Promise<{ ok: boolean }> {
-  const { credentials, setCookies: storeToken } = options;
+  const { credentials, setCookies } = options;
 
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
@@ -21,16 +21,19 @@ export async function login(
   let newToken: string | null = null;
 
   if (credentials) {
-    newToken = await fetchAction(api.actions.loginWithCredentials, credentials);
+    newToken = await fetchAction(
+      api.actions.loginWithCredentials,
+      credentials,
+    ).catch(() => null);
   } else if (token) {
     newToken = await fetchAction(api.actions.validateTokenWithPrivileges, {
       token: token.value,
       requestedPrivileges: [],
-    });
+    }).catch(() => null);
   }
 
   if (newToken) {
-    if (storeToken) {
+    if (setCookies) {
       cookieStore.set("token", newToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -39,13 +42,19 @@ export async function login(
     return { ok: true };
   }
 
+  if (setCookies) {
+    cookieStore.delete("token");
+  }
+
   return { ok: false };
 }
 
 export async function registerUser(
   credentials: Credentials,
 ): Promise<{ ok: boolean }> {
-  const token = await fetchAction(api.actions.registerUser, credentials);
+  const token = await fetchAction(api.actions.registerUser, credentials).catch(
+    () => null,
+  );
 
   if (token) {
     const cookieStore = await cookies();

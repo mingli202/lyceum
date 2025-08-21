@@ -1,33 +1,35 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
-import Login from "./login";
-import { login } from "@/actions/auth";
-import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui";
+import { SignInButton } from "@clerk/nextjs";
+import { useConvexAuth } from "convex/react";
+import { useRouter } from "next/navigation";
+import { useLayoutEffect } from "react";
 
 export default function Page() {
-  const [isLoading, setIsLoading] = useState(true);
+  const auth = useConvexAuth();
   const router = useRouter();
 
   useLayoutEffect(() => {
-    (async () => {
-      const res = await login();
-      if (res.ok) {
-        router.push("/dashboard");
-      } else {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
+    if (auth.isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [auth.isAuthenticated]);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+  if (auth.isLoading || auth.isAuthenticated) {
+    return <LoadingSpinner />;
   }
 
-  return <Login />;
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center">
+      <div>TODO: HERO PAGE</div>
+      <h1 className="text-3xl font-bold">Welcome to Campus Clip</h1>
+      <p>The plateform that clips together every area of your life!</p>
+      <SignInButton>
+        <button className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
+          Sign in to get started
+        </button>
+      </SignInButton>
+    </div>
+  );
 }
