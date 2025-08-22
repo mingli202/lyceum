@@ -1,6 +1,7 @@
 import Button from "@/components/ui/Button";
 import { Archive, LayoutDashboard, Plus } from "lucide-react";
 import { DashboardData } from "../../../../convex/queries";
+import Link from "next/link";
 
 type Props = {
   data: DashboardData;
@@ -40,6 +41,13 @@ export default function Dashboard({ data }: Props) {
           <p className="text-sm">Average</p>
         </div>
       </div>
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
+        <p className="col-span-full">My classes</p>
+        {data.classesInfo.map((classInfo, i) => (
+          <ClassCard classInfo={classInfo} key={classInfo.code + i} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -50,14 +58,20 @@ function ClassCard({
   classInfo: DashboardData["classesInfo"][0];
 }) {
   return (
-    <div className="bg-background/10 flex flex-col gap-2 rounded-lg p-4">
-      <div className="flex items-center gap-2">
-        <div className="bg-background/10 h-9 w-9 rounded-full p-1">
-          <p className="text-foreground text-xl font-bold">{classInfo.code}</p>
-        </div>
-        <p className="text-xl font-bold">{classInfo.title}</p>
+    <Link
+      href={`/class/${classInfo._id}`}
+      className="bg-background ring-foreground/10 z-0 flex flex-col rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
+    >
+      <p className="w-fit rounded-full bg-indigo-100 px-1 py-0.5 text-xs text-indigo-800 ring-1 ring-indigo-300">
+        {classInfo.code}
+      </p>
+      <p className="mt-2 font-bold">{classInfo.title}</p>
+      <p>{classInfo.professor}</p>
+      <hr className="border-foreground/20 my-2" />
+      <div className="flex justify-between">
+        <p>Grade</p>
+        <p>{classInfo.grade}%</p>
       </div>
-      <p className="text-foreground/50 text-sm">{classInfo.professor}</p>
-    </div>
+    </Link>
   );
 }
