@@ -54,6 +54,7 @@ export default function AddClassModal() {
                   onClick={() => {
                     setFile(undefined);
                     formRef.current?.reset();
+                    setClassTimes([]);
                   }}
                 >
                   <Button className="p-0" type="button">
@@ -207,19 +208,33 @@ export default function AddClassModal() {
                     </div>
                   </div>
 
-                  <label htmlFor="class-target-grade" className="w-full">
-                    <p>Target Grade</p>
-                    <input
-                      id="class-target-grade"
-                      name="class-target-grade"
-                      type="number"
-                      className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-                      required
-                      defaultValue={85}
-                      min={0}
-                      max={100}
-                    />
-                  </label>
+                  <div className="flex w-full items-center gap-3">
+                    <label htmlFor="class-target-grade" className="w-full">
+                      <p>Target Grade</p>
+                      <input
+                        id="class-target-grade"
+                        name="class-target-grade"
+                        type="number"
+                        className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                        required
+                        defaultValue={85}
+                        min={0}
+                        max={100}
+                      />
+                    </label>
+                    <label htmlFor="class-credits" className="w-full">
+                      <p>Credits</p>
+                      <input
+                        id="class-credits"
+                        name="class-credits"
+                        type="number"
+                        className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                        required
+                        defaultValue={3}
+                        min={0}
+                      />
+                    </label>
+                  </div>
                 </div>
               )}
               <Button variant="special">Submit</Button>
@@ -252,7 +267,7 @@ function ClassTimeInput({
   onChange,
 }: ClassTimeInputProps) {
   return (
-    <div className="flex w-full gap-1 rounded p-1 ring-2 ring-indigo-200 hover:border-indigo-400">
+    <div className="flex w-full gap-1 rounded p-1 ring-2 ring-indigo-200">
       <select
         id="class-day"
         name="class-day"
