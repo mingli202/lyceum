@@ -25,6 +25,7 @@ export default defineSchema({
     dueDate: v.string(),
     title: v.string(),
     status: v.union(
+      v.literal("active"),
       v.literal("completed"),
       v.literal("pending"),
       v.literal("dropped"),

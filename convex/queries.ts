@@ -24,7 +24,7 @@ export const getUserIdFromClerkId = internalQuery({
   },
 });
 
-type DashboardData = {
+export type DashboardData = {
   classesInfo: (Pick<Class, "code" | "title" | "_id" | "professor"> & {
     grade: number;
   })[];
@@ -72,9 +72,12 @@ export const getDashboardData = query({
 
           const grade = userTasks.reduce(
             (acc, task) =>
-              acc + task.weight * task.scoreTotal === 0
-                ? 0
-                : task.scoreTotal / task.scoreTotal,
+              acc +
+              task.weight *
+                (task.scoreTotal === 0 ||
+                (task.status !== "active" && task.status !== "completed")
+                  ? 0
+                  : task.scoreTotal / task.scoreTotal),
             0,
           );
 
