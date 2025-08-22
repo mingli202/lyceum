@@ -25,16 +25,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground h-screen w-screen overflow-hidden antialiased`}
-        >
-          <ClerkProvider>
-            <ConvexClientProvider>{children}</ConvexClientProvider>
-          </ClerkProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground h-screen w-screen overflow-hidden antialiased`}
+      >
+        <ClerkProvider>
+          <ConvexClientProvider>{children}</ConvexClientProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }
