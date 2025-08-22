@@ -206,6 +206,20 @@ export default function AddClassModal() {
                       ))}
                     </div>
                   </div>
+
+                  <label htmlFor="class-target-grade" className="w-full">
+                    <p>Target Grade</p>
+                    <input
+                      id="class-target-grade"
+                      name="class-target-grade"
+                      type="number"
+                      className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                      required
+                      defaultValue={85}
+                      min={0}
+                      max={100}
+                    />
+                  </label>
                 </div>
               )}
               <Button variant="special">Submit</Button>
