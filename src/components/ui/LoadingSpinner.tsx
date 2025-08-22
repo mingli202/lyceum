@@ -6,8 +6,12 @@ import { LoaderCircle } from "lucide-react";
 type LoadingSpinnerProps = Omit<
   React.HTMLAttributes<HTMLDivElement>,
   "children"
->;
-export function LoadingSpinner({ className, ...props }: LoadingSpinnerProps) {
+> & { hideLoadingText?: boolean };
+export function LoadingSpinner({
+  className,
+  hideLoadingText,
+  ...props
+}: LoadingSpinnerProps) {
   return (
     <div
       className={cn(
@@ -16,7 +20,7 @@ export function LoadingSpinner({ className, ...props }: LoadingSpinnerProps) {
       {...props}
     >
       <LoaderCircle className="h-10 w-10 animate-spin" />
-      <p>Loading</p>
+      {!hideLoadingText && <p>Loading...</p>}
     </div>
   );
 }

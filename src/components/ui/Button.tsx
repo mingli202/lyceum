@@ -1,11 +1,11 @@
 import { cn } from "@/utils/cn";
-import { HTMLAttributes } from "react";
+import { ButtonHTMLAttributes } from "react";
 
-type ButtonProps = HTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "special";
 };
 
-export default function Button({
+export function Button({
   className,
   children,
   variant,
