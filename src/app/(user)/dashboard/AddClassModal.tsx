@@ -1,14 +1,29 @@
 import { Button, LoadingSpinner } from "@/components/ui";
-import { Archive, FileUp, Plus, X } from "lucide-react";
+import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Drawer } from "vaul";
 
+type ClassTime = {
+  day:
+    | "Monday"
+    | "Tuesday"
+    | "Wednesday"
+    | "Thursday"
+    | "Friday"
+    | "Saturday"
+    | "Sunday";
+  start: string;
+  end: string;
+};
 export default function AddClassModal() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [file, setFile] = useState<File | undefined>();
   const [isManual, setIsManual] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
   return (
     <div className="flex gap-4">
@@ -26,10 +41,11 @@ export default function AddClassModal() {
         </Drawer.Trigger>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-          <Drawer.Content className="fixed top-0 right-0 flex h-fit w-full justify-center p-2 md:h-full md:w-fit">
+          <Drawer.Content className="fixed right-0 bottom-0 flex h-fit w-full justify-center p-2 md:top-0 md:h-full md:w-fit">
             <form
-              className="bg-background flex flex-col gap-4 rounded-lg p-4 md:w-sm"
+              className="bg-background flex w-full flex-col gap-4 rounded-lg p-4 md:w-sm"
               onSubmit={(e) => e.preventDefault()}
+              ref={formRef}
             >
               <div className="flex items-center justify-between">
                 <Drawer.Title className="font-bold">New class</Drawer.Title>
@@ -37,7 +53,7 @@ export default function AddClassModal() {
                   asChild
                   onClick={() => {
                     setFile(undefined);
-                    setIsManual(false);
+                    formRef.current?.reset();
                   }}
                 >
                   <Button className="p-0" type="button">
@@ -89,7 +105,7 @@ export default function AddClassModal() {
                   </label>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   <label htmlFor="class-name">
                     <p>Class Name*</p>
                     <input
@@ -101,6 +117,95 @@ export default function AddClassModal() {
                       required
                     />
                   </label>
+                  <label htmlFor="class-code">
+                    <p>Class Code*</p>
+                    <input
+                      id="class-code"
+                      name="class-code"
+                      type="text"
+                      className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                      placeholder="e.g. COMP 547"
+                      required
+                    />
+                  </label>
+                  <label htmlFor="class-prof">
+                    <p>Professor*</p>
+                    <input
+                      id="class-prof"
+                      name="class-prof"
+                      type="text"
+                      className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                      placeholder="e.g. Dr. John Doe"
+                      required
+                    />
+                  </label>
+                  <div className="flex w-full items-center gap-3">
+                    <label htmlFor="class-semester" className="w-full">
+                      <p>Semester*</p>
+                      <select
+                        id="class-semester"
+                        name="class-semester"
+                        className="mt-1 h-8 w-full rounded px-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                        required
+                      >
+                        <option value="Summer">Summer</option>
+                        <option value="Fall">Fall</option>
+                        <option value="Winter">Winter</option>
+                      </select>
+                    </label>
+                    <label htmlFor="class-year" className="w-full">
+                      <p>Year*</p>
+                      <input
+                        id="class-year"
+                        name="class-year"
+                        type="number"
+                        className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                        required
+                        defaultValue={new Date().getFullYear()}
+                      />
+                    </label>
+                  </div>
+                  <div className="flex w-full flex-col items-center gap-1">
+                    <div className="flex w-full justify-between">
+                      <p>Class Times</p>
+                      <Button
+                        className="shrink-0 p-0"
+                        onClick={() => {
+                          setClassTimes((prev) => [
+                            ...prev,
+                            {
+                              day: "Monday",
+                              start: "09:00",
+                              end: "10:00",
+                            },
+                          ]);
+                        }}
+                        type="button"
+                      >
+                        <Plus />
+                      </Button>
+                    </div>
+                    <div className="flex w-full flex-col gap-2">
+                      {classTimes.map((t, i) => (
+                        <ClassTimeInput
+                          key={i}
+                          classTime={t}
+                          onRemove={() => {
+                            setClassTimes((prev) =>
+                              prev.filter((_, k) => k !== i),
+                            );
+                          }}
+                          onChange={(classTime) => {
+                            setClassTimes((prev) => {
+                              const newClassTimes = [...prev];
+                              newClassTimes[i] = classTime;
+                              return newClassTimes;
+                            });
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
               <Button variant="special">Submit</Button>
@@ -117,6 +222,77 @@ export default function AddClassModal() {
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
+    </div>
+  );
+}
+
+type ClassTimeInputProps = {
+  classTime: ClassTime;
+  onRemove: () => void;
+  onChange: (classTime: ClassTime) => void;
+};
+
+function ClassTimeInput({
+  classTime,
+  onRemove,
+  onChange,
+}: ClassTimeInputProps) {
+  return (
+    <div className="flex w-full gap-1 rounded p-1 ring-2 ring-indigo-200 hover:border-indigo-400">
+      <select
+        id="class-day"
+        name="class-day"
+        className="outline-none"
+        required
+        value={classTime.day}
+        onChange={(e) => {
+          onChange({
+            ...classTime,
+            day: e.target.value as ClassTime["day"],
+          });
+        }}
+      >
+        <option value="Monday">Mon</option>
+        <option value="Tuesday">Tue</option>
+        <option value="Wednesday">Wed</option>
+        <option value="Thursday">Thu</option>
+        <option value="Friday">Fri</option>
+        <option value="Saturday">Sat</option>
+        <option value="Sunday">Sun</option>
+      </select>
+      <input
+        id="class-start"
+        name="class-start"
+        type="time"
+        className="w-fit outline-none"
+        required
+        defaultValue="09:00"
+        onChange={(e) => {
+          onChange({
+            ...classTime,
+            start: e.target.value,
+          });
+        }}
+      />
+      <p className="flex items-center">-</p>
+      <input
+        id="class-end"
+        name="class-end"
+        type="time"
+        className="w-fit outline-none"
+        required
+        defaultValue="10:00"
+        onChange={(e) => {
+          onChange({
+            ...classTime,
+            end: e.target.value,
+          });
+        }}
+      />
+      <div className="basis-full" />
+      <Button type="button" className="shrink-0 p-0" onClick={() => onRemove()}>
+        <Minus />
+      </Button>
     </div>
   );
 }

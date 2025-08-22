@@ -16,11 +16,41 @@ export default defineSchema({
     title: v.string(),
     professor: v.string(),
     university: v.string(),
+    semester: v.union(
+      v.literal("Summer"),
+      v.literal("Fall"),
+      v.literal("Winter"),
+    ),
+    year: v.number(),
+    credits: v.number(),
+    classTimes: v.array(
+      v.object({
+        day: v.union(
+          v.literal("Monday"),
+          v.literal("Tuesday"),
+          v.literal("Wednesday"),
+          v.literal("Thursday"),
+          v.literal("Friday"),
+          v.literal("Saturday"),
+          v.literal("Sunday"),
+        ),
+        start: v.string(),
+        end: v.string(),
+      }),
+    ),
   }).index("by_code", ["code"]),
+
+  userClassInfo: defineTable({
+    userId: v.id("users"),
+    classId: v.id("classes"),
+    targetGrade: v.number(),
+    tasks: v.array(v.id("userTasks")),
+  }),
 
   userTasks: defineTable({
     userId: v.id("users"),
     classId: v.id("classes"),
+    userClassInfo: v.id("userClassInfo"),
 
     dueDate: v.string(),
     title: v.string(),
