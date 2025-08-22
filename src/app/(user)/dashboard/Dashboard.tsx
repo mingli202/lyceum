@@ -1,7 +1,9 @@
-import Button from "@/components/ui/Button";
-import { Archive, LayoutDashboard, Plus } from "lucide-react";
+import { Button } from "@/components/ui";
+import { Archive, FileUp, LayoutDashboard, Plus } from "lucide-react";
 import { DashboardData } from "../../../../convex/types";
 import Link from "next/link";
+import { Drawer } from "vaul";
+import AddClassModal from "./AddClassModal";
 
 type Props = {
   data: DashboardData;
@@ -19,20 +21,7 @@ export default function Dashboard({ data }: Props) {
             </h1>
             <p>Your academic command center</p>
           </div>
-          <div className="flex gap-4">
-            {/* TODO: button actions */}
-            <Button className="flex items-center gap-1 text-sm">
-              <Archive className="h-3.5 w-3.5" />
-              Archives
-            </Button>
-            <Button
-              className="flex items-center gap-1 text-sm"
-              variant="special"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add New Class
-            </Button>
-          </div>
+          <AddClassModal />
         </div>
 
         <div className="text-background flex items-center justify-between rounded-lg border-2 border-solid border-indigo-300 bg-gradient-to-br from-blue-500 to-indigo-500 p-6 shadow-xl">

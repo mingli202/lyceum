@@ -27,7 +27,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground h-screen w-screen overflow-hidden antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground relative h-screen w-screen overflow-hidden antialiased`}
       >
         <ClerkProvider>
           <ConvexClientProvider>{children}</ConvexClientProvider>
