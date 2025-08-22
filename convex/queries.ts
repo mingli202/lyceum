@@ -10,7 +10,7 @@ export const getUserIdFromClerkId = internalQuery({
     const userIdentity = await ctx.auth.getUserIdentity();
 
     if (!userIdentity?.["user_id"]) {
-      throw new Error("Not authenticated");
+      throw new Error("Unautenticated");
     }
 
     const clerkId = userIdentity["user_id"] as string;
@@ -31,13 +31,12 @@ export type DashboardData = {
   average?: number;
 };
 export const getDashboardData = query({
-  handler: async (ctx, _args): Promise<DashboardData> => {
+  handler: async (ctx, _args): Promise<DashboardData | Error> => {
     const noInfo = { classesInfo: [] };
 
-    const userId = await ctx.runQuery(
-      internal.queries.getUserIdFromClerkId,
-      {},
-    );
+    const userId = await ctx
+      .runQuery(internal.queries.getUserIdFromClerkId, {})
+      .catch(() => null);
 
     if (!userId) {
       return noInfo;
