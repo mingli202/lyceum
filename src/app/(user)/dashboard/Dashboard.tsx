@@ -8,45 +8,54 @@ type Props = {
 };
 export default function Dashboard({ data }: Props) {
   return (
-    <div className="flex h-full w-full flex-col gap-4 overflow-hidden p-6">
-      {/* Header */}
-      <div className="flex w-full items-center justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 text-4xl font-bold text-blue-600">
-            <LayoutDashboard className="h-9 w-9" />
-            Dashboard
-          </h1>
-          <p>Your academic command center</p>
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      <div className="flex shrink-0 flex-col gap-4 p-6">
+        {/* Header */}
+        <div className="flex w-full items-center justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 text-4xl font-bold text-blue-600">
+              <LayoutDashboard className="h-9 w-9" />
+              Dashboard
+            </h1>
+            <p>Your academic command center</p>
+          </div>
+          <div className="flex gap-4">
+            {/* TODO: button actions */}
+            <Button className="flex items-center gap-1 text-sm">
+              <Archive className="h-3.5 w-3.5" />
+              Archives
+            </Button>
+            <Button
+              className="flex items-center gap-1 text-sm"
+              variant="special"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add New Class
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-4">
-          {/* TODO: button actions */}
-          <Button className="flex items-center gap-1 text-sm">
-            <Archive className="h-3.5 w-3.5" />
-            Archives
-          </Button>
-          <Button className="flex items-center gap-1 text-sm" variant="special">
-            <Plus className="h-3.5 w-3.5" />
-            Add New Class
-          </Button>
+
+        <div className="text-background flex items-center justify-between rounded-lg border-2 border-solid border-indigo-300 bg-gradient-to-br from-blue-500 to-indigo-500 p-6 shadow-xl">
+          <div>
+            <h2 className="text-2xl font-bold">Your Academic Performance</h2>
+            <p>Based on {data.classesInfo.length} class</p>
+          </div>
+          <div className="border-background/10 flex aspect-square flex-col items-center justify-center rounded-full border-2 border-solid p-4">
+            {data.average ?? "N/A"}
+            <p className="text-sm">Average</p>
+          </div>
         </div>
       </div>
 
-      <div className="text-background flex items-center justify-between rounded-lg border-2 border-solid border-indigo-300 bg-gradient-to-br from-blue-500 to-indigo-500 p-6 shadow-xl">
-        <div>
-          <h2 className="text-2xl font-bold">Your Academic Performance</h2>
-          <p>Based on {data.classesInfo.length} class</p>
+      <div className="flex basis-full flex-col gap-1 overflow-hidden">
+        <p className="col-span-full shrink-0 px-6">My classes</p>
+        <div className="basis-full overflow-x-hidden overflow-y-auto px-6 pt-1 pb-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
+            {data.classesInfo.map((classInfo, i) => (
+              <ClassCard classInfo={classInfo} key={classInfo.code + i} />
+            ))}
+          </div>
         </div>
-        <div className="border-background/10 flex aspect-square flex-col items-center justify-center rounded-full border-2 border-solid p-4">
-          {data.average ?? "N/A"}
-          <p className="text-sm">Average</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
-        <p className="col-span-full">My classes</p>
-        {data.classesInfo.map((classInfo, i) => (
-          <ClassCard classInfo={classInfo} key={classInfo.code + i} />
-        ))}
       </div>
     </div>
   );
