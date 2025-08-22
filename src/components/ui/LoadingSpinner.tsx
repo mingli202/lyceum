@@ -11,7 +11,7 @@ export function LoadingSpinner({ className, ...props }: LoadingSpinnerProps) {
   return (
     <div
       className={cn(
-        "w-ful flex h-full flex-col items-center justify-center gap-2",
+        "flex h-full w-full flex-col items-center justify-center gap-2",
       )}
       {...props}
     >
