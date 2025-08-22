@@ -1,6 +1,6 @@
 import Button from "@/components/ui/Button";
 import { Archive, LayoutDashboard, Plus } from "lucide-react";
-import { DashboardData } from "../../../../convex/queries";
+import { DashboardData } from "../../../../convex/types";
 import Link from "next/link";
 
 type Props = {

@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 
 export type User = Doc<"users">;
@@ -13,3 +14,17 @@ export type Event = Doc<"events">;
 export type Club = Doc<"clubs">;
 export type Chat = Doc<"chats">;
 export type Message = Doc<"messages">;
+
+export const DashboardData = v.object({
+  classesInfo: v.array(
+    v.object({
+      code: v.string(),
+      title: v.string(),
+      professor: v.string(),
+      _id: v.id("classes"),
+      grade: v.number(),
+    }),
+  ),
+  average: v.optional(v.number()),
+});
+export type DashboardData = typeof DashboardData.type;

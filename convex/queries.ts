@@ -2,7 +2,7 @@ import { internalQuery, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
-import { Class } from "./types";
+import { Class, DashboardData } from "./types";
 
 export const getUserIdFromClerkId = internalQuery({
   returns: v.union(v.id("users"), v.null()),
@@ -24,14 +24,9 @@ export const getUserIdFromClerkId = internalQuery({
   },
 });
 
-export type DashboardData = {
-  classesInfo: (Pick<Class, "code" | "title" | "_id" | "professor"> & {
-    grade: number;
-  })[];
-  average?: number;
-};
 export const getDashboardData = query({
-  handler: async (ctx, _args): Promise<DashboardData | Error> => {
+  returns: DashboardData,
+  handler: async (ctx, _args): Promise<DashboardData> => {
     const noInfo = { classesInfo: [] };
 
     const userId = await ctx
