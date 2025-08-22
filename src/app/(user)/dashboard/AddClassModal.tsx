@@ -186,26 +186,28 @@ export default function AddClassModal() {
                         <Plus />
                       </Button>
                     </div>
-                    <div className="flex w-full flex-col gap-2">
-                      {classTimes.map((t, i) => (
-                        <ClassTimeInput
-                          key={i}
-                          classTime={t}
-                          onRemove={() => {
-                            setClassTimes((prev) =>
-                              prev.filter((_, k) => k !== i),
-                            );
-                          }}
-                          onChange={(classTime) => {
-                            setClassTimes((prev) => {
-                              const newClassTimes = [...prev];
-                              newClassTimes[i] = classTime;
-                              return newClassTimes;
-                            });
-                          }}
-                        />
-                      ))}
-                    </div>
+                    {classTimes.length > 0 && (
+                      <div className="flex w-full flex-col gap-2">
+                        {classTimes.map((t, i) => (
+                          <ClassTimeInput
+                            key={i}
+                            classTime={t}
+                            onRemove={() => {
+                              setClassTimes((prev) =>
+                                prev.filter((_, k) => k !== i),
+                              );
+                            }}
+                            onChange={(classTime) => {
+                              setClassTimes((prev) => {
+                                const newClassTimes = [...prev];
+                                newClassTimes[i] = classTime;
+                                return newClassTimes;
+                              });
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex w-full items-center gap-3">
