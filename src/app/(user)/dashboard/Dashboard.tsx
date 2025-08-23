@@ -46,6 +46,7 @@ export default function Dashboard({ data }: Props) {
             {dashboardData.classesInfo.map((classInfo, i) => (
               <ClassCard classInfo={classInfo} key={classInfo.code + i} />
             ))}
+            <div className="col-span-full h-0" />
           </div>
         </div>
       </div>

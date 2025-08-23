@@ -3,7 +3,6 @@ import { Button, LoadingSpinner } from "@/components/ui";
 import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 import { Drawer } from "vaul";
-import Form from "next/form";
 import schema from "../../../../convex/schema";
 
 type ClassTime =
@@ -20,17 +19,26 @@ export default function AddClassDrawer() {
 
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
-  const [error, handleAction, isPending] = useActionState(
-    async (_: unknown, formData: FormData) => {
-      const res = await addClass(formData, classTimes);
-      if (res) {
-        return res;
-      } else {
-        closeButtonRef.current?.click();
-      }
-    },
-    null,
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    setIsPending(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const res = await addClass(formData, classTimes);
+
+    if (res) {
+      setError(res);
+    } else {
+      closeButtonRef.current?.click();
+    }
+
+    setIsPending(false);
+  }
 
   return (
     <div className="flex gap-4">
@@ -48,10 +56,10 @@ export default function AddClassDrawer() {
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40" />
           <Drawer.Content className="fixed right-0 bottom-0 flex h-fit w-full justify-center p-2 md:top-0 md:h-full md:w-fit">
-            <Form
+            <form
               className="bg-background flex w-full flex-col gap-4 rounded-lg p-4 md:w-sm"
               ref={formRef}
-              action={handleAction}
+              onSubmit={handleSubmit}
             >
               <div className="flex items-center justify-between">
                 <Drawer.Title className="font-bold">New class</Drawer.Title>
@@ -260,7 +268,7 @@ export default function AddClassDrawer() {
               >
                 {isManual ? "From Syllabus" : "Manual Input"}
               </Button>
-            </Form>
+            </form>
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
