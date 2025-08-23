@@ -3,6 +3,7 @@ import { internalMutation, mutation } from "./_generated/server";
 import { authorize, getUserFromClerkId } from "./utils";
 import { internal } from "./_generated/api";
 import { AddClassArgs, CreateNewUserArgs } from "./types";
+import { Id } from "./_generated/dataModel";
 
 export const createNewUser = mutation({
   args: CreateNewUserArgs,
@@ -57,11 +58,6 @@ export const addClass = mutation({
       throw new Error("User not found");
     }
 
-    const classId = await ctx.runMutation(internal.mutations._createNewClass, {
-      ...args,
-      userId: user._id,
-    });
-
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
@@ -71,30 +67,57 @@ export const addClass = mutation({
       throw new Error("User profile not found");
     }
 
+    // search if the class already exists
+    const existingClass = await ctx.db
+      .query("classes")
+      .withIndex("by_school_code", (q) =>
+        q.eq("school", profile.school).eq("code", args.code),
+      )
+      .unique();
+
+    let classId: Id<"classes">;
+
+    if (existingClass) {
+      // check if the user is already a student
+      const userClassInfo = await ctx.db
+        .query("userClassInfo")
+        .withIndex("by_userId_classId", (q) =>
+          q.eq("userId", user._id).eq("classId", existingClass._id),
+        )
+        .unique();
+
+      if (userClassInfo) {
+        return "Already a student" as const;
+      }
+
+      classId = existingClass._id;
+    } else {
+      classId = await ctx.runMutation(internal.mutations._createNewClass, {
+        ...args,
+        userId: user._id,
+        school: profile.school,
+      });
+    }
+
     await ctx.db.insert("userClassInfo", {
       userId: user._id,
       classId,
       targetGrade: args.targetGrade,
       tasks: [],
     });
+
+    return "ok" as const;
   },
 });
 
 export const _createNewClass = internalMutation({
+  returns: v.id("classes"),
   args: v.object({
     ...AddClassArgs.fields,
     userId: v.id("users"),
+    school: v.string(),
   }),
-  handler: async (ctx, args) => {
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .unique();
-
-    if (!profile) {
-      throw new Error("User profile not found");
-    }
-
+  handler: async (ctx, args): Promise<Id<"classes">> => {
     const chatId = await ctx.db.insert("chats", {
       title: `${args.title}'s Chat`,
       members: [args.userId],
@@ -103,11 +126,10 @@ export const _createNewClass = internalMutation({
     const classId = await ctx.db.insert("classes", {
       code: args.code,
       chat: chatId,
-      students: [args.userId],
 
       title: args.title,
       professor: args.professor,
-      school: profile.school,
+      school: args.school,
       semester: args.semester,
       year: args.year,
       credits: args.credits,

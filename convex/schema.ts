@@ -15,7 +15,6 @@ export default defineSchema({
     code: v.string(),
 
     chat: v.id("chats"),
-    students: v.array(v.id("users")),
 
     title: v.string(),
     professor: v.string(),
@@ -42,7 +41,7 @@ export default defineSchema({
         end: v.string(),
       }),
     ),
-  }).index("by_code", ["code"]),
+  }).index("by_school_code", ["school", "code"]),
 
   userClassInfo: defineTable({
     userId: v.id("users"),
@@ -50,8 +49,9 @@ export default defineSchema({
     targetGrade: v.number(),
     tasks: v.array(v.id("userTasks")),
   })
-    .index("by_userId", ["userId"])
-    .index("by_userId_classId", ["userId", "classId"]),
+    .index("by_userId", ["userId"]) // for getting all the user's classes
+    .index("by_classId", ["classId"]) // for getting all users of a class
+    .index("by_userId_classId", ["userId", "classId"]), // for checking if a user is a student of a class
 
   userTasks: defineTable({
     userId: v.id("users"),

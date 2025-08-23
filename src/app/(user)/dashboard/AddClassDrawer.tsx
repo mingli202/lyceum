@@ -24,7 +24,7 @@ export default function AddClassDrawer() {
     const formData = new FormData(e.currentTarget);
     const res = await addClass(formData, classTimes);
 
-    if (res) {
+    if (res && res !== "ok") {
       return res;
     } else {
       closeButtonRef.current?.click();

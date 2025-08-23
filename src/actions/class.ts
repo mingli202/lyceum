@@ -7,6 +7,7 @@ import { api } from "../../convex/_generated/api";
 import { auth } from "@clerk/nextjs/server";
 
 type ClassTime = AddClassArgs["classTimes"][0];
+
 function checkForOverlap(classTimes: ClassTime[]) {
   const days: { [k in ClassTime["day"]]?: [string, string][] } = {};
   for (const classTime of classTimes) {
@@ -91,8 +92,8 @@ export async function addClass(
   };
 
   const signature = await new SignatureService().sign({
-    clerkId: userId,
     ...body,
+    clerkId: userId,
   });
 
   return await fetchMutation(api.mutations.addClass, {

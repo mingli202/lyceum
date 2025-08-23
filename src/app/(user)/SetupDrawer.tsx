@@ -163,7 +163,7 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
                 className="flex items-center justify-center"
                 isPending={isPending}
               >
-                "Submit"
+                Submit
               </Button>
               {error && <p className="text-red-500">{error}</p>}
             </form>
