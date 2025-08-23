@@ -1,8 +1,8 @@
 "use client";
 
 import { LoadingSpinner } from "@/components/ui";
+import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth } from "convex/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect } from "react";
 
@@ -25,12 +25,11 @@ export default function Page() {
       <div>TODO: HERO PAGE</div>
       <h1 className="text-3xl font-bold">Welcome to Campus Clip</h1>
       <p>The plateform that clips together every area of your life!</p>
-      <Link
-        href="/sign-in"
-        className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
-      >
-        Sign in to get started
-      </Link>
+      <SignInButton>
+        <p className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
+          Sign in to get started
+        </p>
+      </SignInButton>
     </div>
   );
 }
