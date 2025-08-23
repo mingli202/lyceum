@@ -3,7 +3,7 @@
 import { fetchMutation } from "convex/nextjs";
 import { SignatureService } from "../../convex/services/signatureService";
 import { api } from "../../convex/_generated/api";
-import { CreateNewUserArgs } from "../../convex/mutations";
+import { CreateNewUserArgs } from "../../convex/types";
 
 const signatureService = new SignatureService();
 

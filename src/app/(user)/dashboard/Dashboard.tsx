@@ -1,3 +1,5 @@
+"use client";
+
 import { LayoutDashboard } from "lucide-react";
 import { DashboardData } from "../../../../convex/types";
 import Link from "next/link";

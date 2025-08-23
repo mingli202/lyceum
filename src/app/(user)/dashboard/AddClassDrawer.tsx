@@ -1,23 +1,18 @@
+import { addClass } from "@/actions/class";
 import { Button, LoadingSpinner } from "@/components/ui";
 import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Drawer } from "vaul";
+import Form from "next/form";
+import schema from "../../../../convex/schema";
 
-type ClassTime = {
-  day:
-    | "Monday"
-    | "Tuesday"
-    | "Wednesday"
-    | "Thursday"
-    | "Friday"
-    | "Saturday"
-    | "Sunday";
-  start: string;
-  end: string;
-};
+type ClassTime =
+  (typeof schema.tables.classes.validator.fields.classTimes.type)[0];
+
 export default function AddClassDrawer() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const [file, setFile] = useState<File | undefined>();
   const [isManual, setIsManual] = useState(false);
@@ -25,9 +20,17 @@ export default function AddClassDrawer() {
 
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-  }
+  const [error, handleAction, isPending] = useActionState(
+    async (_: unknown, formData: FormData) => {
+      const res = await addClass(formData, classTimes);
+      if (res) {
+        return res;
+      } else {
+        closeButtonRef.current?.click();
+      }
+    },
+    null,
+  );
 
   return (
     <div className="flex gap-4">
@@ -45,14 +48,15 @@ export default function AddClassDrawer() {
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40" />
           <Drawer.Content className="fixed right-0 bottom-0 flex h-fit w-full justify-center p-2 md:top-0 md:h-full md:w-fit">
-            <form
+            <Form
               className="bg-background flex w-full flex-col gap-4 rounded-lg p-4 md:w-sm"
-              onSubmit={handleSubmit}
               ref={formRef}
+              action={handleAction}
             >
               <div className="flex items-center justify-between">
                 <Drawer.Title className="font-bold">New class</Drawer.Title>
                 <Drawer.Close
+                  ref={closeButtonRef}
                   asChild
                   onClick={() => {
                     setFile(undefined);
@@ -110,11 +114,11 @@ export default function AddClassDrawer() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <label htmlFor="class-name">
-                    <p>Class Name*</p>
+                  <label htmlFor="class-title">
+                    <p>Class Title*</p>
                     <input
-                      id="class-name"
-                      name="class-name"
+                      id="class-title"
+                      name="class-title"
                       type="text"
                       className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
                       placeholder="e.g. Cryptography"
@@ -169,6 +173,35 @@ export default function AddClassDrawer() {
                       />
                     </label>
                   </div>
+
+                  <div className="flex w-full items-center gap-3">
+                    <label htmlFor="class-target-grade" className="w-full">
+                      <p>Target Grade</p>
+                      <input
+                        id="class-target-grade"
+                        name="class-target-grade"
+                        type="number"
+                        className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                        required
+                        defaultValue={85}
+                        min={0}
+                        max={100}
+                      />
+                    </label>
+                    <label htmlFor="class-credits" className="w-full">
+                      <p>Credits</p>
+                      <input
+                        id="class-credits"
+                        name="class-credits"
+                        type="number"
+                        className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+                        required
+                        defaultValue={3}
+                        min={0}
+                      />
+                    </label>
+                  </div>
+
                   <div className="flex w-full flex-col items-center gap-1">
                     <div className="flex w-full justify-between">
                       <p>Class Times</p>
@@ -212,37 +245,12 @@ export default function AddClassDrawer() {
                       </div>
                     )}
                   </div>
-
-                  <div className="flex w-full items-center gap-3">
-                    <label htmlFor="class-target-grade" className="w-full">
-                      <p>Target Grade</p>
-                      <input
-                        id="class-target-grade"
-                        name="class-target-grade"
-                        type="number"
-                        className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-                        required
-                        defaultValue={85}
-                        min={0}
-                        max={100}
-                      />
-                    </label>
-                    <label htmlFor="class-credits" className="w-full">
-                      <p>Credits</p>
-                      <input
-                        id="class-credits"
-                        name="class-credits"
-                        type="number"
-                        className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-                        required
-                        defaultValue={3}
-                        min={0}
-                      />
-                    </label>
-                  </div>
                 </div>
               )}
-              <Button variant="special">Submit</Button>
+              <Button variant="special" isPending={isPending}>
+                Submit
+              </Button>
+              {error && <p className="text-red-500">{error}</p>}
               <Button
                 className="p-0"
                 onClick={() => {
@@ -252,7 +260,7 @@ export default function AddClassDrawer() {
               >
                 {isManual ? "From Syllabus" : "Manual Input"}
               </Button>
-            </form>
+            </Form>
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
