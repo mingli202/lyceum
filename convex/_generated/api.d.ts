@@ -17,6 +17,7 @@ import type * as mutations from "../mutations.js";
 import type * as queries from "../queries.js";
 import type * as services_signatureService from "../services/signatureService.js";
 import type * as types from "../types.js";
+import type * as utils from "../utils.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   queries: typeof queries;
   "services/signatureService": typeof services_signatureService;
   types: typeof types;
+  utils: typeof utils;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
