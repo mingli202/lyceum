@@ -1,15 +1,21 @@
 import { internalQuery, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { DashboardData, User } from "./types";
 import schema from "./schema";
 import { authorize } from "./utils";
 
-export const getUserIdFromClerkId = internalQuery({
+export const getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
-  returns: v.union(v.id("users"), v.null()),
-  handler: async (ctx, args): Promise<Id<"users"> | null> => {
+  returns: v.union(
+    v.object({
+      ...schema.tables.users.validator.fields,
+      _id: v.id("users"),
+      _creationTime: v.float64(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args): Promise<User | null> => {
     const clerkId = await authorize(ctx, args.signature);
 
     const user = await ctx.db
@@ -17,7 +23,7 @@ export const getUserIdFromClerkId = internalQuery({
       .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
       .unique();
 
-    return user?._id ?? null;
+    return user;
   },
 });
 
@@ -32,27 +38,18 @@ export const getUser = query({
     v.literal("N/A"),
   ),
   handler: async (ctx, args): Promise<User | "N/A"> => {
-    const userId = await ctx.runQuery(
-      internal.queries.getUserIdFromClerkId,
-      args,
-    );
-
-    if (!userId) {
-      return "N/A";
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await ctx.runQuery(internal.queries.getUserFromClerkId, args);
 
     return user ?? "N/A";
   },
 });
 
 export const getDashboardData = query({
-  args: { signature: v.string() },
+  args: { signature: v.optional(v.string()) },
   returns: DashboardData,
   handler: async (ctx, args): Promise<DashboardData> => {
     const userId = await ctx.runQuery(
-      internal.queries.getUserIdFromClerkId,
+      internal.queries.getUserFromClerkId,
       args,
     );
 

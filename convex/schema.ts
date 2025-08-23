@@ -19,7 +19,7 @@ export default defineSchema({
 
     title: v.string(),
     professor: v.string(),
-    university: v.string(),
+    school: v.string(),
     semester: v.union(
       v.literal("Summer"),
       v.literal("Fall"),

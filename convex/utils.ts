@@ -5,6 +5,8 @@ import {
 } from "convex/server";
 import { DataModel } from "./_generated/dataModel";
 import { SignatureService } from "./services/signatureService";
+import { internal } from "./_generated/api";
+import { User } from "./types";
 
 /**
  * Helper function to authorize a request.
@@ -44,4 +46,20 @@ export async function authorize(
   } else {
     return identity["user_id"] as string;
   }
+}
+
+/**
+ * Helper function to get the userId from the clerkId.
+ * Because it's too long and I'm lazy to write it out every time.
+ * */
+export async function getUserFromClerkId(
+  ctx:
+    | GenericMutationCtx<DataModel>
+    | GenericQueryCtx<DataModel>
+    | GenericActionCtx<DataModel>,
+  args: any & { signature: string },
+): Promise<User | null> {
+  return await ctx.runQuery(internal.queries.getUserFromClerkId, {
+    signature: args.signature,
+  });
 }
