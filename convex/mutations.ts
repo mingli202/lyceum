@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
-import { SignatureService } from "./services/signatureService";
+import { authorize } from "./utils";
 
 export const CreateNewUserArgs = v.object({
   signature: v.optional(v.string()),
@@ -22,31 +22,7 @@ export const createNewUser = mutation({
   args: CreateNewUserArgs,
   returns: v.literal("ok"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-
-    if (!identity) {
-      if (!args.signature) {
-        throw new Error("Unauthenticated");
-      }
-
-      const signatureService = new SignatureService();
-      const [bodyStr, signature] = args.signature.split(".");
-
-      const isValidSignature = await signatureService.verify(
-        signature,
-        bodyStr,
-      );
-
-      if (!isValidSignature) {
-        throw new Error("Invalid signature");
-      }
-    } else {
-      const clerkId = identity["user_id"];
-
-      if (clerkId !== args.userId) {
-        throw new Error("User ID mismatch");
-      }
-    }
+    await authorize(ctx, args.signature);
 
     if (
       await ctx.db
