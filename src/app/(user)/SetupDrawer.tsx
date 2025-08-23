@@ -15,11 +15,11 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
   const [error, submitAction, isPending] = useActionState(
     async (_: unknown, formData: FormData) => {
       if (isPending) {
-        return;
+        return "Pending, please wait...";
       }
 
       if (!user) {
-        throw new Error("Login expired. Sigin again");
+        return "Login expired. Sigin again";
       }
 
       const email = user.primaryEmailAddress?.emailAddress;
@@ -27,7 +27,7 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
       const userId = user.id;
 
       if (!email) {
-        throw new Error("Please set your email address");
+        return "Please set your email address";
       }
 
       formData.set("email", email);
@@ -40,7 +40,7 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
       const error = await createNewUser(formData);
 
       if (error !== "ok") {
-        throw new Error(error);
+        return error;
       }
     },
     null,
