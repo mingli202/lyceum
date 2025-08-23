@@ -16,6 +16,7 @@ export function LoadingSpinner({
     <div
       className={cn(
         "flex h-full w-full flex-col items-center justify-center gap-2",
+        className,
       )}
       {...props}
     >
