@@ -57,7 +57,7 @@ export const addClass = mutation({
       throw new Error("User not found");
     }
 
-    const classId = await ctx.runMutation(internal.mutations.createNewClass, {
+    const classId = await ctx.runMutation(internal.mutations._createNewClass, {
       ...args,
       userId: user._id,
     });
@@ -80,7 +80,7 @@ export const addClass = mutation({
   },
 });
 
-export const createNewClass = internalMutation({
+export const _createNewClass = internalMutation({
   args: v.object({
     ...AddClassArgs.fields,
     userId: v.id("users"),

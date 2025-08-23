@@ -3,9 +3,9 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { DashboardData, User } from "./types";
 import schema from "./schema";
-import { authorize } from "./utils";
+import { authorize, getUserFromClerkId } from "./utils";
 
-export const getUserFromClerkId = internalQuery({
+export const _getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
   returns: v.union(
     v.object({
@@ -38,7 +38,7 @@ export const getUser = query({
     v.literal("N/A"),
   ),
   handler: async (ctx, args): Promise<User | "N/A"> => {
-    const user = await ctx.runQuery(internal.queries.getUserFromClerkId, args);
+    const user = await ctx.runQuery(internal.queries._getUserFromClerkId, args);
 
     return user ?? "N/A";
   },
@@ -48,14 +48,11 @@ export const getDashboardData = query({
   args: { signature: v.optional(v.string()) },
   returns: DashboardData,
   handler: async (ctx, args): Promise<DashboardData> => {
-    const userId = await ctx.runQuery(
-      internal.queries.getUserFromClerkId,
-      args,
-    );
+    const user = await getUserFromClerkId(ctx, args);
 
     const noInfo = { classesInfo: [] };
 
-    if (!userId) {
+    if (!user) {
       return noInfo;
     }
 
