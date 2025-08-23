@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui";
 import { useUser } from "@clerk/nextjs";
-import { useRef, useState } from "react";
+import { useActionState } from "react";
 import { Drawer } from "vaul";
 import { createNewUser } from "@/actions/user";
 import { LoaderCircle } from "lucide-react";
 import Form from "next/form";
-import { useFormStatus } from "react-dom";
 
 type SetupDrawerProps = {
   open: boolean;
@@ -13,40 +12,42 @@ type SetupDrawerProps = {
 export default function SetupDrawer({ open }: SetupDrawerProps) {
   const user = useUser().user;
 
-  const [error, setError] = useState<string | undefined>();
+  const [error, submitAction, isPending] = useActionState(
+    async (_: unknown, formData: FormData) => {
+      if (isPending) {
+        return;
+      }
 
-  async function handleAction(formData: FormData) {
-    if (!user) {
-      setError("Login expired. Sigin again");
-      return;
-    }
+      if (!user) {
+        throw new Error("Login expired. Sigin again");
+      }
 
-    const email = user.primaryEmailAddress?.emailAddress;
-    const imageUrl = user.imageUrl;
-    const userId = user.id;
+      const email = user.primaryEmailAddress?.emailAddress;
+      const imageUrl = user.imageUrl;
+      const userId = user.id;
 
-    if (!email) {
-      setError("Please set your email address");
-      return;
-    }
+      if (!email) {
+        throw new Error("Please set your email address");
+      }
 
-    formData.set("email", email);
-    formData.set("userId", userId);
+      formData.set("email", email);
+      formData.set("userId", userId);
 
-    if (imageUrl) {
-      formData.set("pictureUrl", imageUrl);
-    }
+      if (imageUrl) {
+        formData.set("pictureUrl", imageUrl);
+      }
 
-    const error = await createNewUser(formData);
+      const error = await createNewUser(formData);
 
-    if (error !== "ok") {
-      setError(error);
-    }
-  }
+      if (error !== "ok") {
+        throw new Error(error);
+      }
+    },
+    null,
+  );
 
   return (
     <Drawer.Root open={open} dismissible={false}>
-      <Drawer.Trigger className="hidden"></Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
         <Drawer.Content className="bg-background fixed right-0 bottom-0 left-0 flex h-9/10 justify-center outline-none">
@@ -54,7 +55,7 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
             <Drawer.Title className="text-center text-3xl">
               Setup your account
             </Drawer.Title>
-            <Form className="flex w-full flex-col gap-3" action={handleAction}>
+            <Form className="flex w-full flex-col gap-3" action={submitAction}>
               <label htmlFor="school">
                 <p>School*</p>
                 <input
@@ -163,27 +164,23 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
                   value={user?.primaryEmailAddress?.emailAddress ?? ""}
                 />
               </label>
-              <SubmitButton />
+              <Button
+                variant="special"
+                type="submit"
+                disabled={isPending}
+                className="flex items-center justify-center"
+              >
+                {isPending ? (
+                  <LoaderCircle className="h-6 w-6 animate-spin" />
+                ) : (
+                  "Submit"
+                )}
+              </Button>
               {error && <p className="text-red-500">{error}</p>}
             </Form>
           </div>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
-  );
-}
-
-function SubmitButton() {
-  const status = useFormStatus();
-  const isLoading = status.pending;
-
-  return (
-    <Button
-      variant="special"
-      type={isLoading ? "button" : "submit"}
-      className="flex items-center justify-center"
-    >
-      {isLoading ? <LoaderCircle className="h-6 w-6 animate-spin" /> : "Submit"}
-    </Button>
   );
 }
