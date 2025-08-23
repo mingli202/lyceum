@@ -5,6 +5,10 @@ export default defineSchema({
   users: defineTable({
     clerkId: v.string(),
     privileges: v.array(v.string()),
+    givenName: v.string(),
+    familyName: v.optional(v.string()),
+    pictureUrl: v.optional(v.string()),
+    email: v.string(),
   }).index("by_clerkId", ["clerkId"]),
 
   classes: defineTable({
@@ -75,16 +79,15 @@ export default defineSchema({
     chats: v.array(v.id("chats")),
     classes: v.array(v.id("classes")),
 
-    birthday: v.string(),
-    displayName: v.string(),
     major: v.string(),
     school: v.string(),
     username: v.string(),
     bio: v.optional(v.string()),
     city: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
     academicYear: v.number(),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_username", ["username"]),
 
   settings: defineTable({
     userId: v.id("users"),
