@@ -26,6 +26,8 @@ export default function NavBar() {
     // because undefined is when it's loading fuck ts
     if (user === "N/A") {
       setOpen(true);
+    } else if (user) {
+      setOpen(false);
     }
   }, [user]);
 

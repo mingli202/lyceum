@@ -24,6 +24,7 @@ export default function DashboardPage() {
   if (!data) {
     return <LoadingSpinner />;
   }
+  console.log({ data });
 
-  return <Dashboard data={placeHolderData} />;
+  return <Dashboard data={data} />;
 }

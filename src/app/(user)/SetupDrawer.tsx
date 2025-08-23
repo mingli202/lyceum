@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { createNewUser } from "@/actions/user";
+import { LoaderCircle } from "lucide-react";
+import Form from "next/form";
+import { useFormStatus } from "react-dom";
 
 type SetupDrawerProps = {
   open: boolean;
@@ -51,7 +54,7 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
             <Drawer.Title className="text-center text-3xl">
               Setup your account
             </Drawer.Title>
-            <form className="flex w-full flex-col gap-3" action={handleAction}>
+            <Form className="flex w-full flex-col gap-3" action={handleAction}>
               <label htmlFor="school">
                 <p>School*</p>
                 <input
@@ -160,12 +163,27 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
                   value={user?.primaryEmailAddress?.emailAddress ?? ""}
                 />
               </label>
-              <Button variant="special">Submit</Button>
+              <SubmitButton />
               {error && <p className="text-red-500">{error}</p>}
-            </form>
+            </Form>
           </div>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
+  );
+}
+
+function SubmitButton() {
+  const status = useFormStatus();
+  const isLoading = status.pending;
+
+  return (
+    <Button
+      variant="special"
+      type={isLoading ? "button" : "submit"}
+      className="flex items-center justify-center"
+    >
+      {isLoading ? <LoaderCircle className="h-6 w-6 animate-spin" /> : "Submit"}
+    </Button>
   );
 }
