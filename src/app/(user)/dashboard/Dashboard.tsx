@@ -1,9 +1,7 @@
-import { Button } from "@/components/ui";
-import { Archive, FileUp, LayoutDashboard, Plus } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import { DashboardData } from "../../../../convex/types";
 import Link from "next/link";
-import { Drawer } from "vaul";
-import AddClassModal from "./AddClassModal";
+import AddClassDrawer from "./AddClassDrawer";
 
 type Props = {
   data: DashboardData;
@@ -12,7 +10,6 @@ export default function Dashboard({ data }: Props) {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="flex shrink-0 flex-col gap-4 p-6">
-        {/* Header */}
         <div className="flex w-full items-center justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-4xl font-bold text-blue-600">
@@ -21,7 +18,7 @@ export default function Dashboard({ data }: Props) {
             </h1>
             <p>Your academic command center</p>
           </div>
-          <AddClassModal />
+          <AddClassDrawer />
         </div>
 
         <div className="text-background flex items-center justify-between rounded-lg border-2 border-solid border-indigo-300 bg-gradient-to-br from-blue-500 to-indigo-500 p-6 shadow-xl">

@@ -15,7 +15,7 @@ type ClassTime = {
   start: string;
   end: string;
 };
-export default function AddClassModal() {
+export default function AddClassDrawer() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -25,9 +25,12 @@ export default function AddClassModal() {
 
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+  }
+
   return (
     <div className="flex gap-4">
-      {/* TODO: button actions */}
       <Button className="flex items-center gap-1 text-sm">
         <Archive className="h-3.5 w-3.5" />
         Archives
@@ -44,7 +47,7 @@ export default function AddClassModal() {
           <Drawer.Content className="fixed right-0 bottom-0 flex h-fit w-full justify-center p-2 md:top-0 md:h-full md:w-fit">
             <form
               className="bg-background flex w-full flex-col gap-4 rounded-lg p-4 md:w-sm"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubmit}
               ref={formRef}
             >
               <div className="flex items-center justify-between">
