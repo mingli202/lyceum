@@ -21,14 +21,14 @@ export default function Page() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2">
       <div>TODO: HERO PAGE</div>
       <h1 className="text-3xl font-bold">Welcome to Campus Clip</h1>
       <p>The plateform that clips together every area of your life!</p>
       <SignInButton>
-        <button className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
+        <p className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
           Sign in to get started
-        </button>
+        </p>
       </SignInButton>
     </div>
   );

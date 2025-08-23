@@ -2,6 +2,7 @@
 
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/utils/cn";
+import { useQuery } from "convex/react";
 import {
   Calendar,
   Home,
@@ -12,38 +13,66 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { api } from "../../../convex/_generated/api";
+import { useEffect, useState } from "react";
+import SetupDrawer from "./SetupDrawer";
+import { useAuth } from "@clerk/nextjs";
 
 export default function NavBar() {
+  const user = useQuery(api.queries.getUser, {});
+
+  const { signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    // explicitely define different states
+    // because undefined is when it's loading fuck ts
+    if (user === "N/A") {
+      setOpen(true);
+    } else if (user) {
+      setOpen(false);
+    }
+  }, [user]);
+
   const pathName = usePathname() ?? "";
 
   return (
-    <section className="flex h-full flex-col gap-2 p-4">
-      <div className="h-12 w-52 shrink-0 ring-1 ring-black">
-        Logo placeholder
-      </div>
-      <NavItem href="/dashboard" currentPath={pathName}>
-        <LayoutDashboard /> Dashboard
-      </NavItem>
-      <NavItem href="/feed" currentPath={pathName}>
-        <Home /> Feed
-      </NavItem>
-      <NavItem href="/calendar" currentPath={pathName}>
-        <Calendar /> Calendar
-      </NavItem>
-      <NavItem href="/clubs" currentPath={pathName}>
-        <Users /> Clubs
-      </NavItem>
-      <NavItem href="/search" currentPath={pathName}>
-        <Search /> Search
-      </NavItem>
-      <NavItem href="/profile" currentPath={pathName}>
-        <UserIcon /> Profile
-      </NavItem>
-      <div className="basis-full" />
-      <div className="shrink-0 p-2">
-        <Avatar src={undefined} displayName="Vincent Liu" />
-      </div>
-    </section>
+    <>
+      <section className="bg-background flex h-full flex-col gap-2 border-r border-slate-200 p-4 backdrop-blur-sm">
+        <div className="h-12 w-52 shrink-0 ring-1 ring-black">
+          Logo placeholder
+        </div>
+        <NavItem href="/dashboard" currentPath={pathName}>
+          <LayoutDashboard /> Dashboard
+        </NavItem>
+        <NavItem href="/feed" currentPath={pathName}>
+          <Home /> Feed
+        </NavItem>
+        <NavItem href="/calendar" currentPath={pathName}>
+          <Calendar /> Calendar
+        </NavItem>
+        <NavItem href="/clubs" currentPath={pathName}>
+          <Users /> Clubs
+        </NavItem>
+        <NavItem href="/search" currentPath={pathName}>
+          <Search /> Search
+        </NavItem>
+        <NavItem href="/profile" currentPath={pathName}>
+          <UserIcon /> Profile
+        </NavItem>
+        <div className="basis-full" />
+        <div className="shrink-0 p-2">
+          <Avatar
+            src={user === "N/A" || !user ? undefined : user.pictureUrl}
+            displayName={
+              user === "N/A" || !user ? "User" : (user.givenName ?? "User")
+            }
+          />
+        </div>
+        <button onClick={() => signOut()}>Sign Out</button>
+      </section>
+      <SetupDrawer open={open} />
+    </>
   );
 }
 

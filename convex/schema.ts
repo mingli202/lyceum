@@ -3,30 +3,65 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    email: v.string(),
-    password: v.string(), // hashed
-    salt: v.string(),
+    clerkId: v.string(),
     privileges: v.array(v.string()),
-  }).index("by_email", ["email"]),
+    givenName: v.string(),
+    familyName: v.optional(v.string()),
+    pictureUrl: v.optional(v.string()),
+    email: v.string(),
+  }).index("by_clerkId", ["clerkId"]),
 
   classes: defineTable({
     code: v.string(),
 
     chat: v.id("chats"),
-    students: v.array(v.id("users")),
 
     title: v.string(),
     professor: v.string(),
-    university: v.string(),
-  }).index("by_code", ["code"]),
+    school: v.string(),
+    semester: v.union(
+      v.literal("Summer"),
+      v.literal("Fall"),
+      v.literal("Winter"),
+    ),
+    year: v.number(),
+    credits: v.number(),
+    classTimes: v.array(
+      v.object({
+        day: v.union(
+          v.literal("Monday"),
+          v.literal("Tuesday"),
+          v.literal("Wednesday"),
+          v.literal("Thursday"),
+          v.literal("Friday"),
+          v.literal("Saturday"),
+          v.literal("Sunday"),
+        ),
+        start: v.string(),
+        end: v.string(),
+      }),
+    ),
+  }).index("by_school_code", ["school", "code"]),
+
+  userClassInfo: defineTable({
+    userId: v.id("users"),
+    classId: v.id("classes"),
+    targetGrade: v.number(),
+    tasks: v.array(v.id("userTasks")),
+  })
+    .index("by_userId", ["userId"]) // for getting all the user's classes
+    .index("by_classId", ["classId"]) // for getting all users of a class
+    .index("by_userId_classId", ["userId", "classId"]), // for checking if a user is a student of a class
 
   userTasks: defineTable({
     userId: v.id("users"),
     classId: v.id("classes"),
+    userClassInfo: v.id("userClassInfo"),
 
     dueDate: v.string(),
     title: v.string(),
     status: v.union(
+      v.literal("active"),
       v.literal("completed"),
       v.literal("pending"),
       v.literal("dropped"),
@@ -44,18 +79,16 @@ export default defineSchema({
     followers: v.array(v.id("users")),
     clubs: v.array(v.id("clubs")),
     chats: v.array(v.id("chats")),
-    classes: v.array(v.id("classes")),
 
-    birthday: v.string(),
-    displayName: v.string(),
     major: v.string(),
     school: v.string(),
     username: v.string(),
     bio: v.optional(v.string()),
     city: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
     academicYear: v.number(),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_username", ["username"]),
 
   settings: defineTable({
     userId: v.id("users"),
