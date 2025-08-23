@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui";
 import { useUser } from "@clerk/nextjs";
-import { useActionState } from "react";
+import { useState } from "react";
 import { Drawer } from "vaul";
 import { createNewUser } from "@/actions/user";
-import { LoaderCircle } from "lucide-react";
-import Form from "next/form";
 
 type SetupDrawerProps = {
   open: boolean;
@@ -12,39 +10,45 @@ type SetupDrawerProps = {
 export default function SetupDrawer({ open }: SetupDrawerProps) {
   const user = useUser().user;
 
-  const [error, submitAction, isPending] = useActionState(
-    async (_: unknown, formData: FormData) => {
-      if (isPending) {
-        return "Pending, please wait...";
-      }
-
-      if (!user) {
-        return "Login expired. Sigin again";
-      }
-
-      const email = user.primaryEmailAddress?.emailAddress;
-      const imageUrl = user.imageUrl;
-      const clerkId = user.id;
-
-      if (!email) {
-        return "Please set your email address";
-      }
-
-      formData.set("email", email);
-      formData.set("clerkId", clerkId);
-
-      if (imageUrl) {
-        formData.set("pictureUrl", imageUrl);
-      }
-
-      const error = await createNewUser(formData);
-
-      if (error !== "ok") {
-        return error;
-      }
-    },
+  const [status, setStatus] = useState<{ error: string } | "pending" | null>(
     null,
   );
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (status === "pending") {
+      return;
+    }
+
+    if (!user) {
+      return setStatus({ error: "Login expired. Sigin again" });
+    }
+
+    const email = user.primaryEmailAddress?.emailAddress;
+    const imageUrl = user.imageUrl;
+    const clerkId = user.id;
+
+    if (!email) {
+      return setStatus({ error: "Please set your email address" });
+    }
+
+    setStatus("pending");
+
+    const formData = new FormData(e.currentTarget);
+
+    formData.set("email", email);
+    formData.set("clerkId", clerkId);
+
+    if (imageUrl) {
+      formData.set("pictureUrl", imageUrl);
+    }
+    const res = await createNewUser(formData);
+
+    if (res) {
+      setStatus({ error: res });
+    }
+  }
 
   return (
     <Drawer.Root open={open} dismissible={false}>
@@ -55,7 +59,10 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
             <Drawer.Title className="text-center text-3xl">
               Setup your account
             </Drawer.Title>
-            <Form className="flex w-full flex-col gap-3" action={submitAction}>
+            <form
+              className="flex w-full flex-col gap-3"
+              onSubmit={handleSubmit}
+            >
               <label htmlFor="school">
                 <p>School*</p>
                 <input
@@ -167,17 +174,15 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
               <Button
                 variant="special"
                 type="submit"
-                disabled={isPending}
                 className="flex items-center justify-center"
+                isPending={status === "pending"}
               >
-                {isPending ? (
-                  <LoaderCircle className="h-6 w-6 animate-spin" />
-                ) : (
-                  "Submit"
-                )}
+                "Submit"
               </Button>
-              {error && <p className="text-red-500">{error}</p>}
-            </Form>
+              {status !== "pending" && status && (
+                <p className="text-red-500">{status.error}</p>
+              )}
+            </form>
           </div>
         </Drawer.Content>
       </Drawer.Portal>

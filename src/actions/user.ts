@@ -7,7 +7,9 @@ import { CreateNewUserArgs } from "../../convex/types";
 
 const signatureService = new SignatureService();
 
-export async function createNewUser(formData: FormData) {
+export async function createNewUser(
+  formData: FormData,
+): Promise<string | null> {
   const clerkId = formData.get("clerkId")?.toString();
   const school = formData.get("school")?.toString();
   const major = formData.get("major")?.toString();
