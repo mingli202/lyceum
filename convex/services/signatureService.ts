@@ -5,7 +5,7 @@ export class SignatureService {
   #publicKey?: CryptoKey;
   #privateKey?: CryptoKey;
 
-  async sign(data: string): Promise<string> {
+  public async sign<T>(data: T): Promise<string> {
     if (!this.#privateKey) {
       this.#privateKey = await crypto.subtle.importKey(
         "pkcs8",
@@ -16,18 +16,20 @@ export class SignatureService {
       );
     }
 
+    const encodedData = btoa(JSON.stringify(data));
+
     const signature = await crypto.subtle.sign(
       { name: "RSA-PSS", saltLength: 32 },
       this.#privateKey,
-      new TextEncoder().encode(data),
+      new TextEncoder().encode(encodedData),
     );
 
     const base64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
 
-    return base64;
+    return `${encodedData}.${base64}`;
   }
 
-  async verify(base64Signature: string, data: string): Promise<boolean> {
+  public async verify<T>(signature: string): Promise<T> {
     if (!this.#publicKey) {
       this.#publicKey = await crypto.subtle.importKey(
         "spki",
@@ -38,15 +40,23 @@ export class SignatureService {
       );
     }
 
-    const signature = Uint8Array.from(atob(base64Signature), (c) =>
+    const [base64data, base64Signature] = signature.split(".");
+    const signatureBytes = Uint8Array.from(atob(base64Signature), (c) =>
       c.charCodeAt(0),
     );
 
-    return await crypto.subtle.verify(
+    const isValid = await crypto.subtle.verify(
       { name: "RSA-PSS", saltLength: 32 },
       this.#publicKey,
-      signature,
-      new TextEncoder().encode(data),
+      signatureBytes,
+      new TextEncoder().encode(base64data),
     );
+
+    if (!isValid) {
+      throw new Error("Invalid signature");
+    }
+
+    const decodedData = JSON.parse(atob(base64data)) as T;
+    return decodedData;
   }
 }
