@@ -1,14 +1,7 @@
-import { TokenService } from "../convex/services/tokenService";
-
 export async function test() {
-  const tokenService = await TokenService.new();
-  const token = await tokenService.sign({
-    userId: "1",
-    privileges: [],
-  });
+  const t = "asdf";
 
-  const payload = await tokenService.verify(token);
-  console.log("payload:", payload);
+  console.log(JSON.stringify(t));
 }
 
 test();
