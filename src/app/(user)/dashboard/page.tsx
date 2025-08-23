@@ -19,11 +19,11 @@ const _placeHolderData: DashboardData = {
 // TODO: transition animations instead of loading spinner
 export default async function DashboardPage() {
   const { userId } = await auth();
-  const body = JSON.stringify({ clerkId: userId });
+  const body = { clerkId: userId };
   const signature = await new SignatureService().sign(body);
 
   const data = await fetchQuery(api.queries.getDashboardData, {
-    signature: `${body}.${signature}`,
+    signature,
   });
 
   return <Dashboard data={data} />;
