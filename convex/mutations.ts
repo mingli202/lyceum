@@ -77,7 +77,7 @@ export const createNewUser = mutation({
 
       major: args.major,
       school: args.school,
-      username: args.username,
+      username: args.username.replace(/\s/g, "_"),
       bio: args.bio,
       city: args.city,
       academicYear: args.academicYear,
