@@ -24,14 +24,14 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
 
       const email = user.primaryEmailAddress?.emailAddress;
       const imageUrl = user.imageUrl;
-      const userId = user.id;
+      const clerkId = user.id;
 
       if (!email) {
         return "Please set your email address";
       }
 
       formData.set("email", email);
-      formData.set("userId", userId);
+      formData.set("clerkId", clerkId);
 
       if (imageUrl) {
         formData.set("pictureUrl", imageUrl);

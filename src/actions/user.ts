@@ -8,7 +8,7 @@ import { CreateNewUserArgs } from "../../convex/mutations";
 const signatureService = new SignatureService();
 
 export async function createNewUser(formData: FormData) {
-  const userId = formData.get("userId")?.toString();
+  const clerkId = formData.get("clerkId")?.toString();
   const school = formData.get("school")?.toString();
   const major = formData.get("major")?.toString();
   const firstName = formData.get("first-name")?.toString();
@@ -27,14 +27,14 @@ export async function createNewUser(formData: FormData) {
     !username ||
     !academicYear ||
     !email ||
-    !userId
+    !clerkId
   ) {
     console.log("email:", email);
     return "Please fill out all required fields";
   }
 
   const body: Omit<CreateNewUserArgs, "signature"> = {
-    userId,
+    clerkId,
     school,
     major,
     firstName,
@@ -47,12 +47,10 @@ export async function createNewUser(formData: FormData) {
     bio,
   };
 
-  const bodyStr = btoa(JSON.stringify(body));
-
-  const signature = await signatureService.sign(bodyStr);
+  const signature = await signatureService.sign(body);
 
   return await fetchMutation(api.mutations.createNewUser, {
     ...body,
-    signature: `${bodyStr}.${signature}`,
+    signature,
   }).catch(() => "Oops, something went wrong");
 }
