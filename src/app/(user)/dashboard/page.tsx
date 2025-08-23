@@ -1,13 +1,12 @@
-"use client";
-
-import { useQuery } from "convex/react";
 import Dashboard from "./Dashboard";
-import { LoadingSpinner } from "@/components/ui";
 import { api } from "../../../../convex/_generated/api";
 import { DashboardData } from "../../../../convex/types";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { fetchQuery } from "convex/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { SignatureService } from "../../../../convex/services/signatureService";
 
-const placeHolderData: DashboardData = {
+const _placeHolderData: DashboardData = {
   classesInfo: Array(40).fill({
     code: "CSCI-101",
     title: "Introduction to Computer Science",
@@ -18,13 +17,14 @@ const placeHolderData: DashboardData = {
 };
 
 // TODO: transition animations instead of loading spinner
-export default function DashboardPage() {
-  const data = useQuery(api.queries.getDashboardData, {});
+export default async function DashboardPage() {
+  const { userId } = await auth();
+  const body = JSON.stringify({ clerkId: userId });
+  const signature = await new SignatureService().sign(body);
 
-  if (!data) {
-    return <LoadingSpinner />;
-  }
-  console.log({ data });
+  const data = await fetchQuery(api.queries.getDashboardData, {
+    signature: `${body}.${signature}`,
+  });
 
   return <Dashboard data={data} />;
 }
