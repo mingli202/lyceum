@@ -2,7 +2,8 @@ import { internalQuery, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
-import { Class, DashboardData } from "./types";
+import { DashboardData, User } from "./types";
+import schema from "./schema";
 
 export const getUserIdFromClerkId = internalQuery({
   returns: v.union(v.id("users"), v.null()),
@@ -21,6 +22,31 @@ export const getUserIdFromClerkId = internalQuery({
       .unique();
 
     return user?._id ?? null;
+  },
+});
+
+export const getUser = query({
+  returns: v.union(
+    v.object({
+      ...schema.tables.users.validator.fields,
+      _id: v.id("users"),
+      _creationTime: v.float64(),
+    }),
+    v.literal("N/A"),
+  ),
+  handler: async (ctx, _args): Promise<User | "N/A"> => {
+    const userId = await ctx.runQuery(
+      internal.queries.getUserIdFromClerkId,
+      {},
+    );
+
+    if (!userId) {
+      return "N/A";
+    }
+
+    const user = await ctx.db.get(userId);
+
+    return user ?? "N/A";
   },
 });
 
