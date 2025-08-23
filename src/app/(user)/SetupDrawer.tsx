@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
 import { Drawer } from "vaul";
 import { createNewUser } from "@/actions/user";
+import useFormState from "@/hooks/useFormState";
 
 type SetupDrawerProps = {
   open: boolean;
@@ -10,30 +10,20 @@ type SetupDrawerProps = {
 export default function SetupDrawer({ open }: SetupDrawerProps) {
   const user = useUser().user;
 
-  const [status, setStatus] = useState<{ error: string } | "pending" | null>(
-    null,
-  );
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    if (status === "pending") {
+  const [error, handleSubmit, isPending] = useFormState(async (e) => {
+    if (isPending) {
       return;
     }
-
     if (!user) {
-      return setStatus({ error: "Login expired. Sigin again" });
+      return "Login expired. Sigin again";
     }
-
     const email = user.primaryEmailAddress?.emailAddress;
     const imageUrl = user.imageUrl;
     const clerkId = user.id;
 
     if (!email) {
-      return setStatus({ error: "Please set your email address" });
+      return "Please set your email address";
     }
-
-    setStatus("pending");
 
     const formData = new FormData(e.currentTarget);
 
@@ -43,12 +33,8 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
     if (imageUrl) {
       formData.set("pictureUrl", imageUrl);
     }
-    const res = await createNewUser(formData);
-
-    if (res) {
-      setStatus({ error: res });
-    }
-  }
+    return await createNewUser(formData);
+  });
 
   return (
     <Drawer.Root open={open} dismissible={false}>
@@ -175,13 +161,11 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
                 variant="special"
                 type="submit"
                 className="flex items-center justify-center"
-                isPending={status === "pending"}
+                isPending={isPending}
               >
                 "Submit"
               </Button>
-              {status !== "pending" && status && (
-                <p className="text-red-500">{status.error}</p>
-              )}
+              {error && <p className="text-red-500">{error}</p>}
             </form>
           </div>
         </Drawer.Content>

@@ -1,9 +1,10 @@
 import { addClass } from "@/actions/class";
 import { Button, LoadingSpinner } from "@/components/ui";
 import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Drawer } from "vaul";
 import schema from "../../../../convex/schema";
+import useFormState from "@/hooks/useFormState";
 
 type ClassTime =
   (typeof schema.tables.classes.validator.fields.classTimes.type)[0];
@@ -19,26 +20,16 @@ export default function AddClassDrawer() {
 
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    setIsPending(true);
-    setError(null);
-
+  const [error, handleSubmit, isPending] = useFormState(async (e) => {
     const formData = new FormData(e.currentTarget);
     const res = await addClass(formData, classTimes);
 
     if (res) {
-      setError(res);
+      return res;
     } else {
       closeButtonRef.current?.click();
     }
-
-    setIsPending(false);
-  }
+  });
 
   return (
     <div className="flex gap-4">
