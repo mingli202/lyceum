@@ -16,9 +16,12 @@ import { usePathname } from "next/navigation";
 import { api } from "../../../convex/_generated/api";
 import { useEffect, useState } from "react";
 import SetupDrawer from "./SetupDrawer";
+import { useAuth } from "@clerk/nextjs";
 
 export default function NavBar() {
   const user = useQuery(api.queries.getUser, {});
+
+  const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -66,6 +69,7 @@ export default function NavBar() {
             }
           />
         </div>
+        <button onClick={() => signOut()}>Sign Out</button>
       </section>
       <SetupDrawer open={open} />
     </>
