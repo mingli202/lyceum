@@ -1,41 +1,27 @@
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
-import { authorize } from "./utils";
-
-export const CreateNewUserArgs = v.object({
-  signature: v.optional(v.string()),
-  school: v.string(),
-  major: v.string(),
-  firstName: v.string(),
-  lastName: v.optional(v.string()),
-  username: v.string(),
-  academicYear: v.number(),
-  city: v.optional(v.string()),
-  email: v.string(),
-  pictureUrl: v.optional(v.string()),
-  userId: v.string(),
-  bio: v.optional(v.string()),
-});
-export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
+import { internalMutation, mutation } from "./_generated/server";
+import { authorize, getUserFromClerkId } from "./utils";
+import { internal } from "./_generated/api";
+import { AddClassArgs, CreateNewUserArgs } from "./types";
 
 export const createNewUser = mutation({
   args: CreateNewUserArgs,
   returns: v.literal("ok"),
   handler: async (ctx, args) => {
-    await authorize(ctx, args.signature);
+    const clerkId = await authorize(ctx, args.signature);
 
     if (
       await ctx.db
         .query("users")
-        .withIndex("by_clerkId", (q) => q.eq("clerkId", args.userId))
+        .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
         .unique()
-        .catch(() => null)
+        .catch(() => true)
     ) {
       throw new Error("User already exists or error");
     }
 
     const userId = await ctx.db.insert("users", {
-      clerkId: args.userId,
+      clerkId: args.clerkId,
       privileges: [],
       givenName: args.firstName,
       familyName: args.lastName,
@@ -49,7 +35,6 @@ export const createNewUser = mutation({
       followers: [],
       clubs: [],
       chats: [],
-      classes: [],
 
       major: args.major,
       school: args.school,
@@ -63,50 +48,66 @@ export const createNewUser = mutation({
   },
 });
 
-export const createNewClass = mutation({
-  args: {
-    code: v.string(),
-    student: v.id("users"),
-    title: v.string(),
-    professor: v.string(),
-    university: v.string(),
-    semester: v.union(
-      v.literal("Summer"),
-      v.literal("Fall"),
-      v.literal("Winter"),
-    ),
-    year: v.number(),
-    credits: v.number(),
-    classTimes: v.array(
-      v.object({
-        day: v.union(
-          v.literal("Monday"),
-          v.literal("Tuesday"),
-          v.literal("Wednesday"),
-          v.literal("Thursday"),
-          v.literal("Friday"),
-          v.literal("Saturday"),
-          v.literal("Sunday"),
-        ),
-        start: v.string(),
-        end: v.string(),
-      }),
-    ),
-  },
+export const addClass = mutation({
+  args: AddClassArgs,
   handler: async (ctx, args) => {
-    const newChat = await ctx.db.insert("chats", {
-      title: `${args.title} Chat`,
-      members: [args.student],
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const classId = await ctx.runMutation(internal.mutations.createNewClass, {
+      ...args,
+      userId: user._id,
+    });
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .unique();
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    await ctx.db.insert("userClassInfo", {
+      userId: user._id,
+      classId,
+      targetGrade: args.targetGrade,
+      tasks: [],
+    });
+  },
+});
+
+export const createNewClass = internalMutation({
+  args: v.object({
+    ...AddClassArgs.fields,
+    userId: v.id("users"),
+  }),
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .unique();
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    const chatId = await ctx.db.insert("chats", {
+      title: `${args.title}'s Chat`,
+      members: [args.userId],
     });
 
     const classId = await ctx.db.insert("classes", {
       code: args.code,
-      chat: newChat,
-      students: [args.student],
+      chat: chatId,
+      students: [args.userId],
 
       title: args.title,
       professor: args.professor,
-      university: args.university,
+      school: profile.school,
       semester: args.semester,
       year: args.year,
       credits: args.credits,
