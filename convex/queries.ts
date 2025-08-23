@@ -4,17 +4,13 @@ import { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { DashboardData, User } from "./types";
 import schema from "./schema";
+import { authorize } from "./utils";
 
 export const getUserIdFromClerkId = internalQuery({
+  args: { signature: v.optional(v.string()) },
   returns: v.union(v.id("users"), v.null()),
-  handler: async (ctx, _args): Promise<Id<"users"> | null> => {
-    const userIdentity = await ctx.auth.getUserIdentity();
-
-    if (!userIdentity?.["user_id"]) {
-      throw new Error("Unautenticated");
-    }
-
-    const clerkId = userIdentity["user_id"] as string;
+  handler: async (ctx, args): Promise<Id<"users"> | null> => {
+    const clerkId = await authorize(ctx, args.signature);
 
     const user = await ctx.db
       .query("users")
@@ -26,6 +22,7 @@ export const getUserIdFromClerkId = internalQuery({
 });
 
 export const getUser = query({
+  args: v.object({ signature: v.optional(v.string()) }),
   returns: v.union(
     v.object({
       ...schema.tables.users.validator.fields,
@@ -34,10 +31,10 @@ export const getUser = query({
     }),
     v.literal("N/A"),
   ),
-  handler: async (ctx, _args): Promise<User | "N/A"> => {
+  handler: async (ctx, args): Promise<User | "N/A"> => {
     const userId = await ctx.runQuery(
       internal.queries.getUserIdFromClerkId,
-      {},
+      args,
     );
 
     if (!userId) {
@@ -51,32 +48,31 @@ export const getUser = query({
 });
 
 export const getDashboardData = query({
+  args: { signature: v.string() },
   returns: DashboardData,
-  handler: async (ctx, _args): Promise<DashboardData> => {
-    const noInfo = { classesInfo: [] };
+  handler: async (ctx, args): Promise<DashboardData> => {
+    const userId = await ctx.runQuery(
+      internal.queries.getUserIdFromClerkId,
+      args,
+    );
 
-    const userId = await ctx
-      .runQuery(internal.queries.getUserIdFromClerkId, {})
-      .catch(() => null);
+    const noInfo = { classesInfo: [] };
 
     if (!userId) {
       return noInfo;
     }
 
-    const profile = await ctx.db
-      .query("profiles")
+    const classesInfo = await ctx.db
+      .query("userClassInfo")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .unique();
-
-    if (!profile) {
-      return noInfo;
-    }
+      .collect();
 
     let average = 0;
 
     const classes: DashboardData["classesInfo"] = (
       await Promise.all(
-        profile.classes.map(async (classId) => {
+        classesInfo.map(async (cl) => {
+          const classId = cl.classId;
           const classInfo = await ctx.db.get(classId);
 
           if (!classInfo) {

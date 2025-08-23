@@ -49,7 +49,9 @@ export default defineSchema({
     classId: v.id("classes"),
     targetGrade: v.number(),
     tasks: v.array(v.id("userTasks")),
-  }),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_classId", ["userId", "classId"]),
 
   userTasks: defineTable({
     userId: v.id("users"),
@@ -77,7 +79,6 @@ export default defineSchema({
     followers: v.array(v.id("users")),
     clubs: v.array(v.id("clubs")),
     chats: v.array(v.id("chats")),
-    classes: v.array(v.id("classes")),
 
     major: v.string(),
     school: v.string(),
