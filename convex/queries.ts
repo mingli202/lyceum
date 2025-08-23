@@ -58,7 +58,7 @@ export const getDashboardData = query({
 
     const classesInfo = await ctx.db
       .query("userClassInfo")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .collect();
 
     let average = 0;
@@ -76,7 +76,7 @@ export const getDashboardData = query({
           const userTasks = await ctx.db
             .query("userTasks")
             .withIndex("by_userId_classId", (q) =>
-              q.eq("userId", userId).eq("classId", classId),
+              q.eq("userId", user._id).eq("classId", classId),
             )
             .collect();
 

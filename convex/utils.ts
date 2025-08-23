@@ -59,7 +59,7 @@ export async function getUserFromClerkId(
     | GenericActionCtx<DataModel>,
   args: any & { signature: string },
 ): Promise<User | null> {
-  return await ctx.runQuery(internal.queries.getUserFromClerkId, {
+  return await ctx.runQuery(internal.queries._getUserFromClerkId, {
     signature: args.signature,
   });
 }
