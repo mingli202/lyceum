@@ -120,9 +120,40 @@ export const PostPreviewInfo = v.object({
   imageUrl: v.optional(v.string()),
 });
 
+export const ClubUserStatus = v.union(
+  v.literal("admin"),
+  v.literal("member"),
+  v.literal("following"),
+);
+
+export const ClubCategory = v.union(
+  v.literal("Academic"),
+  v.literal("Social"),
+  v.literal("Sports"),
+  v.literal("Cultural"),
+  v.literal("Recreational"),
+  v.literal("Arts"),
+  v.literal("Volunteer"),
+  v.literal("Other"),
+);
+
+export const ClubPreviewInfo = v.object({
+  clubId: v.id("clubs"),
+  imageUrl: v.optional(v.string()),
+  name: v.string(),
+  category: ClubCategory,
+  nMembers: v.number(),
+  status: ClubUserStatus,
+  description: v.string(),
+  isPrivate: v.boolean(),
+});
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
 export type AddClassArgs = typeof AddClassArgs.type;
 export type ProfileData = typeof ProfileData.type;
 export type PostPreviewInfo = typeof PostPreviewInfo.type;
+export type ClubPreviewInfo = typeof ClubPreviewInfo.type;
+export type ClubCategory = typeof ClubCategory.type;
+export type ClubUserStatus = typeof ClubUserStatus.type;

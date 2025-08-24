@@ -3,8 +3,9 @@ import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
   ClassInfo,
+  ClubPreviewInfo,
+  ClubUserStatus,
   DashboardData,
-  Post,
   PostPreviewInfo,
   ProfileData,
   User,
@@ -248,33 +249,57 @@ export const getUserClasses = query({
 
 export const getUserClubs = query({
   args: { signature: v.optional(v.string()) },
-  returns: v.array(
-    v.object({
-      ...schema.tables.clubs.validator.fields,
-      _creationTime: v.number(),
-      _id: v.id("clubs"),
-    }),
-  ),
-  handler: async (
-    ctx,
-    args,
-  ): Promise<
-    (typeof schema.tables.clubs.validator.type & {
-      _creationTime: number;
-      _id: Id<"clubs">;
-    })[]
-  > => {
+  returns: v.array(ClubPreviewInfo),
+  handler: async (ctx, args): Promise<ClubPreviewInfo[]> => {
     const user = await getUserFromClerkId(ctx, args);
 
     if (!user) {
       return [];
     }
 
-    const clubs = await ctx.db
-      .query("clubs")
+    const profile = await ctx.db
+      .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
-      .collect();
+      .unique();
 
-    return clubs.sort((a, b) => b._creationTime - a._creationTime);
+    if (!profile) {
+      return [];
+    }
+
+    const clubsPreviewInfo: ClubPreviewInfo[] = (
+      await Promise.all(
+        profile.clubs.map(async (clubId) => {
+          const club = await ctx.db.get(clubId);
+          if (!club) {
+            return null;
+          }
+
+          let status: ClubUserStatus;
+
+          if (club.adminId === user._id) {
+            status = "admin";
+          } else if (club.members.includes(user._id)) {
+            status = "member";
+          } else {
+            status = "following";
+          }
+
+          const clubPreviewInfo: ClubPreviewInfo = {
+            category: club.category,
+            clubId: club._id,
+            description: club.description,
+            imageUrl: club.imageUrl,
+            name: club.name,
+            isPrivate: club.isPrivate,
+            nMembers: club.members.length,
+            status,
+          };
+
+          return clubPreviewInfo;
+        }),
+      )
+    ).filter((club) => club !== null);
+
+    return clubsPreviewInfo;
   },
 });

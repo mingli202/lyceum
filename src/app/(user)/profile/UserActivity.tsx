@@ -1,4 +1,5 @@
 import { Button, ClassCard, PostCard } from "@/components";
+import { ClubCard } from "@/components/ClubCard";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
@@ -16,7 +17,7 @@ type Tab = RecordValues<typeof Tab>;
 export default function UserActivity() {
   const posts = useQuery(api.queries.getUserPosts, {});
   const classes = useQuery(api.queries.getUserClasses, {});
-  // const clubs = useQuery(api.queries.getUserClubs, {});
+  const clubs = useQuery(api.queries.getUserClubs, {});
 
   const [selectedTab, setSelectedTab] = useState<Tab>(Tab.Posts);
 
@@ -45,6 +46,13 @@ export default function UserActivity() {
         <div className="flex w-full flex-col gap-2">
           {posts?.map((post) => (
             <PostCard post={post} key={post.postId} />
+          ))}
+        </div>
+      )}
+      {selectedTab === "Clubs" && (
+        <div className="flex w-full flex-col gap-2">
+          {clubs?.map((club) => (
+            <ClubCard club={club} key={club.clubId} />
           ))}
         </div>
       )}
