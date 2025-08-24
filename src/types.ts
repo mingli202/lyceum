@@ -1,5 +1,8 @@
 import z from "zod";
 
+export type RecordValues<T extends Record<string | number | symbol, unknown>> =
+  T[keyof T];
+
 export type Credentials = {
   email: string;
   password: string;
