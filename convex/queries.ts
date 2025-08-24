@@ -87,7 +87,7 @@ export const getDashboardData = query({
                 (task.scoreTotal === 0 ||
                 (task.status !== "active" && task.status !== "completed")
                   ? 0
-                  : task.scoreTotal / task.scoreTotal),
+                  : task.scoreObtained / task.scoreTotal),
             0,
           );
 

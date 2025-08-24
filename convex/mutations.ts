@@ -99,12 +99,26 @@ export const addClass = mutation({
       });
     }
 
-    await ctx.db.insert("userClassInfo", {
+    const classInfoId = await ctx.db.insert("userClassInfo", {
       userId: user._id,
       classId,
       targetGrade: args.targetGrade,
-      tasks: [],
     });
+
+    for (const task of args.tasks) {
+      await ctx.db.insert("userTasks", {
+        classId,
+        userId: user._id,
+        description: task.desc,
+        dueDate: task.dueDate,
+        name: task.name,
+        status: "active",
+        scoreObtained: 0,
+        scoreTotal: 100,
+        weight: task.weight,
+        userClassInfo: classInfoId,
+      });
+    }
 
     return "ok" as const;
   },
