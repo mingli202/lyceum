@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, Button } from "@/components";
+import { Button } from "@/components";
 import { cn } from "@/utils/cn";
 import { useQuery } from "convex/react";
 import {
