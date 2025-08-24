@@ -1,0 +1,45 @@
+{
+  "title": "Sociology 235: Technology & Society",
+  "code": "SOCI 235",
+  "professor": "Prof. Skyler Wang",
+  "semester": "Winter",
+  "credits": 0,
+  "tasks": [
+    {
+      "name": "Midterm exam",
+      "dueDate": "2025-02-26",
+      "weight": 30,
+      "desc": "In-class midterm with four short essay questions covering content from the first half of the course."
+    },
+    {
+      "name": "Tech critique memo",
+      "dueDate": "2025-03-14",
+      "weight": 20,
+      "desc": "Three-page critique of a digital platform after at least three days of use; includes evidence-based design/interface suggestions. (Due Mar 14 by 11:59 PM)"
+    },
+    {
+      "name": "Final research paper",
+      "dueDate": "2025-04-18",
+      "weight": 40,
+      "desc": "Empirical paper (5–7 pages) requiring primary data collection (content analysis, surveys, interviews, or ethnography). (Due Apr 18 by 11:59 PM)"
+    },
+    {
+      "name": "Exit tickets",
+      "dueDate": "3000-01-01",
+      "weight": 10,
+      "desc": "Quick 5-minute MyCourses quizzes given at end of class; each exit ticket worth 5% and two completed equal full 10%. Dates are random (administered three times per semester)."
+    }
+  ],
+  "classTimes": [
+    {
+      "day": "Monday",
+      "start": "08:35:00+00:00",
+      "end": "09:55:00+00:00"
+    },
+    {
+      "day": "Wednesday",
+      "start": "08:35:00+00:00",
+      "end": "09:55:00+00:00"
+    }
+  ]
+}
