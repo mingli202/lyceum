@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
-import schema from "./schema";
 
 export type User = Doc<"users">;
 export type Class = Doc<"classes">;
@@ -16,19 +15,18 @@ export type Club = Doc<"clubs">;
 export type Chat = Doc<"chats">;
 export type Message = Doc<"messages">;
 
+export const ClassInfo = v.object({
+  code: v.string(),
+  title: v.string(),
+  professor: v.string(),
+  classId: v.id("classes"),
+  grade: v.number(),
+});
+
 export const DashboardData = v.object({
-  classesInfo: v.array(
-    v.object({
-      code: v.string(),
-      title: v.string(),
-      professor: v.string(),
-      _id: v.id("classes"),
-      grade: v.number(),
-    }),
-  ),
+  classesInfo: v.array(ClassInfo),
   average: v.optional(v.number()),
 });
-export type DashboardData = typeof DashboardData.type;
 
 export const CreateNewUserArgs = v.object({
   signature: v.optional(v.string()),
@@ -44,7 +42,6 @@ export const CreateNewUserArgs = v.object({
   bio: v.optional(v.string()),
   clerkId: v.string(),
 });
-export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
 
 export const AddClassArgs = v.object({
   signature: v.optional(v.string()),
@@ -83,7 +80,6 @@ export const AddClassArgs = v.object({
     }),
   ),
 });
-export type AddClassArgs = typeof AddClassArgs.type;
 
 export const ProfileData = v.object({
   profileUrl: v.optional(v.string()),
@@ -100,4 +96,34 @@ export const ProfileData = v.object({
   followers: v.array(v.id("users")),
   following: v.array(v.id("users")),
 });
+
+export const PostPreviewInfo = v.object({
+  postId: v.id("posts"),
+  author: v.object({
+    authorId: v.id("users"),
+    pictureUrl: v.optional(v.string()),
+    firstName: v.string(),
+    lastName: v.optional(v.string()),
+    username: v.string(),
+  }),
+  nComments: v.number(),
+  nReplies: v.number(),
+  nLikes: v.number(),
+  clubInfo: v.union(
+    v.object({
+      clubName: v.string(),
+      private: v.boolean(),
+    }),
+    v.null(),
+  ),
+  createdAt: v.number(),
+  description: v.string(),
+  imageUrl: v.optional(v.string()),
+});
+
+export type ClassInfo = typeof ClassInfo.type;
+export type DashboardData = typeof DashboardData.type;
+export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
+export type AddClassArgs = typeof AddClassArgs.type;
 export type ProfileData = typeof ProfileData.type;
+export type PostPreviewInfo = typeof PostPreviewInfo.type;
