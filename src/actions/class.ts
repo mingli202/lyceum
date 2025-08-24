@@ -285,10 +285,16 @@ export async function addClassFromSyllabus(file: File) {
     tasks,
   };
 
-  const signature = await new SignatureService().sign({
-    ...body,
-    clerkId: userId,
-  });
+  const signature = await new SignatureService()
+    .sign({
+      ...body,
+      clerkId: userId,
+    })
+    .catch(() => null);
+
+  if (!signature) {
+    return "Something went wrong, please try again";
+  }
 
   return await fetchMutation(api.mutations.addClass, {
     ...body,
