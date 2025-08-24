@@ -1,9 +1,17 @@
 import { internalQuery, query } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
-import { DashboardData, User } from "./types";
+import {
+  ClassInfo,
+  DashboardData,
+  Post,
+  PostPreviewInfo,
+  ProfileData,
+  User,
+} from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
+import { Id } from "./_generated/dataModel";
 
 export const _getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
@@ -24,6 +32,30 @@ export const _getUserFromClerkId = internalQuery({
       .unique();
 
     return user;
+  },
+});
+
+export const _getUserClassAverageGrade = internalQuery({
+  args: { classId: v.id("classes"), userId: v.id("users") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const tasks = await ctx.db
+      .query("userTasks")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", args.userId).eq("classId", args.classId),
+      )
+      .collect();
+
+    let totalWeight = 0;
+
+    const grade = tasks.reduce((acc, task) => {
+      totalWeight += task.weight;
+      return acc + task.scoreTotal === 0
+        ? 0
+        : (task.weight * task.scoreObtained) / task.scoreTotal;
+    }, 0);
+
+    return grade / totalWeight;
   },
 });
 
@@ -48,67 +80,201 @@ export const getDashboardData = query({
   args: { signature: v.optional(v.string()) },
   returns: DashboardData,
   handler: async (ctx, args): Promise<DashboardData> => {
+    const classes: ClassInfo[] = await ctx.runQuery(
+      api.queries.getUserClasses,
+      { signature: args.signature },
+    );
+
+    return {
+      classesInfo: classes,
+      average:
+        classes.length === 0
+          ? undefined
+          : classes.reduce((acc, classInfo) => {
+              return acc + classInfo.grade;
+            }, 0) / classes.length,
+    };
+  },
+});
+
+export const getProfileData = query({
+  args: { signature: v.optional(v.string()) },
+  returns: ProfileData,
+  handler: async (ctx, args): Promise<ProfileData> => {
     const user = await getUserFromClerkId(ctx, args);
 
-    const noInfo = { classesInfo: [] };
-
     if (!user) {
-      return noInfo;
+      throw new Error("User not found");
     }
 
-    const classesInfo = await ctx.db
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .unique();
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    const profileData: ProfileData = {
+      school: profile.school,
+      major: profile.major,
+      firstName: user.givenName,
+      lastName: user.familyName,
+      username: profile.username,
+      academicYear: profile.academicYear,
+      city: profile.city,
+      email: user.email,
+      pictureUrl: user.pictureUrl,
+      bio: profile.bio,
+      followers: profile.followers,
+      following: profile.following,
+    };
+
+    return profileData;
+  },
+});
+
+export const getUserPosts = query({
+  args: { signature: v.optional(v.string()) },
+  returns: v.array(PostPreviewInfo),
+  handler: async (ctx, args): Promise<PostPreviewInfo[]> => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      return [];
+    }
+
+    const posts = await ctx.db
+      .query("posts")
+      .withIndex("by_authorId", (q) => q.eq("authorId", user._id))
+      .collect();
+
+    const postsInfo = await Promise.all(
+      posts.map(async (post) => {
+        const author = await ctx.db.get(post.authorId);
+        const authorProfile = await ctx.db
+          .query("profiles")
+          .withIndex("by_userId", (q) => q.eq("userId", post.authorId))
+          .unique();
+
+        if (!author || !authorProfile) {
+          return null;
+        }
+
+        const clubInfo = post.club
+          ? {
+              clubName: (await ctx.db.get(post.club.id))?.name ?? "N/A",
+              private: post.club.private,
+            }
+          : null;
+
+        const postPreviewInfo: PostPreviewInfo = {
+          postId: post._id,
+          author: {
+            authorId: post.authorId,
+            pictureUrl: author.pictureUrl,
+            firstName: author.givenName,
+            lastName: author.familyName,
+            username: authorProfile.username,
+          },
+          nComments: (
+            await ctx.db
+              .query("comments")
+              .withIndex("by_postId", (q) => q.eq("postId", post._id))
+              .collect()
+          ).length,
+          nReplies: (
+            await ctx.db
+              .query("replies")
+              .withIndex("by_postId", (q) => q.eq("postId", post._id))
+              .collect()
+          ).length,
+          nLikes: post.likes.length,
+          createdAt: post._creationTime,
+          clubInfo,
+          description: post.description,
+          imageUrl: post.imageUrl,
+        };
+
+        return postPreviewInfo;
+      }),
+    );
+
+    return postsInfo.filter((postInfo) => postInfo !== null);
+  },
+});
+
+export const getUserClasses = query({
+  args: { signature: v.optional(v.string()) },
+  returns: v.array(ClassInfo),
+  handler: async (ctx, args): Promise<ClassInfo[]> => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      return [];
+    }
+
+    const userClassesInfo = await ctx.db
       .query("userClassInfo")
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .collect();
 
-    let average = 0;
-
-    const classes: DashboardData["classesInfo"] = (
+    return (
       await Promise.all(
-        classesInfo.map(async (cl) => {
-          const classId = cl.classId;
+        userClassesInfo.map(async (userClassInfo) => {
+          const classId = userClassInfo.classId;
           const classInfo = await ctx.db.get(classId);
 
           if (!classInfo) {
             return null;
           }
 
-          const userTasks = await ctx.db
-            .query("userTasks")
-            .withIndex("by_userId_classId", (q) =>
-              q.eq("userId", user._id).eq("classId", classId),
-            )
-            .collect();
-
-          const grade = userTasks.reduce(
-            (acc, task) =>
-              acc +
-              task.weight *
-                (task.scoreTotal === 0 ||
-                (task.status !== "active" && task.status !== "completed")
-                  ? 0
-                  : task.scoreObtained / task.scoreTotal),
-            0,
-          );
-
-          average += grade;
-
           return {
             code: classInfo.code,
             title: classInfo.title,
             professor: classInfo.professor,
-            _id: classInfo._id,
-            grade,
+            classId: classInfo._id,
+            grade: await ctx.runQuery(
+              internal.queries._getUserClassAverageGrade,
+              { classId: classInfo._id, userId: user._id },
+            ),
           };
         }),
       )
     ).filter((classInfo) => classInfo !== null);
+  },
+});
 
-    average /= classes.length;
+export const getUserClubs = query({
+  args: { signature: v.optional(v.string()) },
+  returns: v.array(
+    v.object({
+      ...schema.tables.clubs.validator.fields,
+      _creationTime: v.number(),
+      _id: v.id("clubs"),
+    }),
+  ),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<
+    (typeof schema.tables.clubs.validator.type & {
+      _creationTime: number;
+      _id: Id<"clubs">;
+    })[]
+  > => {
+    const user = await getUserFromClerkId(ctx, args);
 
-    return {
-      classesInfo: classes,
-      average,
-    };
+    if (!user) {
+      return [];
+    }
+
+    const clubs = await ctx.db
+      .query("clubs")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .collect();
+
+    return clubs.sort((a, b) => b._creationTime - a._creationTime);
   },
 });

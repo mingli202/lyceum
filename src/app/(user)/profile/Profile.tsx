@@ -44,6 +44,7 @@ export default function Profile({ data }: ProfileProps) {
             <span>{data.major}</span>
           </div>
         </div>
+        {data.bio && <div>{data.bio}</div>}
         <UserActivity />
       </section>
     </div>
