@@ -1,28 +1,8 @@
-import { Id } from "@convex/_generated/dataModel";
 import { PostPreviewInfo } from "@convex/types";
 import { Heart, Link, MessageCircle } from "lucide-react";
 import { ProfilePicture } from "./ProfilePicture";
 
-export function PostCard({ post }: { post?: PostPreviewInfo }) {
-  const postPlaceholder: PostPreviewInfo = {
-    author: {
-      authorId: "placeholder" as Id<"users">,
-      pictureUrl: undefined,
-      firstName: "Placeholder",
-      lastName: "Placeholder",
-      username: "Placeholder",
-    },
-    nComments: 0,
-    nReplies: 0,
-    nLikes: 0,
-    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 30,
-    clubInfo: null,
-    postId: "placeholder" as Id<"posts">,
-    description:
-      "lorem ipsum dolor sit amet consectetur adipisicing elit. fugiat, quidem doloremque, voluptate, dolores, quos, aspernatur, voluptas, fugit, consequuntur, labore, eaque, quaerat, quis, accusamus, velit, inventore, delectus\n\nasdfwerwe\naweoriu",
-  };
-  post = postPlaceholder;
-
+export function PostCard({ post }: { post: PostPreviewInfo }) {
   function parseTimestamp(timestamp: number): string {
     const nowMs = Date.now();
 

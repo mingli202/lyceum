@@ -13,7 +13,6 @@ export default async function DashboardPage() {
   const data = await fetchQuery(api.queries.getDashboardData, {
     signature,
   });
-  console.log("data:", data);
 
   return <Dashboard data={data} />;
 }

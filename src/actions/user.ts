@@ -31,7 +31,6 @@ export async function createNewUser(
     !email ||
     !clerkId
   ) {
-    console.log("email:", email);
     return "Please fill out all required fields";
   }
 

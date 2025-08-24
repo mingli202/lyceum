@@ -34,7 +34,7 @@ export class SignatureService {
     try {
       encodedData = this._encode64(dataString);
     } catch (e) {
-      console.log(dataString);
+      console.error(dataString);
       throw e;
     }
 

@@ -48,9 +48,7 @@ export async function parseSyllabus() {
     clerkId: "user_31bpzQbHe9yDHOw0CjbeLhCxbYc",
   };
 
-  btoa("5–7 pages");
-  // console.log(JSON.stringify(data));
-  // console.log(btoa(JSON.stringify(data)));
+  btoa(new TextEncoder().encode("5–7 pages").join(""));
 }
 
 parseSyllabus();
