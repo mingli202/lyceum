@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components";
 import { ProfileData } from "@convex/types";
 import { GraduationCap, School } from "lucide-react";
@@ -8,8 +6,9 @@ import { ProfilePicture } from "@/components/ProfilePicture";
 
 type ProfileProps = {
   data: ProfileData;
+  currentClerkId: string;
 };
-export default function Profile({ data }: ProfileProps) {
+export default function Profile({ data, currentClerkId }: ProfileProps) {
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
       <section className="flex h-fit w-full max-w-xl flex-col gap-4 p-8">
@@ -30,7 +29,11 @@ export default function Profile({ data }: ProfileProps) {
             </div>
           </div>
           <div className="basis-full" />
-          <Button variant="special">Follow</Button>
+          {currentClerkId === data.clerkId ? (
+            <Button>Edit</Button>
+          ) : (
+            <Button variant="special">Follow</Button>
+          )}
         </div>
         <div className="space-y-1">
           <div className="flex gap-2">

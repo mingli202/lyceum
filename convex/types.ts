@@ -82,6 +82,7 @@ export const AddClassArgs = v.object({
 });
 
 export const ProfileData = v.object({
+  clerkId: v.string(),
   school: v.string(),
   major: v.string(),
   firstName: v.string(),

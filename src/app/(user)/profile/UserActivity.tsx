@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, ClassCard, PostCard } from "@/components";
 import { ClubCard } from "@/components/ClubCard";
 import { RecordValues } from "@/types";

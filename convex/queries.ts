@@ -12,7 +12,6 @@ import {
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
-import { Id } from "./_generated/dataModel";
 
 export const _getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
@@ -130,6 +129,7 @@ export const getProfileData = query({
       bio: profile.bio,
       followers: profile.followers,
       following: profile.following,
+      clerkId: user.clerkId,
     };
 
     return profileData;

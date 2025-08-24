@@ -1,5 +1,5 @@
 export async function parseSyllabus() {
-  const data = {
+  const _data = {
     code: "SOCI 235",
     title: "Sociology 235: Technology & Society",
     professor: "Prof. Skyler Wang",

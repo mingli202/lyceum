@@ -1,4 +1,3 @@
-import { ProfileData } from "@convex/types";
 import Profile from "./Profile";
 import { SignatureService } from "@convex/services/signatureService";
 import { auth } from "@clerk/nextjs/server";
@@ -7,6 +6,7 @@ import { api } from "@convex/_generated/api";
 
 export default async function ProfilePage() {
   const { userId } = await auth();
+
   const body = { clerkId: userId };
   const signature = await new SignatureService().sign(body);
 
@@ -14,5 +14,5 @@ export default async function ProfilePage() {
     signature,
   });
 
-  return <Profile data={data} />;
+  return <Profile data={data} currentClerkId={userId!} />;
 }
