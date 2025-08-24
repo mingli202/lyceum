@@ -73,6 +73,13 @@ export const AddClassArgs = v.object({
     }),
   ),
   targetGrade: v.number(),
-  tasks: v.array(v.id("userTasks")),
+  tasks: v.array(
+    v.object({
+      name: v.string(),
+      dueDate: v.string(),
+      weight: v.number(),
+      desc: v.string(),
+    }),
+  ),
 });
 export type AddClassArgs = typeof AddClassArgs.type;

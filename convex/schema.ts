@@ -47,7 +47,6 @@ export default defineSchema({
     userId: v.id("users"),
     classId: v.id("classes"),
     targetGrade: v.number(),
-    tasks: v.array(v.id("userTasks")),
   })
     .index("by_userId", ["userId"]) // for getting all the user's classes
     .index("by_classId", ["classId"]) // for getting all users of a class
@@ -58,8 +57,9 @@ export default defineSchema({
     classId: v.id("classes"),
     userClassInfo: v.id("userClassInfo"),
 
+    description: v.string(),
     dueDate: v.string(),
-    title: v.string(),
+    name: v.string(),
     status: v.union(
       v.literal("active"),
       v.literal("completed"),
@@ -67,11 +67,13 @@ export default defineSchema({
       v.literal("dropped"),
       v.literal("onHold"),
     ),
-    type: v.union(v.literal("exam"), v.literal("assignment")),
     scoreObtained: v.number(),
     scoreTotal: v.number(),
     weight: v.number(),
-  }).index("by_userId_classId", ["userId", "classId"]),
+  })
+    .index("by_userId", ["userId"]) // for getting all the user's classes
+    .index("by_classId", ["classId"]) // for getting all tasks of a class
+    .index("by_userId_classId", ["userId", "classId"]),
 
   profiles: defineTable({
     userId: v.id("users"),

@@ -16,7 +16,8 @@ export class SignatureService {
       );
     }
 
-    const encodedData = btoa(JSON.stringify(data));
+    // replace the fucking en dash with a hyphen
+    const encodedData = btoa(JSON.stringify(data).replaceAll("–", "-"));
 
     const signature = await crypto.subtle.sign(
       { name: "RSA-PSS", saltLength: 32 },
