@@ -114,7 +114,6 @@ export default defineSchema({
 
     description: v.string(),
     imageUrl: v.string(),
-    timestamp: v.string(),
   }).index("by_authorId", ["authorId"]),
 
   comments: defineTable({
@@ -133,7 +132,9 @@ export default defineSchema({
 
     text: v.string(),
     timestamp: v.string(),
-  }).index("by_commentId", ["commentId"]),
+  })
+    .index("by_commentId", ["commentId"])
+    .index("by_postId", ["postId"]),
 
   notifications: defineTable({
     userId: v.id("users"),
