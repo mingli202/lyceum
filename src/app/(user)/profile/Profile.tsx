@@ -3,34 +3,27 @@
 import { Button } from "@/components";
 import { ProfileData } from "@convex/types";
 import { GraduationCap, School } from "lucide-react";
-import Image from "next/image";
 import UserActivity from "./UserActivity";
+import { ProfilePicture } from "@/components/ProfilePicture";
 
 type ProfileProps = {
   data: ProfileData;
 };
 export default function Profile({ data }: ProfileProps) {
   return (
-    <div className="flex w-full justify-center">
-      <section className="flex w-lg flex-col gap-4 py-8">
+    <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
+      <section className="flex h-fit w-full max-w-xl flex-col gap-4 p-8">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full">
-            {data.pictureUrl ? (
-              <Image
-                src={data.pictureUrl}
-                alt={data.firstName}
-                className="h-full w-full"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gray-200">
-                {data.firstName.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
+          <ProfilePicture
+            src={data.pictureUrl}
+            displayName={data.firstName}
+            className="h-16 w-16"
+          />
           <div className="shrink-0">
-            <p className="">
+            <p className="overflow-ellipsis whitespace-nowrap">
               {data.firstName} {data.lastName}
             </p>
+            <p className="text-foreground/60">@{data.username}</p>
             <div className="text-foreground/60 flex gap-2 text-sm">
               <p>{data.followers.length} Followers</p>
               <p>{data.following.length} Following</p>
