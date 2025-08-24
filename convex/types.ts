@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
+import schema from "./schema";
 
 export type User = Doc<"users">;
 export type Class = Doc<"classes">;
@@ -83,3 +84,20 @@ export const AddClassArgs = v.object({
   ),
 });
 export type AddClassArgs = typeof AddClassArgs.type;
+
+export const ProfileData = v.object({
+  profileUrl: v.optional(v.string()),
+  school: v.string(),
+  major: v.string(),
+  firstName: v.string(),
+  lastName: v.optional(v.string()),
+  username: v.string(),
+  academicYear: v.number(),
+  city: v.optional(v.string()),
+  email: v.string(),
+  pictureUrl: v.optional(v.string()),
+  bio: v.optional(v.string()),
+  followers: v.array(v.id("users")),
+  following: v.array(v.id("users")),
+});
+export type ProfileData = typeof ProfileData.type;
