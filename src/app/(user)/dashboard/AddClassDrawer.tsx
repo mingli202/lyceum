@@ -1,9 +1,9 @@
 import { addClass, addClassFromSyllabus } from "@/actions/class";
-import { Button, LoadingSpinner } from "@/components/ui";
+import { Button, LoadingSpinner } from "@/components";
 import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Drawer } from "vaul";
-import schema from "../../../../convex/schema";
+import schema from "@convex/schema";
 import useFormState from "@/hooks/useFormState";
 
 type ClassTime =

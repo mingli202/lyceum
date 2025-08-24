@@ -1,9 +1,9 @@
 "use server";
 
 import { fetchMutation } from "convex/nextjs";
-import { SignatureService } from "../../convex/services/signatureService";
-import { AddClassArgs } from "../../convex/types";
-import { api } from "../../convex/_generated/api";
+import { SignatureService } from "@convex/services/signatureService";
+import { AddClassArgs } from "@convex/types";
+import { api } from "@convex/_generated/api";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { ParsedFileResponse } from "@/types";

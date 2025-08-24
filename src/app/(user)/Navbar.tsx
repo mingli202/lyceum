@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar } from "@/components/ui/Avatar";
+import { Avatar } from "@/components";
 import { cn } from "@/utils/cn";
 import { useQuery } from "convex/react";
 import {
@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { api } from "../../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useEffect, useState } from "react";
 import SetupDrawer from "./SetupDrawer";
 import { useAuth } from "@clerk/nextjs";
