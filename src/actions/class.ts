@@ -1,9 +1,9 @@
 "use server";
 
 import { fetchMutation } from "convex/nextjs";
-import { SignatureService } from "../../convex/services/signatureService";
-import { AddClassArgs } from "../../convex/types";
-import { api } from "../../convex/_generated/api";
+import { SignatureService } from "@convex/services/signatureService";
+import { AddClassArgs } from "@convex/types";
+import { api } from "@convex/_generated/api";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { ParsedFileResponse } from "@/types";
@@ -285,10 +285,16 @@ export async function addClassFromSyllabus(file: File) {
     tasks,
   };
 
-  const signature = await new SignatureService().sign({
-    ...body,
-    clerkId: userId,
-  });
+  const signature = await new SignatureService()
+    .sign({
+      ...body,
+      clerkId: userId,
+    })
+    .catch(() => null);
+
+  if (!signature) {
+    return "Something went wrong, please try again";
+  }
 
   return await fetchMutation(api.mutations.addClass, {
     ...body,

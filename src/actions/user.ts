@@ -1,9 +1,9 @@
 "use server";
 
+import { api } from "@convex/_generated/api";
+import { SignatureService } from "@convex/services/signatureService";
+import { CreateNewUserArgs } from "@convex/types";
 import { fetchMutation } from "convex/nextjs";
-import { SignatureService } from "../../convex/services/signatureService";
-import { api } from "../../convex/_generated/api";
-import { CreateNewUserArgs } from "../../convex/types";
 
 const signatureService = new SignatureService();
 
@@ -31,7 +31,6 @@ export async function createNewUser(
     !email ||
     !clerkId
   ) {
-    console.log("email:", email);
     return "Please fill out all required fields";
   }
 

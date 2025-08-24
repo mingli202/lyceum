@@ -1,5 +1,5 @@
 export async function parseSyllabus() {
-  const data = {
+  const _data = {
     code: "SOCI 235",
     title: "Sociology 235: Technology & Society",
     professor: "Prof. Skyler Wang",
@@ -48,9 +48,7 @@ export async function parseSyllabus() {
     clerkId: "user_31bpzQbHe9yDHOw0CjbeLhCxbYc",
   };
 
-  btoa("5–7 pages");
-  // console.log(JSON.stringify(data));
-  // console.log(btoa(JSON.stringify(data)));
+  btoa(new TextEncoder().encode("5–7 pages").join(""));
 }
 
 parseSyllabus();

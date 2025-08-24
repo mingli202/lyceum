@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui";
+import { Button } from "@/components";
 import { useUser } from "@clerk/nextjs";
 import { Drawer } from "vaul";
 import { createNewUser } from "@/actions/user";

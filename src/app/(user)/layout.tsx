@@ -2,7 +2,7 @@
 
 import { Authenticated, Unauthenticated } from "convex/react";
 import Navbar from "./Navbar";
-import { LoadingSpinner } from "@/components/ui";
+import { LoadingSpinner } from "@/components";
 
 export default function UserLayout({
   children,

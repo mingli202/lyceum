@@ -1,6 +1,6 @@
 "use client";
 
-import { LoadingSpinner } from "@/components/ui";
+import { LoadingSpinner } from "@/components";
 import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "next/navigation";
