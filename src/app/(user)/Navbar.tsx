@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar } from "@/components";
+import { Avatar, Button } from "@/components";
 import { cn } from "@/utils/cn";
 import { useQuery } from "convex/react";
 import {
@@ -61,15 +61,9 @@ export default function NavBar() {
           <UserIcon /> Profile
         </NavItem>
         <div className="basis-full" />
-        <div className="shrink-0 p-2">
-          <Avatar
-            src={user === "N/A" || !user ? undefined : user.pictureUrl}
-            displayName={
-              user === "N/A" || !user ? "User" : (user.givenName ?? "User")
-            }
-          />
-        </div>
-        <button onClick={() => signOut()}>Sign Out</button>
+        <Button onClick={() => signOut()} className="p-0">
+          Sign Out
+        </Button>
       </section>
       <SetupDrawer open={open} />
     </>
