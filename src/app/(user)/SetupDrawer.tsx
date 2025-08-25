@@ -10,7 +10,7 @@ type SetupDrawerProps = {
 export default function SetupDrawer({ open }: SetupDrawerProps) {
   const user = useUser().user;
 
-  const [error, handleSubmit, _isPending] = useFormState(async (e) => {
+  const [error, handleSubmit, isPending] = useFormState(async (e) => {
     if (!user) {
       return "Login expired. Sigin again";
     }
@@ -158,10 +158,13 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
                 variant="special"
                 type="submit"
                 className="flex items-center justify-center"
+                isPending={isPending}
               >
                 Submit
               </Button>
-              {error && <p className="text-red-500">{error}</p>}
+              {error && error !== "ok" && (
+                <p className="text-red-500">{error}</p>
+              )}
             </form>
           </div>
         </Drawer.Content>

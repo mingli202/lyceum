@@ -20,7 +20,7 @@ export default function AddClassDrawer() {
 
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
-  const [error, handleSubmit, _isPending] = useFormState(async (e) => {
+  const [error, handleSubmit, isPending] = useFormState(async (e) => {
     let res;
 
     if (isManual) {
@@ -255,7 +255,9 @@ export default function AddClassDrawer() {
                   </div>
                 </div>
               )}
-              <Button variant="special">Submit</Button>
+              <Button variant="special" isPending={isPending}>
+                Submit
+              </Button>
               {error && <p className="text-red-500">{error}</p>}
               <Button
                 className="p-0"
