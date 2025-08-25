@@ -384,7 +384,9 @@ export const getUserClassTasks = query({
       )
       .collect();
 
-    return userTasks;
+    return userTasks.sort(
+      (a, b) => Date.parse(a.dueDate) - Date.parse(b.dueDate),
+    );
   },
 });
 
