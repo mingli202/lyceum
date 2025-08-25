@@ -100,7 +100,10 @@ type TaskCardProps = {
 };
 function TaskCard({ task }: TaskCardProps) {
   return (
-    <div className="bg-background ring-foreground/10 z-0 flex flex-col gap-1 rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg">
+    <div
+      className="bg-background ring-foreground/10 z-0 flex w-full flex-col gap-1 rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
+      onClick={() => {}}
+    >
       <div className="flex justify-between gap-4">
         <p>
           <span className="font-bold">{task.name}</span> ({task.weight}%)
