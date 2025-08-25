@@ -22,8 +22,8 @@ export default function Profile({ data, currentClerkId }: ProfileProps) {
             <p className="overflow-ellipsis whitespace-nowrap">
               {data.firstName} {data.lastName}
             </p>
-            <p className="text-foreground/60">@{data.username}</p>
-            <div className="text-foreground/60 flex gap-2 text-sm">
+            <p className="text-muted-foreground">@{data.username}</p>
+            <div className="text-muted-foreground flex gap-2 text-sm">
               <p>{data.followers.length} Followers</p>
               <p>{data.following.length} Following</p>
             </div>

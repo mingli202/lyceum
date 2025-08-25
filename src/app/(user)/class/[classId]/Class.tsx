@@ -31,7 +31,7 @@ export default function Class({ classId }: ClassProps) {
     <section className="flex h-full w-full justify-center overflow-hidden p-6">
       <div className="relative flex h-full w-5xl flex-col gap-4">
         <Button
-          className="text-foreground/60 flex shrink-0 items-center gap-2 p-0"
+          className="text-muted-foreground flex shrink-0 items-center gap-2 p-0"
           onClick={() => router.back()}
         >
           <ArrowLeft className="h-4 w-4" /> back
@@ -39,7 +39,7 @@ export default function Class({ classId }: ClassProps) {
         <div className="flex shrink-0 items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{classData.title}</h1>
-            <p className="text-foreground/60">
+            <p className="text-muted-foreground">
               {classData.code} · {classData.professor}
             </p>
           </div>
@@ -58,7 +58,9 @@ export default function Class({ classId }: ClassProps) {
               <div className="font-bold break-words text-slate-800">
                 {classData.grade}%
               </div>
-              <p className="text-foreground/60 text-sm">Overall performance</p>
+              <p className="text-muted-foreground text-sm">
+                Overall performance
+              </p>
             </div>
             <div className="bg-background ring-foreground/10 h-fit w-full rounded-lg p-2 shadow-md ring-1">
               <div className="flex items-center justify-between">
@@ -71,7 +73,7 @@ export default function Class({ classId }: ClassProps) {
               <div className="font-bold break-words text-blue-700">
                 {classData.targetGrade}%
               </div>
-              <p className="text-foreground/60 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Your goal for this class
               </p>
             </div>
