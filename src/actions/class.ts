@@ -8,6 +8,12 @@ import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import { ParsedFileResponse } from "@/types";
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const signatureService = new SignatureService();
+
 type ClassTime = AddClassArgs["classTimes"][0];
 
 function checkForOverlap(classTimes: ClassTime[]) {
@@ -93,7 +99,7 @@ export async function addClass(
     tasks: [],
   };
 
-  const signature = await new SignatureService().sign({
+  const signature = await signatureService.sign({
     ...body,
     clerkId: userId,
   });
@@ -104,12 +110,8 @@ export async function addClass(
   }).catch(() => "Couldn't add class");
 }
 
-const openAi = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function addClassFromSyllabus(file: File) {
-  const res = await openAi.files.create({
+  const res = await openai.files.create({
     file,
     purpose: "user_data",
     expires_after: {
@@ -118,7 +120,7 @@ export async function addClassFromSyllabus(file: File) {
     },
   });
 
-  const response = await openAi.responses.parse({
+  const response = await openai.responses.parse({
     model: "gpt-5-mini-2025-08-07",
     reasoning: { summary: null, effort: "medium" },
     instructions: "Extract from the course syllabus accurately",
@@ -285,7 +287,7 @@ export async function addClassFromSyllabus(file: File) {
     tasks,
   };
 
-  const signature = await new SignatureService()
+  const signature = await signatureService
     .sign({
       ...body,
       clerkId: userId,
