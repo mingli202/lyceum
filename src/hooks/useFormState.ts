@@ -11,7 +11,7 @@ export default function useFormState(
     e: FormEvent<HTMLFormElement>,
   ) => Promise<string | undefined | null>,
 ) {
-  const [message, setError] = useState<string | undefined | null>();
+  const [message, setMessage] = useState<string | undefined | null>();
   const [isPending, setIsPending] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -20,7 +20,7 @@ export default function useFormState(
     }
     setIsPending(true);
     e.preventDefault();
-    setError(await submitHandler(e));
+    setMessage(await submitHandler(e));
     setIsPending(false);
   }
 
