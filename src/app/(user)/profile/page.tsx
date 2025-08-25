@@ -1,18 +1,18 @@
+"use client";
+
 import Profile from "./Profile";
-import { SignatureService } from "@convex/services/signatureService";
-import { auth } from "@clerk/nextjs/server";
-import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
+import { useAuth } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { LoadingSpinner } from "@/components";
 
-export default async function ProfilePage() {
-  const { userId } = await auth();
+export default function ProfilePage() {
+  const { userId } = useAuth();
+  const data = useQuery(api.queries.getProfileData, {});
 
-  const body = { clerkId: userId };
-  const signature = await new SignatureService().sign(body);
-
-  const data = await fetchQuery(api.queries.getProfileData, {
-    signature,
-  });
+  if (!data || !userId) {
+    return <LoadingSpinner />;
+  }
 
   return <Profile data={data} currentClerkId={userId!} />;
 }
