@@ -255,9 +255,7 @@ export default function AddClassDrawer() {
                   </div>
                 </div>
               )}
-              <Button variant="special" isPending={isPending}>
-                Submit
-              </Button>
+              <Button variant="special">Submit</Button>
               {error && <p className="text-red-500">{error}</p>}
               <Button
                 className="p-0"

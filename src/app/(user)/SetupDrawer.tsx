@@ -161,7 +161,6 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
                 variant="special"
                 type="submit"
                 className="flex items-center justify-center"
-                isPending={isPending}
               >
                 Submit
               </Button>
