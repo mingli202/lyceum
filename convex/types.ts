@@ -149,6 +149,25 @@ export const ClubPreviewInfo = v.object({
   isPrivate: v.boolean(),
 });
 
+export const ClassPageData = v.object({
+  classId: v.id("classes"),
+  code: v.string(),
+  nClassmates: v.number(),
+  grade: v.number(),
+  targetGrade: v.number(),
+
+  title: v.string(),
+  professor: v.string(),
+  school: v.string(),
+  semester: v.union(
+    v.literal("Summer"),
+    v.literal("Fall"),
+    v.literal("Winter"),
+  ),
+  year: v.number(),
+  credits: v.number(),
+});
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
@@ -158,3 +177,4 @@ export type PostPreviewInfo = typeof PostPreviewInfo.type;
 export type ClubPreviewInfo = typeof ClubPreviewInfo.type;
 export type ClubCategory = typeof ClubCategory.type;
 export type ClubUserStatus = typeof ClubUserStatus.type;
+export type ClassPageData = typeof ClassPageData.type;

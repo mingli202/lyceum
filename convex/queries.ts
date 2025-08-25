@@ -3,6 +3,7 @@ import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
   ClassInfo,
+  ClassPageData,
   ClubPreviewInfo,
   ClubUserStatus,
   DashboardData,
@@ -12,6 +13,7 @@ import {
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
+import { Id } from "./_generated/dataModel";
 
 export const _getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
@@ -301,5 +303,61 @@ export const getUserClubs = query({
     ).filter((club) => club !== null);
 
     return clubsPreviewInfo;
+  },
+});
+
+export const getClassPageData = query({
+  args: { classId: v.string(), signature: v.optional(v.string()) },
+  returns: v.union(ClassPageData, v.string()),
+  handler: async (ctx, args): Promise<ClassPageData | string> => {
+    const user = await getUserFromClerkId(ctx, args);
+    const classInfo = await ctx.db
+      .get(args.classId as Id<"classes">)
+      .catch(() => null);
+
+    if (!classInfo) {
+      return "Class not found";
+    }
+
+    if (!user) {
+      return "User not found";
+    }
+
+    const userClassInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", classInfo._id),
+      )
+      .unique();
+
+    if (!userClassInfo) {
+      return "Not registered";
+    }
+
+    const grade = await ctx.runQuery(
+      internal.queries._getUserClassAverageGrade,
+      { userId: user._id, classId: classInfo._id },
+    );
+
+    const nClassmates = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_classId", (q) => q.eq("classId", classInfo._id))
+      .collect();
+
+    const classPageData: ClassPageData = {
+      classId: classInfo._id,
+      title: classInfo.title,
+      professor: classInfo.professor,
+      code: classInfo.code,
+      credits: classInfo.credits,
+      grade,
+      nClassmates: nClassmates.length,
+      school: classInfo.school,
+      semester: classInfo.semester,
+      year: classInfo.year,
+      targetGrade: userClassInfo.targetGrade,
+    };
+
+    return classPageData;
   },
 });
