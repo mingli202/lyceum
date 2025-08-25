@@ -1,10 +1,9 @@
-import { Button, ButtonVariant, UserCard } from "@/components";
+import { Button, ButtonVariant, TaskCard, UserCard } from "@/components";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
-import { UserTask } from "@convex/types";
 import { useQuery } from "convex/react";
-import { Calendar, ClipboardList, MessageCircle, Users } from "lucide-react";
+import { ClipboardList, MessageCircle, Users } from "lucide-react";
 import { useState } from "react";
 
 const Tab = {
@@ -76,9 +75,16 @@ export default function ClassTabs({ classId }: { classId: string }) {
       >
         {selectedTab === Tab.Tasks && (
           <div className="space-y-2">
-            {tasks?.map((task) => (
-              <TaskCard task={task} key={task._id} />
-            ))}
+            {tasks
+              ?.filter((task) => task.status === "active")
+              .map((task) => (
+                <TaskCard task={task} key={"active" + task._id} />
+              ))}
+            {tasks
+              ?.filter((task) => task.status !== "active")
+              .map((task) => (
+                <TaskCard task={task} key={"rest" + task._id} />
+              ))}
           </div>
         )}
         {selectedTab === Tab.Chat && <p>Chat</p>}
@@ -91,31 +97,6 @@ export default function ClassTabs({ classId }: { classId: string }) {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-type TaskCardProps = {
-  task: UserTask;
-};
-function TaskCard({ task }: TaskCardProps) {
-  return (
-    <div
-      className="bg-background ring-foreground/10 z-0 flex w-full flex-col gap-1 rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
-      onClick={() => {}}
-    >
-      <div className="flex justify-between gap-4">
-        <p>
-          <span className="font-bold">{task.name}</span> ({task.weight}%)
-        </p>
-        <p>
-          {task.scoreObtained}/{task.scoreTotal}
-        </p>
-      </div>
-      <p className="flex items-center gap-2">
-        <Calendar className="h-4 w-4" /> {task.dueDate}
-      </p>
-      <p className="text-muted-foreground">{task.description}</p>
     </div>
   );
 }
