@@ -1,9 +1,9 @@
-import { addClass } from "@/actions/class";
-import { Button, LoadingSpinner } from "@/components/ui";
+import { addClass, addClassFromSyllabus } from "@/actions/class";
+import { Button, LoadingSpinner } from "@/components";
 import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Drawer } from "vaul";
-import schema from "../../../../convex/schema";
+import schema from "@convex/schema";
 import useFormState from "@/hooks/useFormState";
 
 type ClassTime =
@@ -21,8 +21,17 @@ export default function AddClassDrawer() {
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
   const [error, handleSubmit, isPending] = useFormState(async (e) => {
-    const formData = new FormData(e.currentTarget);
-    const res = await addClass(formData, classTimes);
+    let res;
+
+    if (isManual) {
+      const formData = new FormData(e.currentTarget);
+      res = await addClass(formData, classTimes);
+    } else {
+      if (!file) {
+        return "Please upload a syllabus";
+      }
+      res = await addClassFromSyllabus(file);
+    }
 
     if (res && res !== "ok") {
       return res;

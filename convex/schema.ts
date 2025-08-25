@@ -47,7 +47,6 @@ export default defineSchema({
     userId: v.id("users"),
     classId: v.id("classes"),
     targetGrade: v.number(),
-    tasks: v.array(v.id("userTasks")),
   })
     .index("by_userId", ["userId"]) // for getting all the user's classes
     .index("by_classId", ["classId"]) // for getting all users of a class
@@ -58,8 +57,9 @@ export default defineSchema({
     classId: v.id("classes"),
     userClassInfo: v.id("userClassInfo"),
 
+    description: v.string(),
     dueDate: v.string(),
-    title: v.string(),
+    name: v.string(),
     status: v.union(
       v.literal("active"),
       v.literal("completed"),
@@ -67,11 +67,13 @@ export default defineSchema({
       v.literal("dropped"),
       v.literal("onHold"),
     ),
-    type: v.union(v.literal("exam"), v.literal("assignment")),
     scoreObtained: v.number(),
     scoreTotal: v.number(),
     weight: v.number(),
-  }).index("by_userId_classId", ["userId", "classId"]),
+  })
+    .index("by_userId", ["userId"]) // for getting all the user's classes
+    .index("by_classId", ["classId"]) // for getting all tasks of a class
+    .index("by_userId_classId", ["userId", "classId"]),
 
   profiles: defineTable({
     userId: v.id("users"),
@@ -112,7 +114,6 @@ export default defineSchema({
 
     description: v.string(),
     imageUrl: v.string(),
-    timestamp: v.string(),
   }).index("by_authorId", ["authorId"]),
 
   comments: defineTable({
@@ -131,7 +132,9 @@ export default defineSchema({
 
     text: v.string(),
     timestamp: v.string(),
-  }).index("by_commentId", ["commentId"]),
+  })
+    .index("by_commentId", ["commentId"])
+    .index("by_postId", ["postId"]),
 
   notifications: defineTable({
     userId: v.id("users"),
@@ -157,16 +160,15 @@ export default defineSchema({
   }).index("by_userId", ["userId"]),
 
   events: defineTable({
-    userId: v.id("users"),
+    clubId: v.id("clubs"),
 
     date: v.string(),
     description: v.string(),
     location: v.string(),
     title: v.string(),
-  }).index("by_userId", ["userId"]),
+  }).index("by_clubId", ["clubId"]),
 
   clubs: defineTable({
-    events: v.array(v.id("events")),
     followers: v.array(v.id("users")),
     members: v.array(v.id("users")),
     posts: v.array(v.id("posts")),
@@ -174,8 +176,8 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     imageUrl: v.optional(v.string()),
-    alloweMemberPost: v.boolean(),
-    private: v.boolean(),
+    allowMemberPost: v.boolean(),
+    isPrivate: v.boolean(),
     category: v.union(
       v.literal("Academic"),
       v.literal("Social"),
@@ -186,6 +188,7 @@ export default defineSchema({
       v.literal("Volunteer"),
       v.literal("Other"),
     ),
+    adminId: v.id("users"),
   }),
 
   chats: defineTable({

@@ -15,19 +15,18 @@ export type Club = Doc<"clubs">;
 export type Chat = Doc<"chats">;
 export type Message = Doc<"messages">;
 
+export const ClassInfo = v.object({
+  code: v.string(),
+  title: v.string(),
+  professor: v.string(),
+  classId: v.id("classes"),
+  grade: v.number(),
+});
+
 export const DashboardData = v.object({
-  classesInfo: v.array(
-    v.object({
-      code: v.string(),
-      title: v.string(),
-      professor: v.string(),
-      _id: v.id("classes"),
-      grade: v.number(),
-    }),
-  ),
+  classesInfo: v.array(ClassInfo),
   average: v.optional(v.number()),
 });
-export type DashboardData = typeof DashboardData.type;
 
 export const CreateNewUserArgs = v.object({
   signature: v.optional(v.string()),
@@ -43,7 +42,6 @@ export const CreateNewUserArgs = v.object({
   bio: v.optional(v.string()),
   clerkId: v.string(),
 });
-export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
 
 export const AddClassArgs = v.object({
   signature: v.optional(v.string()),
@@ -73,6 +71,90 @@ export const AddClassArgs = v.object({
     }),
   ),
   targetGrade: v.number(),
-  tasks: v.array(v.id("userTasks")),
+  tasks: v.array(
+    v.object({
+      name: v.string(),
+      dueDate: v.string(),
+      weight: v.number(),
+      desc: v.string(),
+    }),
+  ),
 });
+
+export const ProfileData = v.object({
+  clerkId: v.string(),
+  school: v.string(),
+  major: v.string(),
+  firstName: v.string(),
+  lastName: v.optional(v.string()),
+  username: v.string(),
+  academicYear: v.number(),
+  city: v.optional(v.string()),
+  email: v.string(),
+  pictureUrl: v.optional(v.string()),
+  bio: v.optional(v.string()),
+  followers: v.array(v.id("users")),
+  following: v.array(v.id("users")),
+});
+
+export const PostPreviewInfo = v.object({
+  postId: v.id("posts"),
+  author: v.object({
+    authorId: v.id("users"),
+    pictureUrl: v.optional(v.string()),
+    firstName: v.string(),
+    lastName: v.optional(v.string()),
+    username: v.string(),
+  }),
+  nComments: v.number(),
+  nReplies: v.number(),
+  nLikes: v.number(),
+  clubInfo: v.union(
+    v.object({
+      clubName: v.string(),
+      private: v.boolean(),
+    }),
+    v.null(),
+  ),
+  createdAt: v.number(),
+  description: v.string(),
+  imageUrl: v.optional(v.string()),
+});
+
+export const ClubUserStatus = v.union(
+  v.literal("admin"),
+  v.literal("member"),
+  v.literal("following"),
+);
+
+export const ClubCategory = v.union(
+  v.literal("Academic"),
+  v.literal("Social"),
+  v.literal("Sports"),
+  v.literal("Cultural"),
+  v.literal("Recreational"),
+  v.literal("Arts"),
+  v.literal("Volunteer"),
+  v.literal("Other"),
+);
+
+export const ClubPreviewInfo = v.object({
+  clubId: v.id("clubs"),
+  imageUrl: v.optional(v.string()),
+  name: v.string(),
+  category: ClubCategory,
+  nMembers: v.number(),
+  status: ClubUserStatus,
+  description: v.string(),
+  isPrivate: v.boolean(),
+});
+
+export type ClassInfo = typeof ClassInfo.type;
+export type DashboardData = typeof DashboardData.type;
+export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
 export type AddClassArgs = typeof AddClassArgs.type;
+export type ProfileData = typeof ProfileData.type;
+export type PostPreviewInfo = typeof PostPreviewInfo.type;
+export type ClubPreviewInfo = typeof ClubPreviewInfo.type;
+export type ClubCategory = typeof ClubCategory.type;
+export type ClubUserStatus = typeof ClubUserStatus.type;
