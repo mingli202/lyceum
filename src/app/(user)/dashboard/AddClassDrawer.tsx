@@ -20,7 +20,7 @@ export default function AddClassDrawer() {
 
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
-  const [error, handleSubmit, isPending] = useFormState(async (e) => {
+  const [error, handleSubmit, _isPending] = useFormState(async (e) => {
     let res;
 
     if (isManual) {

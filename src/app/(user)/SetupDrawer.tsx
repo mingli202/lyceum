@@ -10,10 +10,7 @@ type SetupDrawerProps = {
 export default function SetupDrawer({ open }: SetupDrawerProps) {
   const user = useUser().user;
 
-  const [error, handleSubmit, isPending] = useFormState(async (e) => {
-    if (isPending) {
-      return;
-    }
+  const [error, handleSubmit, _isPending] = useFormState(async (e) => {
     if (!user) {
       return "Login expired. Sigin again";
     }

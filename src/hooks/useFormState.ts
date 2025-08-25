@@ -15,6 +15,9 @@ export default function useFormState(
   const [isPending, setIsPending] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    if (isPending) {
+      return;
+    }
     setIsPending(true);
     e.preventDefault();
     setError(await submitHandler(e));
