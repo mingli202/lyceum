@@ -11,7 +11,7 @@ type ProfileProps = {
 export default function Profile({ data, currentClerkId }: ProfileProps) {
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
-      <section className="flex h-fit w-full max-w-xl flex-col gap-4 p-8">
+      <section className="flex h-fit w-full max-w-xl flex-col gap-4 p-6">
         <div className="flex items-center gap-4">
           <ProfilePicture
             src={data.pictureUrl}
