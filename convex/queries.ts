@@ -41,8 +41,11 @@ export const _getUserFromClerkId = internalQuery({
 
 export const _getUserClassAverageGrade = internalQuery({
   args: { classId: v.id("classes"), userId: v.id("users") },
-  returns: v.number(),
-  handler: async (ctx, args): Promise<number> => {
+  returns: { remainingGrade: v.number(), currentGrade: v.number() },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ remainingGrade: number; currentGrade: number }> => {
     const tasks = await ctx.db
       .query("userTasks")
       .withIndex("by_userId_classId", (q) =>
@@ -50,16 +53,36 @@ export const _getUserClassAverageGrade = internalQuery({
       )
       .collect();
 
+    let totalWeightCompleted = 0;
+    let currentGrade = 0;
     let totalWeight = 0;
 
-    const grade = tasks.reduce((acc, task) => {
+    for (const task of tasks) {
       totalWeight += task.weight;
-      return acc + task.scoreTotal === 0
-        ? 0
-        : (task.weight * task.scoreObtained) / task.scoreTotal;
-    }, 0);
+      if (task.status === "completed") {
+        totalWeightCompleted += task.weight;
+        currentGrade += (task.weight * task.scoreObtained) / task.scoreTotal;
+      }
+    }
 
-    return grade / totalWeight;
+    const userClassInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", args.userId).eq("classId", args.classId),
+      )
+      .unique();
+
+    const grade =
+      totalWeightCompleted === 0 ? 0 : currentGrade / totalWeightCompleted;
+
+    return {
+      currentGrade: 100 * grade,
+      remainingGrade:
+        (100 *
+          ((totalWeight * (userClassInfo?.targetGrade ?? 85)) / 100 -
+            currentGrade)) /
+        (totalWeight - totalWeightCompleted),
+    };
   },
 });
 
@@ -236,10 +259,12 @@ export const getUserClasses = query({
             title: classInfo.title,
             professor: classInfo.professor,
             classId: classInfo._id,
-            grade: await ctx.runQuery(
-              internal.queries._getUserClassAverageGrade,
-              { classId: classInfo._id, userId: user._id },
-            ),
+            grade: (
+              await ctx.runQuery(internal.queries._getUserClassAverageGrade, {
+                classId: classInfo._id,
+                userId: user._id,
+              })
+            ).currentGrade,
           };
         }),
       )
@@ -348,7 +373,8 @@ export const getClassPageData = query({
       professor: classInfo.professor,
       code: classInfo.code,
       credits: classInfo.credits,
-      grade,
+      grade: grade.currentGrade,
+      remainingGrade: grade.remainingGrade,
       nClassmates: nClassmates.length,
       school: classInfo.school,
       semester: classInfo.semester,

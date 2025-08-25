@@ -155,6 +155,7 @@ export const ClassPageData = v.object({
   nClassmates: v.number(),
   grade: v.number(),
   targetGrade: v.number(),
+  remainingGrade: v.number(),
 
   title: v.string(),
   professor: v.string(),
