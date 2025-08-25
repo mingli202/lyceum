@@ -28,26 +28,31 @@ export default function Class({ classId }: ClassProps) {
   }
 
   return (
-    <section className="flex h-full w-full justify-center overflow-hidden p-6">
-      <div className="relative flex h-full w-5xl flex-col gap-4">
-        <Button
-          className="text-muted-foreground flex shrink-0 items-center gap-2 p-0"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" /> back
-        </Button>
-        <div className="flex shrink-0 items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{classData.title}</h1>
-            <p className="text-muted-foreground">
-              {classData.code} · {classData.professor}
-            </p>
+    <section className="flex h-full w-full justify-center">
+      <div className="relative flex h-full w-5xl flex-col">
+        <div className="flex flex-col gap-4 px-6 pt-6">
+          <div className="flex flex-col">
+            <Button
+              className="text-muted-foreground flex items-center gap-2 p-0"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-4 w-4" /> back
+            </Button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">{classData.title}</h1>
+                <p className="text-muted-foreground">
+                  {classData.code} · {classData.professor}
+                </p>
+              </div>
+              <Button variant={ButtonVariant.Destructive} className="h-fit">
+                Delete
+              </Button>
+            </div>
           </div>
-          <Button variant={ButtonVariant.Destructive} className="h-fit">
-            Delete
-          </Button>
         </div>
-        <div className="flex basis-full gap-4">
+
+        <div className="flex basis-full gap-3 overflow-hidden px-6 pt-6 pb-4">
           <div className="flex w-xs shrink-0 flex-col gap-2">
             <div className="bg-background ring-foreground/10 h-fit w-full rounded-lg p-2 shadow-md ring-1">
               <div className="flex items-center justify-between">

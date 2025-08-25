@@ -2,8 +2,9 @@ import { Button, ButtonVariant, UserCard } from "@/components";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
+import { UserTask } from "@convex/types";
 import { useQuery } from "convex/react";
-import { ClipboardList, MessageCircle, Users } from "lucide-react";
+import { Calendar, ClipboardList, MessageCircle, Users } from "lucide-react";
 import { useState } from "react";
 
 const Tab = {
@@ -31,8 +32,8 @@ export default function ClassTabs({ classId }: { classId: string }) {
   };
 
   return (
-    <div className="basis-full space-y-2">
-      <div className="bg-background flex gap-2 rounded-[calc(0.25rem+0.25rem)] p-1 shadow-sm">
+    <div className="relative flex basis-full flex-col gap-2">
+      <div className="bg-background flex shrink-0 gap-2 rounded-[calc(0.25rem+0.25rem)] p-1 shadow-sm">
         <Button
           variant={
             selectedTab === Tab.Tasks ? ButtonVariant.Special : undefined
@@ -69,16 +70,49 @@ export default function ClassTabs({ classId }: { classId: string }) {
           </p>
         </Button>
       </div>
-      {selectedTab === Tab.Tasks && <p>Tasks</p>}
-      {selectedTab === Tab.Chat && <p>Chat</p>}
-      {selectedTab === Tab.Students && (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
-          {students?.map((student) => (
-            <UserCard user={student} key={student.userId} />
-          ))}
-          <div className="col-span-full h-0" />
-        </div>
-      )}
+      <div
+        className="basis-full overflow-x-hidden overflow-y-auto p-1"
+        style={{ scrollbarWidth: "thin" }}
+      >
+        {selectedTab === Tab.Tasks && (
+          <div className="space-y-2">
+            {tasks?.map((task) => (
+              <TaskCard task={task} key={task._id} />
+            ))}
+          </div>
+        )}
+        {selectedTab === Tab.Chat && <p>Chat</p>}
+        {selectedTab === Tab.Students && (
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
+            {students?.map((student) => (
+              <UserCard user={student} key={student.userId} />
+            ))}
+            <div className="col-span-full h-0" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type TaskCardProps = {
+  task: UserTask;
+};
+function TaskCard({ task }: TaskCardProps) {
+  return (
+    <div className="bg-background ring-foreground/10 z-0 flex flex-col gap-1 rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg">
+      <div className="flex justify-between gap-4">
+        <p>
+          <span className="font-bold">{task.name}</span> ({task.weight}%)
+        </p>
+        <p>
+          {task.scoreObtained}/{task.scoreTotal}
+        </p>
+      </div>
+      <p className="flex items-center gap-2">
+        <Calendar className="h-4 w-4" /> {task.dueDate}
+      </p>
+      <p className="text-muted-foreground">{task.description}</p>
     </div>
   );
 }
