@@ -120,7 +120,7 @@ export async function addClassFromSyllabus(file: File) {
 
   const response = await openAi.responses.parse({
     model: "gpt-5-mini-2025-08-07",
-    reasoning: { summary: null, effort: "low" },
+    reasoning: { summary: null, effort: "medium" },
     instructions: "Extract from the course syllabus accurately",
     input: [
       {
