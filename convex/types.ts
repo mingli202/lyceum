@@ -43,6 +43,20 @@ export const CreateNewUserArgs = v.object({
   clerkId: v.string(),
 });
 
+export const ClassTime = v.object({
+  day: v.union(
+    v.literal("Monday"),
+    v.literal("Tuesday"),
+    v.literal("Wednesday"),
+    v.literal("Thursday"),
+    v.literal("Friday"),
+    v.literal("Saturday"),
+    v.literal("Sunday"),
+  ),
+  start: v.string(),
+  end: v.string(),
+});
+
 export const AddClassArgs = v.object({
   signature: v.optional(v.string()),
   code: v.string(),
@@ -55,21 +69,7 @@ export const AddClassArgs = v.object({
   ),
   year: v.number(),
   credits: v.number(),
-  classTimes: v.array(
-    v.object({
-      day: v.union(
-        v.literal("Monday"),
-        v.literal("Tuesday"),
-        v.literal("Wednesday"),
-        v.literal("Thursday"),
-        v.literal("Friday"),
-        v.literal("Saturday"),
-        v.literal("Sunday"),
-      ),
-      start: v.string(),
-      end: v.string(),
-    }),
-  ),
+  classTimes: v.array(ClassTime),
   targetGrade: v.number(),
   tasks: v.array(
     v.object({
@@ -166,15 +166,25 @@ export const ClassPageData = v.object({
   ),
   year: v.number(),
   credits: v.number(),
+  classTimes: v.array(ClassTime),
+});
+
+export const UserCardInfo = v.object({
+  userId: v.id("users"),
+  pictureUrl: v.optional(v.string()),
+  firstName: v.string(),
+  username: v.string(),
 });
 
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
 export type AddClassArgs = typeof AddClassArgs.type;
+export type ClassTime = typeof ClassTime.type;
 export type ProfileData = typeof ProfileData.type;
 export type PostPreviewInfo = typeof PostPreviewInfo.type;
 export type ClubPreviewInfo = typeof ClubPreviewInfo.type;
 export type ClubCategory = typeof ClubCategory.type;
 export type ClubUserStatus = typeof ClubUserStatus.type;
 export type ClassPageData = typeof ClassPageData.type;
+export type UserCardInfo = typeof UserCardInfo.type;

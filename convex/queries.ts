@@ -10,6 +10,8 @@ import {
   PostPreviewInfo,
   ProfileData,
   User,
+  UserCardInfo,
+  UserTask,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -123,7 +125,7 @@ export const getProfileData = query({
       major: profile.major,
       firstName: user.givenName,
       lastName: user.familyName,
-      username: profile.username,
+      username: user.username,
       academicYear: profile.academicYear,
       city: profile.city,
       email: user.email,
@@ -156,12 +158,8 @@ export const getUserPosts = query({
     const postsInfo = await Promise.all(
       posts.map(async (post) => {
         const author = await ctx.db.get(post.authorId);
-        const authorProfile = await ctx.db
-          .query("profiles")
-          .withIndex("by_userId", (q) => q.eq("userId", post.authorId))
-          .unique();
 
-        if (!author || !authorProfile) {
+        if (!author) {
           return null;
         }
 
@@ -179,7 +177,7 @@ export const getUserPosts = query({
             pictureUrl: author.pictureUrl,
             firstName: author.givenName,
             lastName: author.familyName,
-            username: authorProfile.username,
+            username: author.username,
           },
           nComments: (
             await ctx.db
@@ -356,8 +354,68 @@ export const getClassPageData = query({
       semester: classInfo.semester,
       year: classInfo.year,
       targetGrade: userClassInfo.targetGrade,
+      classTimes: classInfo.classTimes,
     };
 
     return classPageData;
+  },
+});
+
+export const getUserClassTasks = query({
+  args: { classId: v.id("classes"), signature: v.optional(v.string()) },
+  returns: v.array(
+    v.object({
+      ...schema.tables.userTasks.validator.fields,
+      _id: v.id("userTasks"),
+      _creationTime: v.float64(),
+    }),
+  ),
+  handler: async (ctx, args): Promise<UserTask[]> => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      return [];
+    }
+
+    const userTasks = await ctx.db
+      .query("userTasks")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .collect();
+
+    return userTasks;
+  },
+});
+
+export const getClassStudents = query({
+  args: { classId: v.id("classes"), signature: v.optional(v.string()) },
+  returns: v.array(UserCardInfo),
+  handler: async (ctx, args): Promise<UserCardInfo[]> => {
+    const students = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_classId", (q) => q.eq("classId", args.classId))
+      .collect();
+
+    const userCardsInfo = await Promise.all(
+      students.map(async (student) => {
+        const user = await ctx.db.get(student.userId);
+
+        if (!user) {
+          return null;
+        }
+
+        const userCardInfo: UserCardInfo = {
+          userId: student.userId,
+          pictureUrl: user.pictureUrl,
+          firstName: user.givenName,
+          username: user.username,
+        };
+
+        return userCardInfo;
+      }),
+    );
+
+    return userCardsInfo.filter((userCardInfo) => userCardInfo !== null);
   },
 });

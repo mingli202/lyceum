@@ -28,6 +28,7 @@ export const createNewUser = mutation({
       familyName: args.lastName,
       pictureUrl: args.pictureUrl,
       email: args.email,
+      username: args.username.replace(/\s/g, "_"),
     });
 
     await ctx.db.insert("profiles", {
@@ -39,7 +40,6 @@ export const createNewUser = mutation({
 
       major: args.major,
       school: args.school,
-      username: args.username.replace(/\s/g, "_"),
       bio: args.bio,
       city: args.city,
       academicYear: args.academicYear,
