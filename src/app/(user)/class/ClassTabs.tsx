@@ -74,7 +74,7 @@ export default function ClassTabs({ classId }: { classId: string }) {
         className="basis-full overflow-x-hidden overflow-y-auto p-1"
         style={{ scrollbarWidth: "thin" }}
       >
-        {selectedTab === Tab.Tasks && <Tasks tasks={tasks} />}
+        {selectedTab === Tab.Tasks && <Tasks tasks={tasks} classId={classId} />}
         {selectedTab === Tab.Chat && <p>Chat</p>}
         {selectedTab === Tab.Students && (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">

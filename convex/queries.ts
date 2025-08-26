@@ -332,7 +332,7 @@ export const getUserClubs = query({
 });
 
 export const getClassPageData = query({
-  args: { classId: v.string(), signature: v.optional(v.string()) },
+  args: { classId: v.optional(v.string()), signature: v.optional(v.string()) },
   returns: v.union(ClassPageData, v.string()),
   handler: async (ctx, args): Promise<ClassPageData | string> => {
     const user = await getUserFromClerkId(ctx, args);
