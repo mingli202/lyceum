@@ -192,7 +192,6 @@ export const updateTask = mutation({
     }
 
     const { taskId: _t, signature: _s, ...updatedTask } = args;
-    console.log(updatedTask);
 
     await ctx.db.patch(args.taskId, updatedTask);
   },
@@ -285,6 +284,15 @@ export const deleteClass = mutation({
     if (userClassInfo) {
       await ctx.db.delete(userClassInfo._id);
     }
+
+    const userTasks = await ctx.db
+      .query("userTasks")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .collect();
+
+    await Promise.all(userTasks.map((t) => ctx.db.delete(t._id)));
 
     const nStudents = await ctx.db
       .query("userClassInfo")
