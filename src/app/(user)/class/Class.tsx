@@ -10,6 +10,7 @@ import { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { ClassPageData } from "@convex/types";
 import { Dialog } from "radix-ui";
+import { Card } from "@/components/ui/Card";
 
 type ClassProps = {
   classData: ClassPageData;
@@ -56,21 +57,21 @@ export default function Class({ classData }: ClassProps) {
 
           <div className="flex basis-full gap-3 overflow-hidden px-6 pt-6 pb-4">
             <div className="flex w-xs flex-1 flex-col gap-2">
-              <div className="bg-background ring-foreground/10 h-fit w-full rounded-lg p-2 shadow-md ring-1">
+              <Card className="w-full gap-1 text-base">
                 <div className="flex items-center justify-between">
-                  <h3 className="truncate text-base">Current Grade</h3>
+                  <h3 className="truncate">Current Grade</h3>
                   <TrendingUp className="h-4 w-4 flex-shrink-0 text-blue-500" />
                 </div>
 
-                <div className="font-bold break-words text-slate-800">
+                <div className="font-bold text-slate-800">
                   {classData.grade.toFixed(1)}%
                 </div>
                 <p className="text-muted-foreground text-sm">
                   Overall performance
                 </p>
-              </div>
+              </Card>
 
-              <div className="bg-background h-fit w-full rounded-lg p-2 shadow-md ring-1 shadow-amber-500/30 ring-amber-300">
+              <Card className="w-full text-base shadow-amber-500/30 ring-amber-300">
                 <div className="flex items-center justify-between">
                   <h3 className="truncate text-base text-gray-900">
                     Required Grade
@@ -78,15 +79,15 @@ export default function Class({ classData }: ClassProps) {
                   <TrendingUp className="h-4 w-4 flex-shrink-0 text-amber-500" />
                 </div>
 
-                <div className="font-bold break-words text-amber-700">
+                <div className="font-bold text-amber-700">
                   {classData.remainingGrade.toFixed(1)}%
                 </div>
                 <p className="text-muted-foreground text-sm">
                   Needed to the remaining tasks
                 </p>
-              </div>
+              </Card>
 
-              <div className="bg-background h-fit w-full rounded-lg p-2 shadow-md ring-1 shadow-blue-500/30 ring-blue-300">
+              <Card className="w-full text-base shadow-blue-500/30 ring-blue-300">
                 <div className="flex items-center justify-between">
                   <h3 className="truncate text-base text-gray-900">
                     Target Grade
@@ -100,15 +101,20 @@ export default function Class({ classData }: ClassProps) {
                 <p className="text-muted-foreground text-sm">
                   Your goal for this class
                 </p>
-              </div>
+              </Card>
 
-              <Button
-                className="bg-background flex h-fit w-full items-center justify-center gap-1 rounded-lg p-2 text-center text-sm text-blue-800 shadow-md ring-1 shadow-blue-500/30 ring-blue-300"
+              <button
                 onClick={() => setIsEditingTargetGrade(true)}
+                className="w-full"
               >
-                <Target className="h-4 w-4" />
-                Edit target grade
-              </Button>
+                <Card
+                  clickable
+                  className="w-full flex-row items-center justify-center gap-1 text-sm text-blue-800 shadow-blue-500/30 ring-blue-300"
+                >
+                  <Target className="h-4 w-4" />
+                  Edit target grade
+                </Card>
+              </button>
             </div>
             <ClassTabs classId={classData.classId} />
           </div>

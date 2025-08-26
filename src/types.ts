@@ -39,4 +39,24 @@ export const ParsedFileResponse = z.object({
     }),
   ),
 });
+
+export const TaskStatus = {
+  Completed: "completed",
+  Active: "active",
+  Dropped: "dropped",
+  OnHold: "on hold",
+  New: "new",
+} as const;
+
+export const TaskType = {
+  Exam: "Exam",
+  Assignments: "Assignments",
+  Project: "Project",
+  Quiz: "Quiz",
+  Other: "Other",
+  None: "None",
+} as const;
+
+export type TaskStatus = RecordValues<typeof TaskStatus>;
+export type TaskType = RecordValues<typeof TaskType>;
 export type ParsedFileResponse = z.infer<typeof ParsedFileResponse>;

@@ -1,6 +1,5 @@
 "use client";
 
-import { RecordValues } from "@/types";
 import { cn } from "@/utils/cn";
 import { Id } from "@convex/_generated/dataModel";
 import { UserTask } from "@convex/types";
@@ -9,16 +8,7 @@ import { Dispatch, SetStateAction } from "react";
 import { Card } from "./ui/Card";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
-
-export const TaskStatus = {
-  Completed: "completed",
-  Active: "active",
-  Dropped: "dropped",
-  OnHold: "on hold",
-  New: "new",
-} as const;
-
-export type TaskStatus = RecordValues<typeof TaskStatus>;
+import { TaskStatus } from "@/types";
 
 type TaskCardProps = {
   task: UserTask;
@@ -52,7 +42,7 @@ export function TaskCard({ task, setEditTask }: TaskCardProps) {
         <div className="text-muted-foreground flex items-center gap-2">
           <Edit className="h-4 w-4" />
           <Trash
-            className="h-4 w-4 text-red-400"
+            className="h-4 w-4"
             onClick={async (e) => {
               e.stopPropagation();
               await deleteTask({ taskId: task._id as Id<"userTasks"> });

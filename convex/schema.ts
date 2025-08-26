@@ -76,6 +76,9 @@ export default defineSchema({
         v.literal("Exam"),
         v.literal("Assignments"),
         v.literal("Project"),
+        v.literal("Quiz"),
+        v.literal("Other"),
+        v.literal("None"),
       ),
     ),
   })
