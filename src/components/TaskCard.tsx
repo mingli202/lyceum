@@ -51,9 +51,6 @@ export function TaskCard({ task, setEditTask }: TaskCardProps) {
       <div className="flex items-center gap-2">
         <Calendar className="h-4 w-4" /> {task.dueDate}
       </div>
-      <p className="text-muted-foreground whitespace-pre-wrap">
-        {task.description}
-      </p>
       <hr className="border-foreground/20 my-2" />
       <div className="flex justify-between">
         <p

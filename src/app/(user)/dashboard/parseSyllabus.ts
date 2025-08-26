@@ -20,7 +20,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
 
   const response = await openai.responses.parse({
     model: "gpt-5-mini-2025-08-07",
-    reasoning: { summary: null, effort: "medium" },
+    reasoning: { summary: null, effort: "low" },
     instructions: "Extract from the course syllabus accurately",
     input: [
       {
@@ -28,7 +28,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
         content: [
           {
             type: "input_text",
-            text: "Read the parsed data from a syllabus and extract the following data: the course title, the course code that is a unique identifier of the course within the university, the course professor, the semester the course is taken in, how many credits the course is worth, the graded tasks such as assignments and evaluations given in the course, and the class times.",
+            text: `Read the parsed data from a syllabus and extract the following data: the course title, the course code that is a unique identifier of the course within the university, the course professor, the semester and the year the course is taken in, how many credits the course is worth, the graded tasks such as assignments and evaluations given in the course, and the class times. The current date right now is ${new Date().toLocaleString()}, use this to as reference when extracting dates.`,
           },
           { type: "input_file", file_id: res.id },
         ],
@@ -50,7 +50,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
             code: {
               type: "string",
               description:
-                "Extract the unique identifier of the course within the university exactly as written.",
+                "Extract the unique identifier of the course within the university exactly as written. It is usually a combination of numbers and letters.",
             },
             professor: {
               type: "string",
@@ -60,7 +60,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
             semester: {
               type: "string",
               description:
-                "Exact The semester the course is taken in exactly as written.",
+                "Exact The semester the course is taken in exactly as written. Look at the due dates of the assignments and evaluations to accurately determine the semester. For example, if the dates in September to December, it's the Fall semester; in December to May, it's the Winter semester; and in May to September, it's the Summer semester",
               enum: ["Summer", "Fall", "Winter"],
             },
             credits: {
@@ -83,7 +83,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
                   dueDate: {
                     type: "string",
                     description:
-                      "Extract the due date of the task exactly as written if possible. If there are no due date, default to 'TBT'",
+                      "Extract the due date of the task exactly as written. The due date should take into account the year the course is taken in exactly as written. If the year is not written, then default to the current year.",
                     format: "date",
                   },
                   weight: {
@@ -138,6 +138,10 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
                 additionalProperties: false,
               },
             },
+            school: {
+              type: "string",
+              description: "Extract the name of the school exactly as written.",
+            },
           },
           required: [
             "title",
@@ -147,6 +151,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
             "credits",
             "tasks",
             "classTimes",
+            "school",
           ],
           additionalProperties: false,
         },
@@ -170,6 +175,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
     classTimes,
     targetGrade: 85,
     tasks,
+    school: data.school,
   };
   return body;
 }
