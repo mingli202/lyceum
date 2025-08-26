@@ -71,6 +71,13 @@ export default defineSchema({
     scoreObtained: v.number(),
     scoreTotal: v.number(),
     weight: v.number(),
+    type: v.optional(
+      v.union(
+        v.literal("Exam"),
+        v.literal("Assignments"),
+        v.literal("Project"),
+      ),
+    ),
   })
     .index("by_userId", ["userId"]) // for getting all the user's classes
     .index("by_classId", ["classId"]) // for getting all tasks of a class
