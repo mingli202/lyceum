@@ -9,7 +9,7 @@ import {
   LayoutDashboard,
   Search,
   UserIcon,
-  Users,
+  Volleyball,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -52,7 +52,7 @@ export default function NavBar() {
           <Calendar /> Calendar
         </NavItem>
         <NavItem href="/clubs" currentPath={pathName}>
-          <Users /> Clubs
+          <Volleyball /> Clubs
         </NavItem>
         <NavItem href="/search" currentPath={pathName}>
           <Search /> Search

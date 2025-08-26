@@ -1,18 +1,17 @@
+"use client";
+
 import Dashboard from "./Dashboard";
-import { fetchQuery } from "convex/nextjs";
-import { auth } from "@clerk/nextjs/server";
-import { SignatureService } from "@convex/services/signatureService";
 import { api } from "@convex/_generated/api";
+import { useQuery } from "convex/react";
+import { LoadingSpinner } from "@/components";
 
 // TODO: transition animations instead of loading spinner
-export default async function DashboardPage() {
-  const { userId } = await auth();
-  const body = { clerkId: userId };
-  const signature = await new SignatureService().sign(body);
+export default function DashboardPage() {
+  const data = useQuery(api.queries.getDashboardData, {});
 
-  const data = await fetchQuery(api.queries.getDashboardData, {
-    signature,
-  });
+  if (!data) {
+    return <LoadingSpinner />;
+  }
 
   return <Dashboard data={data} />;
 }

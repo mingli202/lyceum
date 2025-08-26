@@ -3,15 +3,19 @@ import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
   ClassInfo,
+  ClassPageData,
   ClubPreviewInfo,
   ClubUserStatus,
   DashboardData,
   PostPreviewInfo,
   ProfileData,
   User,
+  UserCardInfo,
+  UserTask,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
+import { Id } from "./_generated/dataModel";
 
 export const _getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
@@ -37,8 +41,11 @@ export const _getUserFromClerkId = internalQuery({
 
 export const _getUserClassAverageGrade = internalQuery({
   args: { classId: v.id("classes"), userId: v.id("users") },
-  returns: v.number(),
-  handler: async (ctx, args): Promise<number> => {
+  returns: { remainingGrade: v.number(), currentGrade: v.number() },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ remainingGrade: number; currentGrade: number }> => {
     const tasks = await ctx.db
       .query("userTasks")
       .withIndex("by_userId_classId", (q) =>
@@ -46,16 +53,38 @@ export const _getUserClassAverageGrade = internalQuery({
       )
       .collect();
 
+    let totalWeightCompleted = 0;
+    let currentGrade = 0;
     let totalWeight = 0;
 
-    const grade = tasks.reduce((acc, task) => {
+    for (const task of tasks) {
       totalWeight += task.weight;
-      return acc + task.scoreTotal === 0
-        ? 0
-        : (task.weight * task.scoreObtained) / task.scoreTotal;
-    }, 0);
+      if (task.status === "completed") {
+        totalWeightCompleted += task.weight;
+        currentGrade += (task.weight * task.scoreObtained) / task.scoreTotal;
+      }
+    }
 
-    return grade / totalWeight;
+    const userClassInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", args.userId).eq("classId", args.classId),
+      )
+      .unique();
+
+    const grade =
+      totalWeightCompleted === 0 ? 0 : currentGrade / totalWeightCompleted;
+
+    return {
+      currentGrade: 100 * grade,
+      remainingGrade:
+        totalWeight - totalWeightCompleted === 0
+          ? 0
+          : (100 *
+              ((totalWeight * (userClassInfo?.targetGrade ?? 85)) / 100 -
+                currentGrade)) /
+            (totalWeight - totalWeightCompleted),
+    };
   },
 });
 
@@ -121,7 +150,7 @@ export const getProfileData = query({
       major: profile.major,
       firstName: user.givenName,
       lastName: user.familyName,
-      username: profile.username,
+      username: user.username,
       academicYear: profile.academicYear,
       city: profile.city,
       email: user.email,
@@ -154,12 +183,8 @@ export const getUserPosts = query({
     const postsInfo = await Promise.all(
       posts.map(async (post) => {
         const author = await ctx.db.get(post.authorId);
-        const authorProfile = await ctx.db
-          .query("profiles")
-          .withIndex("by_userId", (q) => q.eq("userId", post.authorId))
-          .unique();
 
-        if (!author || !authorProfile) {
+        if (!author) {
           return null;
         }
 
@@ -177,7 +202,7 @@ export const getUserPosts = query({
             pictureUrl: author.pictureUrl,
             firstName: author.givenName,
             lastName: author.familyName,
-            username: authorProfile.username,
+            username: author.username,
           },
           nComments: (
             await ctx.db
@@ -236,10 +261,12 @@ export const getUserClasses = query({
             title: classInfo.title,
             professor: classInfo.professor,
             classId: classInfo._id,
-            grade: await ctx.runQuery(
-              internal.queries._getUserClassAverageGrade,
-              { classId: classInfo._id, userId: user._id },
-            ),
+            grade: (
+              await ctx.runQuery(internal.queries._getUserClassAverageGrade, {
+                classId: classInfo._id,
+                userId: user._id,
+              })
+            ).currentGrade,
           };
         }),
       )
@@ -301,5 +328,124 @@ export const getUserClubs = query({
     ).filter((club) => club !== null);
 
     return clubsPreviewInfo;
+  },
+});
+
+export const getClassPageData = query({
+  args: { classId: v.string(), signature: v.optional(v.string()) },
+  returns: v.union(ClassPageData, v.string()),
+  handler: async (ctx, args): Promise<ClassPageData | string> => {
+    const user = await getUserFromClerkId(ctx, args);
+    const classInfo = await ctx.db
+      .get(args.classId as Id<"classes">)
+      .catch(() => null);
+
+    if (!classInfo) {
+      return "Class not found";
+    }
+
+    if (!user) {
+      return "User not found";
+    }
+
+    const userClassInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", classInfo._id),
+      )
+      .unique();
+
+    if (!userClassInfo) {
+      return "Not registered";
+    }
+
+    const grade = await ctx.runQuery(
+      internal.queries._getUserClassAverageGrade,
+      { userId: user._id, classId: classInfo._id },
+    );
+
+    const nClassmates = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_classId", (q) => q.eq("classId", classInfo._id))
+      .collect();
+
+    const classPageData: ClassPageData = {
+      classId: classInfo._id,
+      title: classInfo.title,
+      professor: classInfo.professor,
+      code: classInfo.code,
+      credits: classInfo.credits,
+      grade: grade.currentGrade,
+      remainingGrade: grade.remainingGrade,
+      nClassmates: nClassmates.length,
+      school: classInfo.school,
+      semester: classInfo.semester,
+      year: classInfo.year,
+      targetGrade: userClassInfo.targetGrade,
+      classTimes: classInfo.classTimes,
+    };
+
+    return classPageData;
+  },
+});
+
+export const getUserClassTasks = query({
+  args: { classId: v.id("classes"), signature: v.optional(v.string()) },
+  returns: v.array(
+    v.object({
+      ...schema.tables.userTasks.validator.fields,
+      _id: v.id("userTasks"),
+      _creationTime: v.float64(),
+    }),
+  ),
+  handler: async (ctx, args): Promise<UserTask[]> => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      return [];
+    }
+
+    const userTasks = await ctx.db
+      .query("userTasks")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .collect();
+
+    return userTasks.sort(
+      (a, b) => Date.parse(a.dueDate) - Date.parse(b.dueDate),
+    );
+  },
+});
+
+export const getClassStudents = query({
+  args: { classId: v.id("classes"), signature: v.optional(v.string()) },
+  returns: v.array(UserCardInfo),
+  handler: async (ctx, args): Promise<UserCardInfo[]> => {
+    const students = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_classId", (q) => q.eq("classId", args.classId))
+      .collect();
+
+    const userCardsInfo = await Promise.all(
+      students.map(async (student) => {
+        const user = await ctx.db.get(student.userId);
+
+        if (!user) {
+          return null;
+        }
+
+        const userCardInfo: UserCardInfo = {
+          userId: student.userId,
+          pictureUrl: user.pictureUrl,
+          firstName: user.givenName,
+          username: user.username,
+        };
+
+        return userCardInfo;
+      }),
+    );
+
+    return userCardsInfo.filter((userCardInfo) => userCardInfo !== null);
   },
 });

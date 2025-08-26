@@ -26,7 +26,6 @@ export class SignatureService {
       );
     }
 
-    // replace the fucking en dash with a hyphen
     let encodedData;
     let dataString = JSON.stringify(data);
 

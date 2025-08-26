@@ -9,6 +9,7 @@ export default defineSchema({
     familyName: v.optional(v.string()),
     pictureUrl: v.optional(v.string()),
     email: v.string(),
+    username: v.string(),
   }).index("by_clerkId", ["clerkId"]),
 
   classes: defineTable({
@@ -63,7 +64,7 @@ export default defineSchema({
     status: v.union(
       v.literal("active"),
       v.literal("completed"),
-      v.literal("pending"),
+      v.literal("new"),
       v.literal("dropped"),
       v.literal("onHold"),
     ),
@@ -84,13 +85,10 @@ export default defineSchema({
 
     major: v.string(),
     school: v.string(),
-    username: v.string(),
     bio: v.optional(v.string()),
     city: v.optional(v.string()),
     academicYear: v.number(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_username", ["username"]),
+  }).index("by_userId", ["userId"]),
 
   settings: defineTable({
     userId: v.id("users"),
