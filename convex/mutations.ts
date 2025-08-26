@@ -197,6 +197,49 @@ export const updateTask = mutation({
   },
 });
 
+export const createTask = mutation({
+  args: {
+    classId: v.id("classes"),
+    description: v.string(),
+    dueDate: v.string(),
+    name: v.string(),
+    scoreObtained: v.number(),
+    scoreTotal: v.number(),
+    weight: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const userClassInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .unique();
+
+    if (!userClassInfo) {
+      throw new Error("Class not found");
+    }
+
+    await ctx.db.insert("userTasks", {
+      classId: args.classId,
+      userId: user._id,
+      description: args.description,
+      dueDate: args.dueDate,
+      name: args.name,
+      status: "new",
+      scoreObtained: 0,
+      scoreTotal: 100,
+      weight: args.weight,
+      userClassInfo: userClassInfo._id,
+    });
+  },
+});
+
 export const deleteClass = mutation({
   args: { classId: v.id("classes") },
   handler: async (ctx, args) => {
