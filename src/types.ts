@@ -13,6 +13,7 @@ export const ParsedFileResponse = z.object({
   code: z.string(),
   professor: z.string(),
   semester: z.enum(["Summer", "Fall", "Winter"]),
+  school: z.string(),
   credits: z.number(),
   tasks: z.array(
     z.object({
