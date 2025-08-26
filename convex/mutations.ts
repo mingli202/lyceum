@@ -227,3 +227,31 @@ export const deleteClass = mutation({
     }
   },
 });
+
+export const editTargetGrade = mutation({
+  args: { classId: v.id("classes"), targetGrade: v.number() },
+  handler: async (ctx, args) => {
+    if (args.targetGrade > 100 || args.targetGrade < 0) {
+      throw new Error("Target grade must be between 0 and 100");
+    }
+
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const classInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .unique();
+
+    if (!classInfo) {
+      throw new Error("Class not found");
+    }
+
+    await ctx.db.patch(classInfo._id, { targetGrade: args.targetGrade });
+  },
+});

@@ -78,10 +78,12 @@ export const _getUserClassAverageGrade = internalQuery({
     return {
       currentGrade: 100 * grade,
       remainingGrade:
-        (100 *
-          ((totalWeight * (userClassInfo?.targetGrade ?? 85)) / 100 -
-            currentGrade)) /
-        (totalWeight - totalWeightCompleted),
+        totalWeight - totalWeightCompleted === 0
+          ? 0
+          : (100 *
+              ((totalWeight * (userClassInfo?.targetGrade ?? 85)) / 100 -
+                currentGrade)) /
+            (totalWeight - totalWeightCompleted),
     };
   },
 });

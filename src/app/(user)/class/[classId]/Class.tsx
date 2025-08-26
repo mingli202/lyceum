@@ -3,10 +3,11 @@
 import { Button, ButtonVariant, LoadingSpinner } from "@/components";
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowLeft, Target, TrendingUp } from "lucide-react";
+import { ArrowLeft, Edit, Target, TrendingUp, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ClassTabs from "./ClassTabs";
 import { Id } from "@convex/_generated/dataModel";
+import { useState } from "react";
 
 type ClassProps = {
   classId: string;
@@ -16,6 +17,8 @@ export default function Class({ classId }: ClassProps) {
   const classData = useQuery(api.queries.getClassPageData, { classId });
   const deleteClass = useMutation(api.mutations.deleteClass);
   const router = useRouter();
+  const [isEditingTargetGrade, setIsEditingTargetGrade] = useState(false);
+  const editTargetGrade = useMutation(api.mutations.editTargetGrade);
 
   if (!classData) {
     return <LoadingSpinner />;
@@ -33,31 +36,29 @@ export default function Class({ classId }: ClassProps) {
     <section className="flex h-full w-full justify-center">
       <div className="relative flex h-full w-full max-w-4xl flex-col">
         <div className="flex flex-col gap-4 px-6 pt-6">
-          <div className="flex flex-col">
-            <Button
-              className="text-muted-foreground flex items-center gap-2 p-0"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="h-4 w-4" /> back
-            </Button>
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">{classData.title}</h1>
-                <p className="text-muted-foreground">
-                  {classData.code} · {classData.professor}
-                </p>
-              </div>
-              <Button
-                variant={ButtonVariant.Destructive}
-                className="h-fit"
-                onClick={async () => {
-                  router.push("/dashboard");
-                  await deleteClass({ classId: classId as Id<"classes"> });
-                }}
-              >
-                Delete
-              </Button>
+          <Button
+            className="text-muted-foreground flex items-center gap-2 p-0"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4" /> back
+          </Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">{classData.title}</h1>
+              <p className="text-muted-foreground">
+                {classData.code} · {classData.professor}
+              </p>
             </div>
+            <Button
+              variant={ButtonVariant.Destructive}
+              className="h-fit"
+              onClick={async () => {
+                router.push("/dashboard");
+                await deleteClass({ classId: classId as Id<"classes"> });
+              }}
+            >
+              Delete
+            </Button>
           </div>
         </div>
 
@@ -70,7 +71,7 @@ export default function Class({ classId }: ClassProps) {
               </div>
 
               <div className="font-bold break-words text-slate-800">
-                {classData.grade}%
+                {classData.grade.toFixed(2)}%
               </div>
               <p className="text-muted-foreground text-sm">
                 Overall performance
@@ -82,12 +83,57 @@ export default function Class({ classId }: ClassProps) {
                 <h3 className="truncate text-base text-gray-900">
                   Target Grade
                 </h3>
-                <Target className="h-4 w-4 flex-shrink-0 text-green-500" />
+                {isEditingTargetGrade ? (
+                  <X
+                    className="h-4 w-4 flex-shrink-0 text-green-500 hover:cursor-pointer"
+                    onClick={() => setIsEditingTargetGrade(false)}
+                  />
+                ) : (
+                  <Edit
+                    className="h-4 w-4 flex-shrink-0 text-green-500 hover:cursor-pointer"
+                    onClick={() => setIsEditingTargetGrade(true)}
+                  />
+                )}
               </div>
 
-              <div className="font-bold break-words text-green-700">
-                {classData.targetGrade.toFixed(2)}%
-              </div>
+              {isEditingTargetGrade ? (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const targetGrade = parseInt(
+                      formData.get("targetGrade")?.toString() ??
+                        classData.targetGrade.toString(),
+                    );
+
+                    if (targetGrade === classData.targetGrade) {
+                      return;
+                    }
+
+                    setIsEditingTargetGrade(false);
+                    await editTargetGrade({
+                      classId: classId as Id<"classes">,
+                      targetGrade: targetGrade,
+                    });
+                  }}
+                >
+                  <input
+                    type="number"
+                    id="targetGrade"
+                    name="targetGrade"
+                    defaultValue={classData.targetGrade}
+                    placeholder="85"
+                    className="w-15 outline-none"
+                    min={0}
+                    max={100}
+                  />
+                  %
+                </form>
+              ) : (
+                <div className="font-bold break-words text-green-700">
+                  {classData.targetGrade}%
+                </div>
+              )}
               <p className="text-muted-foreground text-sm">
                 Your goal for this class
               </p>
