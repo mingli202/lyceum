@@ -5,6 +5,36 @@ import { internal } from "./_generated/api";
 import { AddClassArgs, CreateNewUserArgs } from "./types";
 import { Id } from "./_generated/dataModel";
 
+export const _createNewClass = internalMutation({
+  returns: v.id("classes"),
+  args: v.object({
+    ...AddClassArgs.fields,
+    userId: v.id("users"),
+    school: v.string(),
+  }),
+  handler: async (ctx, args): Promise<Id<"classes">> => {
+    const chatId = await ctx.db.insert("chats", {
+      title: `${args.title}'s Chat`,
+      members: [args.userId],
+    });
+
+    const classId = await ctx.db.insert("classes", {
+      code: args.code,
+      chat: chatId,
+
+      title: args.title,
+      professor: args.professor,
+      school: args.school,
+      semester: args.semester,
+      year: args.year,
+      credits: args.credits,
+      classTimes: args.classTimes,
+    });
+
+    return classId;
+  },
+});
+
 export const createNewUser = mutation({
   args: CreateNewUserArgs,
   returns: v.literal("ok"),
@@ -112,7 +142,7 @@ export const addClass = mutation({
         description: task.desc,
         dueDate: task.dueDate,
         name: task.name,
-        status: "active",
+        status: "new",
         scoreObtained: 0,
         scoreTotal: 100,
         weight: task.weight,
@@ -124,32 +154,45 @@ export const addClass = mutation({
   },
 });
 
-export const _createNewClass = internalMutation({
-  returns: v.id("classes"),
-  args: v.object({
-    ...AddClassArgs.fields,
-    userId: v.id("users"),
-    school: v.string(),
-  }),
-  handler: async (ctx, args): Promise<Id<"classes">> => {
-    const chatId = await ctx.db.insert("chats", {
-      title: `${args.title}'s Chat`,
-      members: [args.userId],
-    });
+export const updateTask = mutation({
+  args: {
+    taskId: v.id("userTasks"),
+    signature: v.optional(v.string()),
 
-    const classId = await ctx.db.insert("classes", {
-      code: args.code,
-      chat: chatId,
+    description: v.optional(v.string()),
+    dueDate: v.optional(v.string()),
+    name: v.optional(v.string()),
+    status: v.optional(
+      v.union(
+        v.literal("active"),
+        v.literal("completed"),
+        v.literal("new"),
+        v.literal("dropped"),
+        v.literal("onHold"),
+      ),
+    ),
+    scoreObtained: v.optional(v.number()),
+    scoreTotal: v.optional(v.number()),
+    weight: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getUserFromClerkId(ctx, args);
+    const task = await ctx.db.get(args.taskId);
 
-      title: args.title,
-      professor: args.professor,
-      school: args.school,
-      semester: args.semester,
-      year: args.year,
-      credits: args.credits,
-      classTimes: args.classTimes,
-    });
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-    return classId;
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    if (task.userId !== user._id) {
+      throw new Error("Modifying task of another user");
+    }
+
+    const { taskId: _t, signature: _s, ...updatedTask } = args;
+
+    await ctx.db.patch(args.taskId, updatedTask);
   },
 });

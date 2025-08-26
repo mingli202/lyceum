@@ -29,7 +29,7 @@ export default function Class({ classId }: ClassProps) {
 
   return (
     <section className="flex h-full w-full justify-center">
-      <div className="relative flex h-full w-4xl flex-col">
+      <div className="relative flex h-full w-full max-w-4xl flex-col">
         <div className="flex flex-col gap-4 px-6 pt-6">
           <div className="flex flex-col">
             <Button
@@ -53,7 +53,7 @@ export default function Class({ classId }: ClassProps) {
         </div>
 
         <div className="flex basis-full gap-3 overflow-hidden px-6 pt-6 pb-4">
-          <div className="flex w-xs shrink-0 flex-col gap-2">
+          <div className="flex w-xs flex-1 flex-col gap-2">
             <div className="bg-background ring-foreground/10 h-fit w-full rounded-lg p-2 shadow-md ring-1">
               <div className="flex items-center justify-between">
                 <h3 className="truncate text-base">Current Grade</h3>
@@ -77,7 +77,7 @@ export default function Class({ classId }: ClassProps) {
               </div>
 
               <div className="font-bold break-words text-green-700">
-                {classData.targetGrade}%
+                {classData.targetGrade.toFixed(2)}%
               </div>
               <p className="text-muted-foreground text-sm">
                 Your goal for this class
@@ -93,7 +93,7 @@ export default function Class({ classId }: ClassProps) {
               </div>
 
               <div className="font-bold break-words text-blue-700">
-                {classData.remainingGrade}%
+                {classData.remainingGrade.toFixed(2)}%
               </div>
               <p className="text-muted-foreground text-sm">
                 Needed to the remaining tasks

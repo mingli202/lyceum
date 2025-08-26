@@ -3,7 +3,7 @@
 import { RecordValues } from "@/types";
 import { cn } from "@/utils/cn";
 import { LoaderCircle } from "lucide-react";
-import { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes, HTMLProps } from "react";
 
 export const ButtonVariant = {
   Special: "special",

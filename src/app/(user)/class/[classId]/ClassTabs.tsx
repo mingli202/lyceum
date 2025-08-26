@@ -5,6 +5,7 @@ import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { ClipboardList, MessageCircle, Users } from "lucide-react";
 import { useState } from "react";
+import Tasks from "./Tasks";
 
 const Tab = {
   Tasks: "Tasks",
@@ -31,7 +32,7 @@ export default function ClassTabs({ classId }: { classId: string }) {
   };
 
   return (
-    <div className="relative flex basis-full flex-col gap-2">
+    <div className="relative flex flex-2 flex-col gap-2">
       <div className="bg-background flex shrink-0 gap-2 rounded-[calc(0.25rem+0.25rem)] p-1 shadow-sm">
         <Button
           variant={
@@ -73,20 +74,7 @@ export default function ClassTabs({ classId }: { classId: string }) {
         className="basis-full overflow-x-hidden overflow-y-auto p-1"
         style={{ scrollbarWidth: "thin" }}
       >
-        {selectedTab === Tab.Tasks && (
-          <div className="space-y-2">
-            {tasks
-              ?.filter((task) => task.status === "active")
-              .map((task) => (
-                <TaskCard task={task} key={"active" + task._id} />
-              ))}
-            {tasks
-              ?.filter((task) => task.status !== "active")
-              .map((task) => (
-                <TaskCard task={task} key={"rest" + task._id} />
-              ))}
-          </div>
-        )}
+        {selectedTab === Tab.Tasks && <Tasks tasks={tasks} />}
         {selectedTab === Tab.Chat && <p>Chat</p>}
         {selectedTab === Tab.Students && (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
