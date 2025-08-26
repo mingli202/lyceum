@@ -20,10 +20,10 @@ const Tab = {
 type Tab = RecordValues<typeof Tab>;
 
 export default function UserActivity() {
-  const posts: PostPreviewInfo[] | undefined = useQuery(
-    api.queries.getUserPosts,
-    {},
-  );
+  // const posts: PostPreviewInfo[] | undefined = useQuery(
+  //   api.queries.getUserPosts,
+  //   {},
+  // );
   const classes = useQuery(api.queries.getUserClasses, {});
   const clubs = useQuery(api.queries.getUserClubs, {});
 

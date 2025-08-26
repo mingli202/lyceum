@@ -3,7 +3,7 @@
 import { Button, ButtonVariant } from "@/components";
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
-import { ArrowLeft, Target, TrendingUp, X } from "lucide-react";
+import { ArrowLeft, Target, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ClassTabs from "./ClassTabs";
 import { Id } from "@convex/_generated/dataModel";
