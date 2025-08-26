@@ -28,7 +28,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
         content: [
           {
             type: "input_text",
-            text: `Read the parsed data from a syllabus and extract the following data: the course title, the course code that is a unique identifier of the course within the university, the course professor, the semester and the year the course is taken in, how many credits the course is worth, the graded tasks such as assignments and evaluations given in the course, and the class times. The current date right now is ${new Date().toLocaleString()}, use this to as reference when extracting dates.`,
+            text: `Read the parsed data from a syllabus and extract the following data: the school name, the course title, the course code that is a unique identifier of the course within the school, the course professor, the semester and the year the course is taken in, how many credits the course is worth, the graded tasks such as assignments and evaluations given in the course, and the class times. The current date right now is ${new Date().toLocaleString()}, use this to as reference when extracting dates.`,
           },
           { type: "input_file", file_id: res.id },
         ],
@@ -50,7 +50,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
             code: {
               type: "string",
               description:
-                "Extract the unique identifier of the course within the university exactly as written. It is usually a combination of numbers and letters.",
+                "Extract the unique identifier of the course within the university exactly as written.",
             },
             professor: {
               type: "string",
