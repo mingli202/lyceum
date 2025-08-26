@@ -351,7 +351,10 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
             setEditTaskDetail((e) => !e);
           }}
           variant={ButtonVariant.Muted}
-          disabled={isPending}
+          disabled={isPending || isNewTask}
+          className={cn(
+            isNewTask && "bg-muted-foreground/10 cursor-not-allowed",
+          )}
         >
           {editTaskDetail ? "Hide" : "Edit"} Details
         </Button>
