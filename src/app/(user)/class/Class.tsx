@@ -36,7 +36,7 @@ export default function Class({ classData }: ClassProps) {
               <div>
                 <h1 className="text-2xl font-bold">{classData.title}</h1>
                 <p className="text-muted-foreground">
-                  {classData.code} · {classData.professor}
+                  {classData.school} · {classData.code} · {classData.professor}
                 </p>
               </div>
               <Button
@@ -123,7 +123,7 @@ export default function Class({ classData }: ClassProps) {
           <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
           <Dialog.Content className="animate-pop-in fixed top-1/2 left-1/2 z-10 h-fit -translate-1/2">
             <form
-              className="bg-background flex w-md flex-col gap-3 rounded-lg p-5"
+              className="bg-background flex w-sm flex-col gap-3 rounded-lg p-5"
               onSubmit={async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
