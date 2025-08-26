@@ -66,7 +66,7 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("new"),
       v.literal("dropped"),
-      v.literal("onHold"),
+      v.literal("on hold"),
     ),
     scoreObtained: v.number(),
     scoreTotal: v.number(),

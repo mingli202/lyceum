@@ -168,7 +168,7 @@ export const updateTask = mutation({
         v.literal("completed"),
         v.literal("new"),
         v.literal("dropped"),
-        v.literal("onHold"),
+        v.literal("on hold"),
       ),
     ),
     scoreObtained: v.optional(v.number()),
@@ -194,6 +194,72 @@ export const updateTask = mutation({
     const { taskId: _t, signature: _s, ...updatedTask } = args;
 
     await ctx.db.patch(args.taskId, updatedTask);
+  },
+});
+
+export const createTask = mutation({
+  args: {
+    classId: v.id("classes"),
+    description: v.string(),
+    dueDate: v.string(),
+    name: v.string(),
+    scoreObtained: v.number(),
+    scoreTotal: v.number(),
+    weight: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const userClassInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .unique();
+
+    if (!userClassInfo) {
+      throw new Error("Class not found");
+    }
+
+    await ctx.db.insert("userTasks", {
+      classId: args.classId,
+      userId: user._id,
+      description: args.description,
+      dueDate: args.dueDate,
+      name: args.name,
+      status: "new",
+      scoreObtained: 0,
+      scoreTotal: 100,
+      weight: args.weight,
+      userClassInfo: userClassInfo._id,
+    });
+  },
+});
+
+export const deleteTask = mutation({
+  args: { taskId: v.id("userTasks") },
+  handler: async (ctx, args) => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const task = await ctx.db.get(args.taskId);
+
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    if (task.userId !== user._id) {
+      throw new Error("Modifying task of another user");
+    }
+
+    await ctx.db.delete(args.taskId);
   },
 });
 

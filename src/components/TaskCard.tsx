@@ -2,6 +2,7 @@
 
 import { RecordValues } from "@/types";
 import { cn } from "@/utils/cn";
+import { Id } from "@convex/_generated/dataModel";
 import { UserTask } from "@convex/types";
 import { Calendar } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
@@ -10,7 +11,7 @@ export const TaskStatus = {
   Completed: "completed",
   Active: "active",
   Dropped: "dropped",
-  OnHold: "onHold",
+  OnHold: "on hold",
   New: "new",
 } as const;
 
@@ -18,7 +19,18 @@ export type TaskStatus = RecordValues<typeof TaskStatus>;
 
 type TaskCardProps = {
   task: UserTask;
-  setEditTask: Dispatch<SetStateAction<UserTask | undefined>>;
+  setEditTask: Dispatch<
+    SetStateAction<
+      | (Omit<UserTask, "_id" | "_creationTime" | "userId" | "userClassInfo"> &
+          Partial<{
+            _id: Id<"userTasks">;
+            _creationTime: number;
+            userId: Id<"users">;
+            userClassInfo: Id<"userClassInfo">;
+          }>)
+      | undefined
+    >
+  >;
 };
 export function TaskCard({ task, setEditTask }: TaskCardProps) {
   return (
@@ -52,7 +64,7 @@ export function TaskCard({ task, setEditTask }: TaskCardProps) {
               task.status === TaskStatus.Active,
             "ring-slatee-400 bg-slate-200 text-slate-700":
               task.status === TaskStatus.Dropped,
-            "bg-amber-200 text-amber-700 ring-amber-400":
+            "bg-rose-200 text-rose-700 ring-rose-400":
               task.status === TaskStatus.OnHold,
             "bg-green-200 text-green-700 ring-green-400":
               task.status === TaskStatus.New,

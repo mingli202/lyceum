@@ -1,36 +1,24 @@
 "use client";
 
-import { Button, ButtonVariant, LoadingSpinner } from "@/components";
+import { Button, ButtonVariant } from "@/components";
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { ArrowLeft, Edit, Target, TrendingUp, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ClassTabs from "./ClassTabs";
 import { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { ClassPageData } from "@convex/types";
 
 type ClassProps = {
-  classId: string;
+  classData: ClassPageData;
 };
 
-export default function Class({ classId }: ClassProps) {
-  const classData = useQuery(api.queries.getClassPageData, { classId });
+export default function Class({ classData }: ClassProps) {
   const deleteClass = useMutation(api.mutations.deleteClass);
   const router = useRouter();
   const [isEditingTargetGrade, setIsEditingTargetGrade] = useState(false);
   const editTargetGrade = useMutation(api.mutations.editTargetGrade);
-
-  if (!classData) {
-    return <LoadingSpinner />;
-  }
-
-  if (typeof classData === "string") {
-    return (
-      <div className="flex h-full w-full items-center justify-center text-red-500">
-        {classData}
-      </div>
-    );
-  }
 
   return (
     <section className="flex h-full w-full justify-center">
@@ -54,7 +42,9 @@ export default function Class({ classId }: ClassProps) {
               className="h-fit"
               onClick={async () => {
                 router.push("/dashboard");
-                await deleteClass({ classId: classId as Id<"classes"> });
+                await deleteClass({
+                  classId: classData.classId as Id<"classes">,
+                });
               }}
             >
               Delete
@@ -112,7 +102,7 @@ export default function Class({ classId }: ClassProps) {
 
                     setIsEditingTargetGrade(false);
                     await editTargetGrade({
-                      classId: classId as Id<"classes">,
+                      classId: classData.classId as Id<"classes">,
                       targetGrade: targetGrade,
                     });
                   }}
@@ -155,7 +145,7 @@ export default function Class({ classId }: ClassProps) {
               </p>
             </div>
           </div>
-          <ClassTabs classId={classId} />
+          <ClassTabs classId={classData.classId} />
         </div>
       </div>
     </section>
