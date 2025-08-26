@@ -2,10 +2,11 @@
 
 import { Button, ButtonVariant, LoadingSpinner } from "@/components";
 import { api } from "@convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, Target, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ClassTabs from "./ClassTabs";
+import { Id } from "@convex/_generated/dataModel";
 
 type ClassProps = {
   classId: string;
@@ -13,6 +14,7 @@ type ClassProps = {
 
 export default function Class({ classId }: ClassProps) {
   const classData = useQuery(api.queries.getClassPageData, { classId });
+  const deleteClass = useMutation(api.mutations.deleteClass);
   const router = useRouter();
 
   if (!classData) {
@@ -45,7 +47,14 @@ export default function Class({ classId }: ClassProps) {
                   {classData.code} · {classData.professor}
                 </p>
               </div>
-              <Button variant={ButtonVariant.Destructive} className="h-fit">
+              <Button
+                variant={ButtonVariant.Destructive}
+                className="h-fit"
+                onClick={async () => {
+                  router.push("/dashboard");
+                  await deleteClass({ classId: classId as Id<"classes"> });
+                }}
+              >
                 Delete
               </Button>
             </div>

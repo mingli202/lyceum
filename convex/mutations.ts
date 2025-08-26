@@ -196,3 +196,34 @@ export const updateTask = mutation({
     await ctx.db.patch(args.taskId, updatedTask);
   },
 });
+
+export const deleteClass = mutation({
+  args: { classId: v.id("classes") },
+  handler: async (ctx, args) => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const userClassInfo = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .unique();
+
+    if (userClassInfo) {
+      await ctx.db.delete(userClassInfo._id);
+    }
+
+    const nStudents = await ctx.db
+      .query("userClassInfo")
+      .withIndex("by_classId", (q) => q.eq("classId", args.classId))
+      .collect();
+
+    if (nStudents.length === 0) {
+      await ctx.db.delete(args.classId);
+    }
+  },
+});
