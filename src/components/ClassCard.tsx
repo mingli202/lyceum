@@ -21,7 +21,7 @@ export function ClassCard({
         </div>
         <CardFooter className="flex justify-between">
           <p>Grade</p>
-          <p>{classInfo.grade.toFixed(2)}%</p>
+          <p>{classInfo.grade.toFixed(1)}%</p>
         </CardFooter>
       </Card>
     </Link>

@@ -1,4 +1,5 @@
 import { Button, ButtonVariant, TaskCard, TaskStatus } from "@/components";
+import { Card } from "@/components/ui/Card";
 import useFormState from "@/hooks/useFormState";
 import { cn } from "@/utils/cn";
 import { api } from "@convex/_generated/api";
@@ -46,8 +47,8 @@ export default function Tasks({ tasks, classId }: TasksProps) {
   return (
     <>
       <div className="space-y-2">
-        <Button
-          className="text-muted-foreground bg-background ring-foreground/10 hover:text-foreground z-0 flex w-full items-center justify-center gap-2 rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
+        <Card
+          className="text-muted-foreground flex-row items-center justify-center"
           onClick={() =>
             setEditTask({
               classId: classId as Id<"classes">,
@@ -62,7 +63,7 @@ export default function Tasks({ tasks, classId }: TasksProps) {
           }
         >
           <Plus className="h-4 w-4" /> New Task
-        </Button>
+        </Card>
         {activeOrNewTasks.map((task) => (
           <TaskCard
             task={task}

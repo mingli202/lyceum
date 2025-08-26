@@ -63,7 +63,7 @@ export default function Class({ classData }: ClassProps) {
                 </div>
 
                 <div className="font-bold break-words text-slate-800">
-                  {classData.grade.toFixed(2)}%
+                  {classData.grade.toFixed(1)}%
                 </div>
                 <p className="text-muted-foreground text-sm">
                   Overall performance
@@ -79,7 +79,7 @@ export default function Class({ classData }: ClassProps) {
                 </div>
 
                 <div className="font-bold break-words text-amber-700">
-                  {classData.remainingGrade.toFixed(2)}%
+                  {classData.remainingGrade.toFixed(1)}%
                 </div>
                 <p className="text-muted-foreground text-sm">
                   Needed to the remaining tasks
