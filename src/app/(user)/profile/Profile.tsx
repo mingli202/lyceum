@@ -1,4 +1,3 @@
-import { Button, ButtonVariant } from "@/components";
 import { ProfileData } from "@convex/types";
 import { GraduationCap, MapPin, School } from "lucide-react";
 import UserActivity from "./UserActivity";
@@ -8,7 +7,7 @@ type ProfileProps = {
   data: ProfileData;
   currentClerkId: string;
 };
-export default function Profile({ data, currentClerkId }: ProfileProps) {
+export default function Profile({ data }: ProfileProps) {
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
       <section className="flex h-fit w-full max-w-3xl flex-col gap-2 p-6">
