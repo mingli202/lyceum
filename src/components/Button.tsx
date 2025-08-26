@@ -8,6 +8,7 @@ import { ButtonHTMLAttributes, HTMLProps } from "react";
 export const ButtonVariant = {
   Special: "special",
   Destructive: "destructive",
+  Muted: "muted",
 };
 export type ButtonVariant = RecordValues<typeof ButtonVariant>;
 
@@ -34,6 +35,8 @@ export function Button({
             variant === "special",
           "text-background bg-gradient-to-br from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600":
             variant === "destructive",
+          "ring-muted-foreground/50 hover:ring-muted-foreground text-muted-foreground hover:text-foreground ring-1":
+            variant === "muted",
         },
         isPending &&
           "flex cursor-wait items-center justify-center hover:cursor-wait",
