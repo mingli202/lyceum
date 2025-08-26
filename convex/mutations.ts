@@ -168,7 +168,7 @@ export const updateTask = mutation({
         v.literal("completed"),
         v.literal("new"),
         v.literal("dropped"),
-        v.literal("onHold"),
+        v.literal("on hold"),
       ),
     ),
     scoreObtained: v.optional(v.number()),
@@ -237,6 +237,29 @@ export const createTask = mutation({
       weight: args.weight,
       userClassInfo: userClassInfo._id,
     });
+  },
+});
+
+export const deleteTask = mutation({
+  args: { taskId: v.id("userTasks") },
+  handler: async (ctx, args) => {
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const task = await ctx.db.get(args.taskId);
+
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    if (task.userId !== user._id) {
+      throw new Error("Modifying task of another user");
+    }
+
+    await ctx.db.delete(args.taskId);
   },
 });
 

@@ -120,6 +120,7 @@ type EditTaskProps = {
 function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
   const updateTask = useMutation(api.mutations.updateTask);
   const createTask = useMutation(api.mutations.createTask);
+  const deleteTask = useMutation(api.mutations.deleteTask);
 
   const nameRef = useRef<HTMLInputElement>(null!);
   const descriptionRef = useRef<HTMLTextAreaElement>(null!);
@@ -244,6 +245,8 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
             placeholder="e.g. 30"
             ref={weightRef}
             required
+            min={0}
+            max={100}
           />
         </label>
         <label htmlFor="status" className="w-full">
@@ -276,6 +279,7 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
               placeholder="e.g. 100"
               ref={scoreObtainedRef}
               required
+              min={0}
             />
           </label>
           /
@@ -289,6 +293,7 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
               placeholder="e.g. 100"
               ref={scoreTotalRef}
               required
+              min={0}
             />
           </label>
         </div>
@@ -313,6 +318,26 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
       >
         {task._id ? "Update" : "Create"}
       </Button>
+      {task._id ? (
+        <Button
+          variant="destructive"
+          className="flex items-center justify-center"
+          isPending={isPending}
+          type="button"
+          onClick={async () => {
+            if (!task._id) {
+              return;
+            }
+
+            setShowEdit(undefined);
+            await deleteTask({
+              taskId: task._id,
+            });
+          }}
+        >
+          Delete
+        </Button>
+      ) : null}
       {message && <p className="text-red-500">{message}</p>}
     </form>
   );

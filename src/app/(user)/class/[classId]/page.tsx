@@ -10,9 +10,7 @@ export default function ClassPage() {
   const params = useParams();
 
   const classId = params.classId?.toString();
-  const classData = classId
-    ? useQuery(api.queries.getClassPageData, { classId })
-    : "Class not found";
+  const classData = useQuery(api.queries.getClassPageData, { classId });
 
   if (!classData) {
     return <LoadingSpinner />;

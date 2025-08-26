@@ -11,7 +11,7 @@ export const TaskStatus = {
   Completed: "completed",
   Active: "active",
   Dropped: "dropped",
-  OnHold: "onHold",
+  OnHold: "on hold",
   New: "new",
 } as const;
 
@@ -64,7 +64,7 @@ export function TaskCard({ task, setEditTask }: TaskCardProps) {
               task.status === TaskStatus.Active,
             "ring-slatee-400 bg-slate-200 text-slate-700":
               task.status === TaskStatus.Dropped,
-            "bg-amber-200 text-amber-700 ring-amber-400":
+            "bg-rose-200 text-rose-700 ring-rose-400":
               task.status === TaskStatus.OnHold,
             "bg-green-200 text-green-700 ring-green-400":
               task.status === TaskStatus.New,
