@@ -79,6 +79,7 @@ export const AddClassArgs = v.object({
       desc: v.string(),
     }),
   ),
+  school: v.optional(v.string()),
 });
 
 export const ProfileData = v.object({
