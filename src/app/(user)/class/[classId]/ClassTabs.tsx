@@ -1,4 +1,4 @@
-import { Button, ButtonVariant, TaskCard, UserCard } from "@/components";
+import { Button, ButtonVariant, UserCard } from "@/components";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
