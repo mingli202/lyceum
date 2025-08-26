@@ -83,7 +83,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
                   dueDate: {
                     type: "string",
                     description:
-                      "Extract the due date of the task exactly as written. The due date should take into account the year the course is taken in exactly as written. If the year is not written, then default to the current year.",
+                      "Extract the due date of the task exactly as written. The due date should take into account the year the course is taken in exactly as written. If there is not due date, default to the end of the semester (last day of the last month of the semester)",
                     format: "date",
                   },
                   weight: {

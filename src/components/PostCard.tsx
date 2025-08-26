@@ -4,7 +4,6 @@ import { ProfilePicture } from "./ProfilePicture";
 import Link from "next/link";
 
 export function PostCard({ post }: { post: PostPreviewInfo }) {
-  console.log("post:", post);
   function parseTimestamp(timestamp: number): string {
     const nowMs = Date.now();
 
