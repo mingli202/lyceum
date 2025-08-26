@@ -5,7 +5,7 @@ import { ClubCard } from "@/components/ClubCard";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
-import { BookOpen, Grid2x2, Users } from "lucide-react";
+import { BookOpen, Grid2x2, Volleyball } from "lucide-react";
 import { useState } from "react";
 
 const Tab = {
@@ -26,7 +26,7 @@ export default function UserActivity() {
   const iconMap: Record<Tab, React.ReactNode> = {
     [Tab.Posts]: <Grid2x2 className="h-4 w-4" />,
     [Tab.Classes]: <BookOpen className="h-4 w-4" />,
-    [Tab.Clubs]: <Users className="h-4 w-4" />,
+    [Tab.Clubs]: <Volleyball className="h-4 w-4" />,
   };
 
   return (

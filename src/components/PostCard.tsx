@@ -47,7 +47,7 @@ export function PostCard({ post }: { post: PostPreviewInfo }) {
       <div className="space-y-1">
         <div className="flex gap-1">
           <p className="font-bold">{post.author.firstName}</p>
-          <p className="text-foreground/60">
+          <p className="text-muted-foreground">
             @{post.author.username} ({parseTimestamp(post.createdAt)})
           </p>
         </div>
@@ -57,7 +57,7 @@ export function PostCard({ post }: { post: PostPreviewInfo }) {
           {/* <Image src={post.imageUrl} alt={post.description} fill /> */}
         </div>
         {/* )} */}
-        <div className="text-foreground/60 flex items-center gap-2">
+        <div className="text-muted-foreground flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Heart className="h-4 w-4" />
             <p>{post.nLikes}</p>

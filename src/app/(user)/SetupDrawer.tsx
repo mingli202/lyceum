@@ -1,24 +1,23 @@
 import { Button } from "@/components";
 import { useUser } from "@clerk/nextjs";
 import { Drawer } from "vaul";
-import { createNewUser } from "@/actions/user";
 import useFormState from "@/hooks/useFormState";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 type SetupDrawerProps = {
   open: boolean;
 };
 export default function SetupDrawer({ open }: SetupDrawerProps) {
   const user = useUser().user;
+  const createNewUser = useMutation(api.mutations.createNewUser);
 
   const [error, handleSubmit, isPending] = useFormState(async (e) => {
-    if (isPending) {
-      return;
-    }
     if (!user) {
       return "Login expired. Sigin again";
     }
     const email = user.primaryEmailAddress?.emailAddress;
-    const imageUrl = user.imageUrl;
+    const pictureUrl = user.imageUrl;
     const clerkId = user.id;
 
     if (!email) {
@@ -27,13 +26,40 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
 
     const formData = new FormData(e.currentTarget);
 
-    formData.set("email", email);
-    formData.set("clerkId", clerkId);
+    const school = formData.get("school")?.toString();
+    const major = formData.get("major")?.toString();
+    const firstName = formData.get("first-name")?.toString();
+    const lastName = formData.get("last-name")?.toString();
+    const username = formData.get("username")?.toString();
+    const academicYear = formData.get("academic-year")?.toString();
+    const city = formData.get("city")?.toString();
+    const bio = formData.get("bio")?.toString();
 
-    if (imageUrl) {
-      formData.set("pictureUrl", imageUrl);
+    if (
+      !school ||
+      !major ||
+      !firstName ||
+      !username ||
+      !academicYear ||
+      !email ||
+      !clerkId
+    ) {
+      return "Please fill out all required fields";
     }
-    return await createNewUser(formData);
+
+    await createNewUser({
+      clerkId,
+      school,
+      major,
+      firstName,
+      lastName,
+      username,
+      academicYear: parseInt(academicYear),
+      city,
+      email,
+      pictureUrl,
+      bio,
+    });
   });
 
   return (
@@ -165,7 +191,9 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
               >
                 Submit
               </Button>
-              {error && <p className="text-red-500">{error}</p>}
+              {error && error !== "ok" && (
+                <p className="text-red-500">{error}</p>
+              )}
             </form>
           </div>
         </Drawer.Content>

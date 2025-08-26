@@ -29,11 +29,11 @@ export function ClubCard({ club }: ClubCardProps) {
       <div className="space-y-1">
         <div className="flex gap-2">
           <p className="font-bold">{club.name} </p>
-          <span className="text-foreground/60 flex items-center">
+          <span className="text-muted-foreground flex items-center">
             <User className="h-4 w-4" /> {club.nMembers}
           </span>
         </div>
-        <p className="text-foreground/60 line-clamp-2">{club.description}</p>
+        <p className="text-muted-foreground line-clamp-2">{club.description}</p>
         <div className="flex gap-2 text-xs">
           <p
             className={cn(

@@ -1,15 +1,21 @@
-import { addClass, addClassFromSyllabus } from "@/actions/class";
+import parseSyllabus from "./parseSyllabus";
 import { Button, LoadingSpinner } from "@/components";
 import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Drawer } from "vaul";
 import schema from "@convex/schema";
 import useFormState from "@/hooks/useFormState";
+import checkForOverlap from "./checkForOverlap";
+import { AddClassArgs } from "@convex/types";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 type ClassTime =
   (typeof schema.tables.classes.validator.fields.classTimes.type)[0];
 
 export default function AddClassDrawer() {
+  const addClass = useMutation(api.mutations.addClass);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -21,17 +27,53 @@ export default function AddClassDrawer() {
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
 
   const [error, handleSubmit, isPending] = useFormState(async (e) => {
-    let res;
+    let body: AddClassArgs;
 
     if (isManual) {
       const formData = new FormData(e.currentTarget);
-      res = await addClass(formData, classTimes);
+
+      const title = formData.get("class-title")!.toString();
+      const code = formData.get("class-code")!.toString();
+      const professor = formData.get("class-prof")!.toString();
+      const semester = formData.get("class-semester")!.toString();
+      const year = formData.get("class-year")!.toString();
+      const credits = formData.get("class-credits")!.toString();
+      const targetGrade = formData.get("class-target-grade")!.toString();
+
+      if (!["Summer", "Fall", "Winter"].includes(semester)) {
+        return "Invalid semester";
+      }
+
+      body = {
+        code,
+        title,
+        professor,
+        semester: semester as AddClassArgs["semester"],
+        year: parseInt(year),
+        credits: parseInt(credits),
+        classTimes,
+        targetGrade: parseInt(targetGrade),
+        tasks: [],
+      };
     } else {
       if (!file) {
         return "Please upload a syllabus";
       }
-      res = await addClassFromSyllabus(file);
+      body = await parseSyllabus(file);
     }
+
+    try {
+      if (checkForOverlap(body.classTimes)) {
+        return "Class times overlap";
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        return e.message;
+      }
+      return "Error while checking for class times overlap";
+    }
+
+    const res = await addClass(body);
 
     if (res && res !== "ok") {
       return res;
