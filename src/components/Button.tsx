@@ -16,6 +16,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
   HTMLProps<HTMLButtonElement> & {
     variant?: ButtonVariant;
     isPending?: boolean;
+    pendingElement?: React.ReactNode;
   };
 
 export function Button({
@@ -23,6 +24,7 @@ export function Button({
   children,
   variant,
   isPending,
+  pendingElement,
   ...props
 }: ButtonProps) {
   return (
@@ -50,7 +52,9 @@ export function Button({
       )}
       {...props}
     >
-      {isPending ? <LoaderCircle className="h-6 w-6 animate-spin" /> : children}
+      {isPending
+        ? (pendingElement ?? <LoaderCircle className="h-6 w-6 animate-spin" />)
+        : children}
     </button>
   );
 }
