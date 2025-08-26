@@ -11,10 +11,11 @@ export const ButtonVariant = {
 };
 export type ButtonVariant = RecordValues<typeof ButtonVariant>;
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant;
-  isPending?: boolean;
-};
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
+  HTMLProps<HTMLButtonElement> & {
+    variant?: ButtonVariant;
+    isPending?: boolean;
+  };
 
 export function Button({
   className,
