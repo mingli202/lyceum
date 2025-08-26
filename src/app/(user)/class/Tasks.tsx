@@ -1,10 +1,12 @@
-import { Button, TaskCard, TaskStatus } from "@/components";
+import { Button, ButtonVariant, TaskCard, TaskStatus } from "@/components";
 import useFormState from "@/hooks/useFormState";
+import { cn } from "@/utils/cn";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { UserTask } from "@convex/types";
 import { useMutation } from "convex/react";
 import { Plus, X } from "lucide-react";
+import { Dialog } from "radix-ui";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 type TasksProps = {
@@ -45,7 +47,7 @@ export default function Tasks({ tasks, classId }: TasksProps) {
     <>
       <div className="space-y-2">
         <Button
-          className="text-muted-foreground flex w-full items-center justify-center gap-2"
+          className="text-muted-foreground bg-background ring-foreground/10 hover:text-foreground z-0 flex w-full items-center justify-center gap-2 rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
           onClick={() =>
             setEditTask({
               classId: classId as Id<"classes">,
@@ -91,7 +93,21 @@ export default function Tasks({ tasks, classId }: TasksProps) {
         ))}
       </div>
 
-      {editTask && <EditTask task={editTask} setEditTask={setEditTask} />}
+      <Dialog.Root
+        open={!!editTask}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditTask(undefined);
+          }
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+          <Dialog.Content className="animate-pop-in fixed top-1/2 left-1/2 z-10 h-fit -translate-1/2">
+            {editTask && <EditTask task={editTask} setEditTask={setEditTask} />}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }
@@ -118,6 +134,8 @@ type EditTaskProps = {
   >;
 };
 function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
+  const isNewTask = task._id === undefined;
+
   const updateTask = useMutation(api.mutations.updateTask);
   const createTask = useMutation(api.mutations.createTask);
   const deleteTask = useMutation(api.mutations.deleteTask);
@@ -130,24 +148,31 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
   const scoreObtainedRef = useRef<HTMLInputElement>(null!);
   const scoreTotalRef = useRef<HTMLInputElement>(null!);
 
+  const [editTaskDetail, setEditTaskDetail] = useState<boolean>(isNewTask);
+
   useEffect(() => {
-    nameRef.current.value = task.name;
-    descriptionRef.current.value = task.description;
-    dueDateRef.current.value = task.dueDate;
-    weightRef.current.value = task.weight.toString();
-    statusRef.current.value = task.status;
+    nameRef.current!.value = task.name;
+    descriptionRef.current!.value = task.description;
+    dueDateRef.current!.value = task.dueDate;
+    weightRef.current!.value = task.weight.toString();
+    if (task.status === TaskStatus.New || task.status === TaskStatus.Active) {
+      statusRef.current!.value = TaskStatus.Completed;
+    } else {
+      statusRef.current!.value = task.status;
+    }
+
     scoreObtainedRef.current.value = task.scoreObtained.toString();
     scoreTotalRef.current.value = task.scoreTotal.toString();
-  }, [task]);
+  }, [task, editTaskDetail]);
 
   const [message, handleSubmit, isPending] = useFormState(async () => {
-    const name = nameRef.current.value!;
-    const description = descriptionRef.current.value!;
-    const dueDate = dueDateRef.current.value!;
-    const weight = weightRef.current.value!;
-    const status = statusRef.current.value!;
-    const scoreObtained = scoreObtainedRef.current.value!;
-    const scoreTotal = scoreTotalRef.current.value!;
+    const name = nameRef.current.value;
+    const description = descriptionRef.current.value;
+    const dueDate = dueDateRef.current.value;
+    const weight = weightRef.current.value;
+    const status = statusRef.current.value;
+    const scoreObtained = scoreObtainedRef.current.value;
+    const scoreTotal = scoreTotalRef.current.value;
 
     let res;
     if (!task._id) {
@@ -196,12 +221,12 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
 
   return (
     <form
-      className="bg-background ring-foreground/10 absolute top-0 right-full z-0 m-2 flex w-60 flex-col gap-1 space-y-2 rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:shadow-lg"
+      className="bg-background ring-foreground/10 m-2 flex w-sm flex-col gap-1 space-y-2 rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:shadow-lg"
       onSubmit={handleSubmit}
     >
-      <label htmlFor="name">
-        <div className="flex w-full items-center justify-between">
-          <p>Name</p>
+      <Dialog.Title className="flex items-center justify-between gap-4 font-bold">
+        <div className="flex w-full items-center justify-between gap-2">
+          <p>Update Task</p>
           <Button
             className="p-0"
             onClick={() => {
@@ -212,132 +237,158 @@ function EditTask({ task, setEditTask: setShowEdit }: EditTaskProps) {
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-          placeholder="e.g. Task name"
-          ref={nameRef}
-          required
-        />
-      </label>
-      <label htmlFor="dueDate">
-        <p>Due Date</p>
-        <input
-          id="dueDate"
-          name="dueDate"
-          type="date"
-          className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-          placeholder="e.g. 2023-01-01"
-          ref={dueDateRef}
-          required
-        />
-      </label>
-      <div className="flex items-center gap-3">
-        <label htmlFor="weight" className="w-full">
-          <p>Weight (%)</p>
+      </Dialog.Title>
+
+      <div className={cn("flex flex-col gap-1", !editTaskDetail && "hidden")}>
+        <label htmlFor="name">
+          <p>Name</p>
           <input
-            id="weight"
-            name="weight"
-            type="number"
-            className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-            placeholder="e.g. 30"
-            ref={weightRef}
+            id="name"
+            name="name"
+            type="text"
+            className={cn(
+              "mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400",
+            )}
+            placeholder="e.g. Task name"
+            ref={nameRef}
             required
-            min={0}
-            max={100}
           />
         </label>
-        <label htmlFor="status" className="w-full">
-          <p>Status</p>
-          <select
-            id="status"
-            name="status"
+        <label htmlFor="dueDate">
+          <p>Due Date</p>
+          <input
+            id="dueDate"
+            name="dueDate"
+            type="date"
             className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-            ref={statusRef}
+            placeholder="e.g. 2023-01-01"
+            ref={dueDateRef}
             required
-          >
-            <option value={TaskStatus.Active}>Active</option>
-            <option value={TaskStatus.Completed}>Completed</option>
-            <option value={TaskStatus.Dropped}>Dropped</option>
-            <option value={TaskStatus.New}>New</option>
-            <option value={TaskStatus.OnHold}>On Hold</option>
-          </select>
+          />
         </label>
-      </div>
-      <div>
-        <p>Score</p>
-        <div className="flex w-full items-center gap-2">
-          <label htmlFor="scoreObtained">
-            <p>Obtained</p>
+        <div className="flex items-center gap-3">
+          <label htmlFor="weight" className="w-full">
+            <p>Weight (%)</p>
             <input
-              id="scoreObtained"
-              name="scoreObtained"
+              id="weight"
+              name="weight"
               type="number"
               className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-              placeholder="e.g. 100"
-              ref={scoreObtainedRef}
+              placeholder="e.g. 30"
+              ref={weightRef}
               required
               min={0}
+              max={100}
             />
           </label>
-          /
-          <label htmlFor="scoreTotal">
-            <p>Total</p>
-            <input
-              id="scoreTotal"
-              name="scoreTotal"
-              type="number"
+          <label htmlFor="status" className="w-full">
+            <p>Status</p>
+            <select
+              id="status"
+              name="status"
               className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-              placeholder="e.g. 100"
-              ref={scoreTotalRef}
+              ref={statusRef}
               required
-              min={0}
-            />
+            >
+              <option value={TaskStatus.Active}>Active</option>
+              <option value={TaskStatus.Completed}>Completed</option>
+              <option value={TaskStatus.Dropped}>Dropped</option>
+              <option value={TaskStatus.New}>New</option>
+              <option value={TaskStatus.OnHold}>On Hold</option>
+            </select>
           </label>
         </div>
+        <label htmlFor="description">
+          <p>Description</p>
+          <textarea
+            id="description"
+            rows={3}
+            name="description"
+            className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+            placeholder="e.g. Task description"
+            ref={descriptionRef}
+            required
+          />
+        </label>
       </div>
-      <label htmlFor="description">
-        <p>Description</p>
-        <textarea
-          id="description"
-          rows={3}
-          name="description"
-          className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
-          placeholder="e.g. Task description"
-          ref={descriptionRef}
-          required
-        />
-      </label>
-      <Button
-        variant="special"
-        type="submit"
-        className="flex items-center justify-center"
-        isPending={isPending}
-      >
-        {task._id ? "Update" : "Create"}
-      </Button>
-      {task._id ? (
+
+      <div className="flex w-full items-center gap-2">
+        <label htmlFor="scoreObtained" className="w-full">
+          <p>Score Obtained</p>
+          <input
+            id="scoreObtained"
+            name="scoreObtained"
+            type="number"
+            className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+            placeholder="e.g. 100"
+            ref={scoreObtainedRef}
+            required
+            min={0}
+          />
+        </label>
+        /
+        <label htmlFor="scoreTotal" className="w-full">
+          <p>Total Score</p>
+          <input
+            id="scoreTotal"
+            name="scoreTotal"
+            type="number"
+            className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+            placeholder="e.g. 100"
+            ref={scoreTotalRef}
+            required
+            min={0}
+          />
+        </label>
+      </div>
+      <div className="flex w-full items-center justify-between gap-2">
         <Button
-          variant="destructive"
-          className="flex items-center justify-center"
-          isPending={isPending}
           type="button"
-          onClick={async () => {
-            if (!task._id) {
+          onClick={() => {
+            if (isPending) {
               return;
             }
-
-            setShowEdit(undefined);
-            await deleteTask({
-              taskId: task._id,
-            });
+            setEditTaskDetail((e) => !e);
           }}
+          variant={ButtonVariant.Muted}
+          disabled={isPending || isNewTask}
+          className={cn(
+            isNewTask && "bg-muted-foreground/10 cursor-not-allowed",
+          )}
         >
-          Delete
+          {editTaskDetail ? "Hide" : "Edit"} Details
         </Button>
-      ) : null}
+        <div className="flex items-center justify-end gap-2">
+          {!isNewTask ? (
+            <Button
+              variant="destructive"
+              className="flex items-center justify-center"
+              type="button"
+              disabled={isPending}
+              onClick={async () => {
+                if (!task._id || isPending) {
+                  return;
+                }
+
+                setShowEdit(undefined);
+                await deleteTask({
+                  taskId: task._id,
+                });
+              }}
+            >
+              Delete
+            </Button>
+          ) : null}
+          <Button
+            variant="special"
+            type="submit"
+            className="flex items-center justify-center"
+            isPending={isPending}
+          >
+            {task._id ? "Update" : "Create"}
+          </Button>
+        </div>
+      </div>
       {message && <p className="text-red-500">{message}</p>}
     </form>
   );

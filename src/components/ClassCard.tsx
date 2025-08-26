@@ -19,7 +19,7 @@ export function ClassCard({
       <hr className="border-foreground/20 my-2" />
       <div className="flex justify-between">
         <p>Grade</p>
-        <p>{classInfo.grade}%</p>
+        <p>{classInfo.grade.toFixed(2)}%</p>
       </div>
     </Link>
   );

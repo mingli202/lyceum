@@ -88,20 +88,26 @@ export const addClass = mutation({
       throw new Error("User not found");
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
-      .unique();
+    let school;
+    if (args.school) {
+      school = args.school;
+    } else {
+      const profile = await ctx.db
+        .query("profiles")
+        .withIndex("by_userId", (q) => q.eq("userId", user._id))
+        .unique();
 
-    if (!profile) {
-      throw new Error("User profile not found");
+      if (!profile) {
+        throw new Error("User profile not found");
+      }
+      school = profile.school;
     }
 
     // search if the class already exists
     const existingClass = await ctx.db
       .query("classes")
       .withIndex("by_school_code", (q) =>
-        q.eq("school", profile.school).eq("code", args.code),
+        q.eq("school", school).eq("code", args.code),
       )
       .unique();
 
@@ -125,7 +131,7 @@ export const addClass = mutation({
       classId = await ctx.runMutation(internal.mutations._createNewClass, {
         ...args,
         userId: user._id,
-        school: profile.school,
+        school: school,
       });
     }
 

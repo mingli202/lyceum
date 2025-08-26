@@ -64,7 +64,7 @@ export default function AddClassDrawer() {
 
     try {
       if (checkForOverlap(body.classTimes)) {
-        return "Class times overlap";
+        body.classTimes = [];
       }
     } catch (e) {
       if (e instanceof Error) {
