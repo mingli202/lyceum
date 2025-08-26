@@ -27,7 +27,7 @@ export default function Dashboard({ data }: Props) {
             <p>Based on {data.classesInfo.length} class</p>
           </div>
           <div className="border-background/10 flex aspect-square flex-col items-center justify-center rounded-full border-2 border-solid p-4">
-            {data.average ?? "N/A"}
+            {data.average?.toFixed(2) ?? "N/A"}
             <p className="text-sm">Average</p>
           </div>
         </div>
