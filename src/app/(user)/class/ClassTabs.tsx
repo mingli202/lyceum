@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import { ClipboardList, MessageCircle, Users } from "lucide-react";
 import { useState } from "react";
 import Tasks from "./Tasks";
+import { Grid } from "@/components/ui/Grid";
 
 const Tab = {
   Tasks: "Tasks",
@@ -77,12 +78,11 @@ export default function ClassTabs({ classId }: { classId: string }) {
         {selectedTab === Tab.Tasks && <Tasks tasks={tasks} classId={classId} />}
         {selectedTab === Tab.Chat && <p>Chat</p>}
         {selectedTab === Tab.Students && (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
+          <Grid childrenSize="md">
             {students?.map((student) => (
               <UserCard user={student} key={student.userId} />
             ))}
-            <div className="col-span-full h-0" />
-          </div>
+          </Grid>
         )}
       </div>
     </div>

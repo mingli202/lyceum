@@ -1,7 +1,7 @@
 import parseSyllabus from "./parseSyllabus";
 import { Button, LoadingSpinner } from "@/components";
 import { Archive, FileUp, Minus, Plus, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import schema from "@convex/schema";
 import useFormState from "@/hooks/useFormState";
@@ -25,6 +25,17 @@ export default function AddClassDrawer() {
   const [isUploading, setIsUploading] = useState(false);
 
   const [classTimes, setClassTimes] = useState<ClassTime[]>([]);
+  const [timeS, setTimeS] = useState(0);
+
+  const intervalId = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (intervalId.current) {
+        clearInterval(intervalId.current);
+      }
+    };
+  }, []);
 
   const [error, handleSubmit, isPending] = useFormState(async (e) => {
     let body: AddClassArgs;
@@ -59,6 +70,10 @@ export default function AddClassDrawer() {
       if (!file) {
         return "Please upload a syllabus";
       }
+
+      intervalId.current = setInterval(() => {
+        setTimeS((s) => s + 0.1);
+      }, 100);
       body = await parseSyllabus(file);
     }
 
@@ -67,10 +82,12 @@ export default function AddClassDrawer() {
         body.classTimes = [];
       }
     } catch (e) {
-      if (e instanceof Error) {
-        return e.message;
+      if (isManual) {
+        if (e instanceof Error) {
+          return e.message;
+        }
+        return "Error while checking for class times overlap";
       }
-      return "Error while checking for class times overlap";
     }
 
     const res = await addClass(body);
@@ -121,7 +138,7 @@ export default function AddClassDrawer() {
               </div>
               {!isManual ? (
                 <div className="flex flex-col gap-1">
-                  <p>From Syllabus</p>
+                  <p>From Syllabus (ChatGPT)</p>
                   <label
                     htmlFor="file-upload"
                     className="flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-indigo-300 p-4 transition hover:cursor-pointer hover:border-indigo-500"
@@ -297,7 +314,13 @@ export default function AddClassDrawer() {
                   </div>
                 </div>
               )}
-              <Button variant="special" isPending={isPending}>
+              <Button
+                variant="special"
+                isPending={isPending}
+                pendingElement={
+                  isManual ? undefined : <p>{timeS.toFixed(1)} s</p>
+                }
+              >
                 Submit
               </Button>
               {error && <p className="text-red-500">{error}</p>}

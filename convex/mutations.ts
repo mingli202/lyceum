@@ -4,6 +4,7 @@ import { authorize, getUserFromClerkId } from "./utils";
 import { internal } from "./_generated/api";
 import { AddClassArgs, CreateNewUserArgs } from "./types";
 import { Id } from "./_generated/dataModel";
+import schema from "./schema";
 
 export const _createNewClass = internalMutation({
   returns: v.id("classes"),
@@ -153,6 +154,7 @@ export const addClass = mutation({
         scoreTotal: 100,
         weight: task.weight,
         userClassInfo: classInfoId,
+        type: task.taskType,
       });
     }
 
@@ -168,18 +170,11 @@ export const updateTask = mutation({
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
     name: v.optional(v.string()),
-    status: v.optional(
-      v.union(
-        v.literal("active"),
-        v.literal("completed"),
-        v.literal("new"),
-        v.literal("dropped"),
-        v.literal("on hold"),
-      ),
-    ),
+    status: v.optional(schema.tables.userTasks.validator.fields.status),
     scoreObtained: v.optional(v.number()),
     scoreTotal: v.optional(v.number()),
     weight: v.optional(v.number()),
+    type: v.optional(schema.tables.userTasks.validator.fields.type),
   },
   handler: async (ctx, args) => {
     const user = await getUserFromClerkId(ctx, args);
@@ -212,6 +207,7 @@ export const createTask = mutation({
     scoreObtained: v.number(),
     scoreTotal: v.number(),
     weight: v.number(),
+    type: schema.tables.userTasks.validator.fields.type,
   },
   handler: async (ctx, args) => {
     const user = await getUserFromClerkId(ctx, args);
@@ -242,6 +238,7 @@ export const createTask = mutation({
       scoreTotal: 100,
       weight: args.weight,
       userClassInfo: userClassInfo._id,
+      type: args.type,
     });
   },
 });
@@ -288,6 +285,15 @@ export const deleteClass = mutation({
     if (userClassInfo) {
       await ctx.db.delete(userClassInfo._id);
     }
+
+    const userTasks = await ctx.db
+      .query("userTasks")
+      .withIndex("by_userId_classId", (q) =>
+        q.eq("userId", user._id).eq("classId", args.classId),
+      )
+      .collect();
+
+    await Promise.all(userTasks.map((t) => ctx.db.delete(t._id)));
 
     const nStudents = await ctx.db
       .query("userClassInfo")
