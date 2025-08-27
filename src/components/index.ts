@@ -7,3 +7,6 @@ export * from "./PostCard";
 export * from "./UserCard";
 export * from "./ClubCard";
 export * from "./TaskCard";
+export * from "./ui/Card";
+export * from "./ui/Grid";
+export * from "./Profile";

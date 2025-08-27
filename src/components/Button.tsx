@@ -43,7 +43,8 @@ export function Button({
         !props.disabled && {
           "hover:from-blue-600 hover:to-indigo-600": variant === "special",
           "hover:from-amber-600 hover:to-red-600": variant === "destructive",
-          "hover:text-foreground ring-1": variant === "muted",
+          "hover:text-foreground hover:ring-muted-foreground/80":
+            variant === "muted",
         },
         isPending &&
           "flex cursor-wait items-center justify-center hover:cursor-wait",
