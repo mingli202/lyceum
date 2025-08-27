@@ -1,14 +1,14 @@
 import { ProfileData } from "@convex/types";
-import { MapPin, School } from "lucide-react";
-import UserActivity from "./UserActivity";
+import { GraduationCap, MapPin, School } from "lucide-react";
 import { ProfilePicture } from "@/components/ProfilePicture";
 import { Button, ButtonVariant } from "@/components";
+import UserActivity from "@/app/(user)/profile/UserActivity";
 
 type ProfileProps = {
   data: ProfileData;
-  currentClerkId: string;
+  currentClerkId?: string | null;
 };
-export default function Profile({ data, currentClerkId }: ProfileProps) {
+export function Profile({ data, currentClerkId }: ProfileProps) {
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
       <section className="flex h-fit w-full max-w-2xl flex-col">
@@ -20,13 +20,13 @@ export default function Profile({ data, currentClerkId }: ProfileProps) {
           />
         </div>
         <div className="flex w-full justify-end p-6">
-          {data.clerkId === currentClerkId ? (
+          {currentClerkId && data.clerkId === currentClerkId ? (
             <Button variant={ButtonVariant.Muted}>Edit</Button>
           ) : (
             <Button variant={ButtonVariant.Special}>Follow</Button>
           )}
         </div>
-        <div className="flex flex-col justify-between gap-2 px-8 text-sm">
+        <div className="flex flex-col justify-between gap-2 px-6 text-sm">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               <p className="text-2xl font-bold overflow-ellipsis whitespace-nowrap">
@@ -38,22 +38,26 @@ export default function Profile({ data, currentClerkId }: ProfileProps) {
           </div>
           {data.bio && <div>{data.bio}</div>}
 
-          <div className="text-muted-foreground">
-            <div className="flex items-center gap-2">
+          <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-0">
+            <div className="flex items-center gap-1">
               <School className="h-4 w-4" />
+              <span>{data.school}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <GraduationCap className="h-4 w-4" />
               <span>
-                {data.school} · {data.academicYear - 2024}st Year · {data.major}
+                {data.academicYear - 2024}st Year · {data.major}
               </span>
             </div>
             {data.city && (
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1">
                 <MapPin className="h-4 w-4" />
                 <span>{data.city}</span>
               </div>
             )}
           </div>
 
-          <div className="mb-2 flex gap-2">
+          <div className="mb-4 flex gap-2">
             <p>
               <span className="font-bold">{data.followers.length + " "}</span>
               <span className="text-muted-foreground">Followers</span>
