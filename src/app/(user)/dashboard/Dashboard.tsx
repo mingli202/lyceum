@@ -2,6 +2,7 @@ import { LayoutDashboard } from "lucide-react";
 import { DashboardData } from "@convex/types";
 import AddClassDrawer from "./AddClassDrawer";
 import { ClassCard } from "@/components";
+import { Grid } from "@/components/ui/Grid";
 
 type Props = {
   data: DashboardData;
@@ -27,7 +28,7 @@ export default function Dashboard({ data }: Props) {
             <p>Based on {data.classesInfo.length} class</p>
           </div>
           <div className="border-background/10 flex aspect-square flex-col items-center justify-center rounded-full border-2 border-solid p-4">
-            {data.average?.toFixed(2) ?? "N/A"}
+            {data.average?.toFixed(1) ?? "N/A"}
             <p className="text-sm">Average</p>
           </div>
         </div>
@@ -36,12 +37,11 @@ export default function Dashboard({ data }: Props) {
       <div className="flex basis-full flex-col gap-1 overflow-hidden">
         <p className="col-span-full shrink-0 px-6">My classes</p>
         <div className="basis-full overflow-x-hidden overflow-y-auto px-6 pt-1 pb-6">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
+          <Grid>
             {data.classesInfo.map((classInfo, i) => (
               <ClassCard classInfo={classInfo} key={classInfo.code + i} />
             ))}
-            <div className="col-span-full h-0" />
-          </div>
+          </Grid>
         </div>
       </div>
     </div>

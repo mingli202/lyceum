@@ -58,6 +58,10 @@ export const _getUserClassAverageGrade = internalQuery({
     let totalWeight = 0;
 
     for (const task of tasks) {
+      if (task.status === "dropped") {
+        continue;
+      }
+
       totalWeight += task.weight;
       if (task.status === "completed") {
         totalWeightCompleted += task.weight;

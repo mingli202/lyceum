@@ -4,7 +4,6 @@ import { ProfilePicture } from "./ProfilePicture";
 import Link from "next/link";
 
 export function PostCard({ post }: { post: PostPreviewInfo }) {
-  console.log("post:", post);
   function parseTimestamp(timestamp: number): string {
     const nowMs = Date.now();
 
@@ -40,7 +39,7 @@ export function PostCard({ post }: { post: PostPreviewInfo }) {
   return (
     <Link
       href={`/post?id=${post.postId}`}
-      className="ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
+      className="ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-3 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
     >
       <ProfilePicture
         src={post.author.pictureUrl}

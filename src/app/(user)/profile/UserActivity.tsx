@@ -2,6 +2,7 @@
 
 import { Button, ClassCard, PostCard } from "@/components";
 import { ClubCard } from "@/components/ClubCard";
+import { Grid } from "@/components/ui/Grid";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
@@ -27,7 +28,7 @@ export default function UserActivity() {
   const classes = useQuery(api.queries.getUserClasses, {});
   const clubs = useQuery(api.queries.getUserClubs, {});
 
-  const postsPlaceholder: PostPreviewInfo[] = Array(0)
+  const postsPlaceholder: PostPreviewInfo[] = Array(10)
     .fill(0)
     .map((_, i) => ({
       postId: `placeholder-${i}` as Id<"posts">,
@@ -113,13 +114,11 @@ export default function UserActivity() {
         ))}
       {selectedTab === "Classes" &&
         (classes && classes.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-2">
+          <Grid>
             {classes?.map((classinfo) => (
               <ClassCard classInfo={classinfo} key={classinfo.classId} />
             ))}
-
-            <div className="col-span-full h-0" />
-          </div>
+          </Grid>
         ) : (
           <div className="flex w-full flex-col items-center justify-center p-6">
             <BookOpen className="text-muted-foreground h-20 w-20 stroke-1" />

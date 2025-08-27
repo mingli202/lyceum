@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
+import schema from "./schema";
 
 export type User = Doc<"users">;
 export type Class = Doc<"classes">;
@@ -77,6 +78,7 @@ export const AddClassArgs = v.object({
       dueDate: v.string(),
       weight: v.number(),
       desc: v.string(),
+      taskType: schema.tables.userTasks.validator.fields.type,
     }),
   ),
   school: v.optional(v.string()),
