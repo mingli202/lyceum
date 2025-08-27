@@ -201,9 +201,7 @@ export default function EditTask({
             >
               <option value={TaskType.None}>{TaskType.None}</option>
               <option value={TaskType.Exam}>{TaskType.Exam}</option>
-              <option value={TaskType.Assignments}>
-                {TaskType.Assignments}
-              </option>
+              <option value={TaskType.Assignment}>{TaskType.Assignment}</option>
               <option value={TaskType.Project}>{TaskType.Project}</option>
               <option value={TaskType.Quiz}>{TaskType.Quiz}</option>
               <option value={TaskType.Other}>{TaskType.Other}</option>

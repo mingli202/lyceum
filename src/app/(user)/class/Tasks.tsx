@@ -36,7 +36,7 @@ export default function Tasks({ tasks, classId }: TasksProps) {
     };
   }> = {
     [TaskType.Exam]: {},
-    [TaskType.Assignments]: {},
+    [TaskType.Assignment]: {},
     [TaskType.Project]: {},
     [TaskType.Quiz]: {},
     [TaskType.Other]: {},

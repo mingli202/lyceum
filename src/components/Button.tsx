@@ -58,3 +58,7 @@ export function Button({
     </button>
   );
 }
+
+export function TimeTrackingButton(props: ButtonProps) {
+  return <Button {...props} />;
+}

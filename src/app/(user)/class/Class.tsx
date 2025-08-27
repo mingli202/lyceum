@@ -71,7 +71,7 @@ export default function Class({ classData }: ClassProps) {
                 </p>
               </Card>
 
-              <Card className="w-full text-base shadow-amber-500/30 ring-amber-300">
+              <Card className="w-full gap-1 text-base shadow-amber-500/30 ring-amber-300">
                 <div className="flex items-center justify-between">
                   <h3 className="truncate text-base text-gray-900">
                     Required Grade
@@ -87,7 +87,7 @@ export default function Class({ classData }: ClassProps) {
                 </p>
               </Card>
 
-              <Card className="w-full text-base shadow-blue-500/30 ring-blue-300">
+              <Card className="w-full gap-1 text-base shadow-blue-500/30 ring-blue-300">
                 <div className="flex items-center justify-between">
                   <h3 className="truncate text-base text-gray-900">
                     Target Grade
