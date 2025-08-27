@@ -154,6 +154,7 @@ export const addClass = mutation({
         scoreTotal: 100,
         weight: task.weight,
         userClassInfo: classInfoId,
+        type: task.taskType,
       });
     }
 

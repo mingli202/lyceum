@@ -2,7 +2,7 @@
 
 import { AddClassArgs } from "@convex/types";
 import OpenAI from "openai";
-import { ParsedFileResponse } from "@/types";
+import { ParsedFileResponse, TaskType } from "@/types";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -20,7 +20,7 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
 
   const response = await openai.responses.parse({
     model: "gpt-5-mini-2025-08-07",
-    reasoning: { summary: null, effort: "low" },
+    reasoning: { summary: null, effort: "minimal" },
     instructions: "Extract from the course syllabus accurately",
     input: [
       {
@@ -96,8 +96,21 @@ export default async function parseSyllabus(file: File): Promise<AddClassArgs> {
                     description:
                       "Extract the description of the task if possible. If there are no description, return an empty string.",
                   },
+                  taskType: {
+                    type: "string",
+                    description:
+                      "Extract the type of the task exactly as written. Classify the task in it's closest type. Exams include final exams and midterm exams. Quizzes are for smaller graded works. Projects usually involve teamwork and span for a longer time period, while Assignments are individual smaller work. Other tasks include tasks that don't particularly fit in the above types, such as oral presentation, weekly check-ins, participation, etc. At last, if it fits nothing, default to the type 'None'.",
+                    enum: [
+                      TaskType.Assignment,
+                      TaskType.Exam,
+                      TaskType.Other,
+                      TaskType.None,
+                      TaskType.Project,
+                      TaskType.Quiz,
+                    ],
+                  },
                 },
-                required: ["name", "dueDate", "weight", "desc"],
+                required: ["name", "dueDate", "weight", "desc", "taskType"],
                 additionalProperties: false,
               },
             },

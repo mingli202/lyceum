@@ -74,7 +74,7 @@ export default defineSchema({
     type: v.optional(
       v.union(
         v.literal("Exam"),
-        v.literal("Assignments"),
+        v.literal("Assignment"),
         v.literal("Project"),
         v.literal("Quiz"),
         v.literal("Other"),
