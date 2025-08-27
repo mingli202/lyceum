@@ -73,72 +73,6 @@ export default defineSchema({
     lastSeenAt: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
-  userClassInfo: defineTable({
-    userId: v.id("users"),
-    classId: v.id("classes"),
-    targetGrade: v.number(),
-  })
-    .index("by_userId", ["userId"]) // for getting all the user's classes
-    .index("by_classId", ["classId"]) // for getting all users of a class
-    .index("by_userId_classId", ["userId", "classId"]), // for checking if a user is a student of a class
-
-  userTasks: defineTable({
-    userId: v.id("users"),
-    classId: v.id("classes"),
-    userClassInfo: v.id("userClassInfo"),
-
-    description: v.string(),
-    dueDate: v.string(),
-    name: v.string(),
-    status: v.union(
-      v.literal("active"),
-      v.literal("completed"),
-      v.literal("new"),
-      v.literal("dropped"),
-      v.literal("on hold"),
-    ),
-    scoreObtained: v.number(),
-    scoreTotal: v.number(),
-    weight: v.number(),
-    type: v.optional(
-      v.union(
-        v.literal("Exam"),
-        v.literal("Assignment"),
-        v.literal("Project"),
-        v.literal("Quiz"),
-        v.literal("Other"),
-        v.literal("None"),
-      ),
-    ),
-  })
-    .index("by_userId", ["userId"]) // for getting all the user's classes
-    .index("by_classId", ["classId"]) // for getting all tasks of a class
-    .index("by_userId_classId", ["userId", "classId"]),
-
-  userClubsInfo: defineTable({
-    userId: v.id("users"),
-    clubId: v.id("clubs"),
-    status: v.union(
-      v.literal("member"),
-      v.literal("following"),
-      v.literal("admin"),
-      v.literal("banned"),
-      v.literal("requested"),
-    ),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_clubId", ["clubId"])
-    .index("by_userId_clubId", ["userId", "clubId"]),
-
-  userChatsInfo: defineTable({
-    userId: v.id("users"),
-    chatId: v.id("chats"),
-    lastSeenMessage: v.id("messages"),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_chatId", ["chatId"])
-    .index("by_userId_chatId", ["userId", "chatId"]),
-
   settings: defineTable({
     userId: v.id("users"),
 
@@ -153,13 +87,6 @@ export default defineSchema({
     description: v.string(),
     imageUrl: v.string(),
   }),
-
-  userPosts: defineTable({
-    userId: v.id("users"),
-    postId: v.id("posts"),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_postId", ["postId"]),
 
   clubPosts: defineTable({
     clubId: v.id("clubs"),
@@ -240,7 +167,6 @@ export default defineSchema({
       v.literal("Volunteer"),
       v.literal("Other"),
     ),
-    adminId: v.id("users"),
   }),
 
   chats: defineTable({
@@ -267,4 +193,77 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_followingId", ["followingId"])
     .index("by_userId_followingId", ["userId", "followingId"]),
+
+  userClassInfo: defineTable({
+    userId: v.id("users"),
+    classId: v.id("classes"),
+    targetGrade: v.number(),
+  })
+    .index("by_userId", ["userId"]) // for getting all the user's classes
+    .index("by_classId", ["classId"]) // for getting all users of a class
+    .index("by_userId_classId", ["userId", "classId"]), // for checking if a user is a student of a class
+
+  userPosts: defineTable({
+    userId: v.id("users"),
+    postId: v.id("posts"),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_postId", ["postId"]),
+
+  userTasks: defineTable({
+    userId: v.id("users"),
+    classId: v.id("classes"),
+    userClassInfo: v.id("userClassInfo"),
+
+    description: v.string(),
+    dueDate: v.string(),
+    name: v.string(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("new"),
+      v.literal("dropped"),
+      v.literal("on hold"),
+    ),
+    scoreObtained: v.number(),
+    scoreTotal: v.number(),
+    weight: v.number(),
+    type: v.optional(
+      v.union(
+        v.literal("Exam"),
+        v.literal("Assignment"),
+        v.literal("Project"),
+        v.literal("Quiz"),
+        v.literal("Other"),
+        v.literal("None"),
+      ),
+    ),
+  })
+    .index("by_userId", ["userId"]) // for getting all the user's classes
+    .index("by_classId", ["classId"]) // for getting all tasks of a class
+    .index("by_userId_classId", ["userId", "classId"]),
+
+  userClubsInfo: defineTable({
+    userId: v.id("users"),
+    clubId: v.id("clubs"),
+    status: v.union(
+      v.literal("member"),
+      v.literal("following"),
+      v.literal("admin"),
+      v.literal("banned"),
+      v.literal("requested"),
+    ),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_clubId", ["clubId"])
+    .index("by_userId_clubId", ["userId", "clubId"]),
+
+  userChatsInfo: defineTable({
+    userId: v.id("users"),
+    chatId: v.id("chats"),
+    lastSeenMessage: v.id("messages"),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_chatId", ["chatId"])
+    .index("by_userId_chatId", ["userId", "chatId"]),
 });
