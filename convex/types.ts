@@ -96,9 +96,10 @@ export const ProfileData = v.object({
   email: v.string(),
   pictureUrl: v.optional(v.string()),
   bio: v.optional(v.string()),
-  followers: v.array(v.id("users")),
-  following: v.array(v.id("users")),
   isPrivate: v.boolean(),
+  followingStatus: v.optional(
+    schema.tables.followingsInfo.validator.fields.status,
+  ),
 });
 
 export const PostPreviewInfo = v.object({
@@ -113,23 +114,13 @@ export const PostPreviewInfo = v.object({
   nComments: v.number(),
   nReplies: v.number(),
   nLikes: v.number(),
-  clubInfo: v.union(
-    v.object({
-      clubName: v.string(),
-      private: v.boolean(),
-    }),
-    v.null(),
-  ),
   createdAt: v.number(),
   description: v.string(),
   imageUrl: v.optional(v.string()),
 });
 
-export const ClubUserStatus = v.union(
-  v.literal("admin"),
-  v.literal("member"),
-  v.literal("following"),
-);
+export const ClubUserStatus =
+  schema.tables.userClubsInfo.validator.fields.status;
 
 export const ClubCategory = v.union(
   v.literal("Academic"),
@@ -144,7 +135,7 @@ export const ClubCategory = v.union(
 
 export const ClubPreviewInfo = v.object({
   clubId: v.id("clubs"),
-  imageUrl: v.optional(v.string()),
+  pictureUrl: v.optional(v.string()),
   name: v.string(),
   category: ClubCategory,
   nMembers: v.number(),
