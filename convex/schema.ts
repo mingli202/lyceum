@@ -2,14 +2,30 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  appState: defineTable({
+    state: v.union(
+      v.literal("active"),
+      v.literal("updating"),
+      v.literal("down"),
+    ),
+  }),
+
+  bannedUsers: defineTable({
+    email: v.string(),
+  }).index("by_email", ["email"]),
+
   users: defineTable({
     clerkId: v.string(),
-    privileges: v.array(v.string()),
     givenName: v.string(),
     familyName: v.optional(v.string()),
     pictureUrl: v.optional(v.string()),
     email: v.string(),
     username: v.string(),
+    state: v.union(
+      v.literal("active"),
+      v.literal("banned"),
+      v.literal("suspended"),
+    ),
   }).index("by_clerkId", ["clerkId"]),
 
   classes: defineTable({
@@ -43,6 +59,19 @@ export default defineSchema({
       }),
     ),
   }).index("by_school_code", ["school", "code"]),
+
+  profiles: defineTable({
+    userId: v.id("users"),
+
+    major: v.string(),
+    school: v.string(),
+    bio: v.optional(v.string()),
+    city: v.optional(v.string()),
+    academicYear: v.number(),
+    isPrivate: v.boolean(),
+    isOnline: v.boolean(),
+    lastSeenAt: v.optional(v.string()),
+  }).index("by_userId", ["userId"]),
 
   userClassInfo: defineTable({
     userId: v.id("users"),
@@ -86,48 +115,62 @@ export default defineSchema({
     .index("by_classId", ["classId"]) // for getting all tasks of a class
     .index("by_userId_classId", ["userId", "classId"]),
 
-  profiles: defineTable({
+  userClubsInfo: defineTable({
     userId: v.id("users"),
-    following: v.array(v.id("users")),
-    followers: v.array(v.id("users")),
-    clubs: v.array(v.id("clubs")),
-    chats: v.array(v.id("chats")),
+    clubId: v.id("clubs"),
+    status: v.union(
+      v.literal("member"),
+      v.literal("following"),
+      v.literal("admin"),
+      v.literal("banned"),
+      v.literal("requested"),
+    ),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_clubId", ["clubId"])
+    .index("by_userId_clubId", ["userId", "clubId"]),
 
-    major: v.string(),
-    school: v.string(),
-    bio: v.optional(v.string()),
-    city: v.optional(v.string()),
-    academicYear: v.number(),
-    isPrivate: v.optional(v.boolean()),
-  }).index("by_userId", ["userId"]),
+  userChatsInfo: defineTable({
+    userId: v.id("users"),
+    chatId: v.id("chats"),
+    lastSeenMessage: v.id("messages"),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_chatId", ["chatId"])
+    .index("by_userId_chatId", ["userId", "chatId"]),
 
   settings: defineTable({
     userId: v.id("users"),
 
     phoneNumber: v.optional(v.string()),
     gradeDisplayFormat: v.union(v.literal("Percentage"), v.literal("GPA")),
-    private: v.boolean(),
   }).index("by_userId", ["userId"]),
 
   posts: defineTable({
-    authorId: v.id("users"),
     comments: v.id("comments"),
     likes: v.array(v.id("users")),
-    club: v.union(
-      v.object({
-        id: v.id("clubs"),
-        private: v.boolean(),
-      }),
-      v.null(),
-    ),
 
     description: v.string(),
     imageUrl: v.string(),
-  }).index("by_authorId", ["authorId"]),
+  }),
+
+  userPosts: defineTable({
+    userId: v.id("users"),
+    postId: v.id("posts"),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_postId", ["postId"]),
+
+  clubPosts: defineTable({
+    clubId: v.id("clubs"),
+    postId: v.id("posts"),
+    isMembersOnly: v.boolean(),
+  })
+    .index("by_clubId", ["clubId"])
+    .index("by_postId", ["postId"]),
 
   comments: defineTable({
     authorId: v.id("users"),
-    replies: v.array(v.id("replies")),
     postId: v.union(v.id("posts"), v.null()),
 
     content: v.string(),
@@ -151,6 +194,10 @@ export default defineSchema({
       v.object({
         type: v.literal("follow"),
         followerId: v.id("users"),
+      }),
+      v.object({
+        type: v.literal("requestFollow"),
+        requestFollowerId: v.id("users"),
       }),
       v.object({
         type: v.literal("like"),
@@ -178,13 +225,9 @@ export default defineSchema({
   }).index("by_clubId", ["clubId"]),
 
   clubs: defineTable({
-    followers: v.array(v.id("users")),
-    members: v.array(v.id("users")),
-    posts: v.array(v.id("posts")),
-
     name: v.string(),
     description: v.string(),
-    imageUrl: v.optional(v.string()),
+    pictureUrl: v.optional(v.string()),
     allowMemberPost: v.boolean(),
     isPrivate: v.boolean(),
     category: v.union(
@@ -211,4 +254,17 @@ export default defineSchema({
 
     content: v.string(),
   }).index("by_chatId_senderId", ["chatId", "senderId"]),
+
+  followingsInfo: defineTable({
+    userId: v.id("users"),
+    followingId: v.id("users"),
+    status: v.union(
+      v.literal("requested"),
+      v.literal("accepted"),
+      v.literal("blocked"),
+    ),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_followingId", ["followingId"])
+    .index("by_userId_followingId", ["userId", "followingId"]),
 });
