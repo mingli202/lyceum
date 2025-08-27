@@ -54,26 +54,23 @@ export const createNewUser = mutation({
 
     const userId = await ctx.db.insert("users", {
       clerkId: args.clerkId,
-      privileges: [],
       givenName: args.firstName,
       familyName: args.lastName,
       pictureUrl: args.pictureUrl,
       email: args.email,
       username: args.username.replace(/\s/g, "_"),
+      state: "active",
     });
 
     await ctx.db.insert("profiles", {
       userId,
-      following: [],
-      followers: [],
-      clubs: [],
-      chats: [],
-
       major: args.major,
       school: args.school,
       bio: args.bio,
       city: args.city,
       academicYear: args.academicYear,
+      isPrivate: true,
+      isOnline: true,
     });
 
     return "ok" as const;
@@ -269,6 +266,7 @@ export const deleteTask = mutation({
 export const deleteClass = mutation({
   args: { classId: v.id("classes") },
   handler: async (ctx, args) => {
+    const { classId } = args;
     const user = await getUserFromClerkId(ctx, args);
 
     if (!user) {
@@ -278,18 +276,22 @@ export const deleteClass = mutation({
     const userClassInfo = await ctx.db
       .query("userClassInfo")
       .withIndex("by_userId_classId", (q) =>
-        q.eq("userId", user._id).eq("classId", args.classId),
+        q.eq("userId", user._id).eq("classId", classId),
       )
       .unique();
 
     if (userClassInfo) {
+      if (userClassInfo.userId !== user._id) {
+        throw new Error("Not your class");
+      }
+
       await ctx.db.delete(userClassInfo._id);
     }
 
     const userTasks = await ctx.db
       .query("userTasks")
       .withIndex("by_userId_classId", (q) =>
-        q.eq("userId", user._id).eq("classId", args.classId),
+        q.eq("userId", user._id).eq("classId", classId),
       )
       .collect();
 
@@ -297,7 +299,7 @@ export const deleteClass = mutation({
 
     const nStudents = await ctx.db
       .query("userClassInfo")
-      .withIndex("by_classId", (q) => q.eq("classId", args.classId))
+      .withIndex("by_classId", (q) => q.eq("classId", classId))
       .collect();
 
     if (nStudents.length === 0) {
@@ -319,17 +321,21 @@ export const editTargetGrade = mutation({
       throw new Error("User not found");
     }
 
-    const classInfo = await ctx.db
+    const userClassInfo = await ctx.db
       .query("userClassInfo")
       .withIndex("by_userId_classId", (q) =>
         q.eq("userId", user._id).eq("classId", args.classId),
       )
       .unique();
 
-    if (!classInfo) {
+    if (!userClassInfo) {
       throw new Error("Class not found");
     }
 
-    await ctx.db.patch(classInfo._id, { targetGrade: args.targetGrade });
+    if (userClassInfo.userId !== user._id) {
+      throw new Error("Not your class");
+    }
+
+    await ctx.db.patch(userClassInfo._id, { targetGrade: args.targetGrade });
   },
 });
