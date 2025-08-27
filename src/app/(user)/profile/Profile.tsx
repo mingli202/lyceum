@@ -1,63 +1,69 @@
 import { ProfileData } from "@convex/types";
-import { GraduationCap, MapPin, School } from "lucide-react";
+import { MapPin, School } from "lucide-react";
 import UserActivity from "./UserActivity";
 import { ProfilePicture } from "@/components/ProfilePicture";
+import { Button, ButtonVariant } from "@/components";
 
 type ProfileProps = {
   data: ProfileData;
   currentClerkId: string;
 };
-export default function Profile({ data }: ProfileProps) {
+export default function Profile({ data, currentClerkId }: ProfileProps) {
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
-      <section className="flex h-fit w-full max-w-3xl flex-col gap-2 p-6">
-        <div className="bg-background flex justify-between gap-4 rounded-lg p-6 shadow-sm">
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <ProfilePicture
-                src={data.pictureUrl}
-                displayName={data.firstName}
-                className="h-20 w-20"
-              />
-              <div className="shrink-0 space-y-1">
-                <p className="font-bold overflow-ellipsis whitespace-nowrap">
-                  {data.firstName} {data.lastName}
-                </p>
-                <p className="text-muted-foreground">@{data.username}</p>
-                <div className="t flex gap-2">
-                  <p>
-                    {data.followers.length} <span className="">Followers</span>
-                  </p>
-                  <p>
-                    {data.following.length} <span className="">Followings</span>
-                  </p>
-                </div>
-              </div>
-              <div className="basis-full" />
+      <section className="flex h-fit w-full max-w-2xl flex-col">
+        <div className="bg-muted-foreground/10 relative h-50 w-full">
+          <ProfilePicture
+            src={data.pictureUrl}
+            displayName={data.firstName}
+            className="absolute bottom-0 left-6 h-34 w-34 translate-y-1/2"
+          />
+        </div>
+        <div className="flex w-full justify-end p-6">
+          {data.clerkId === currentClerkId ? (
+            <Button variant={ButtonVariant.Muted}>Edit</Button>
+          ) : (
+            <Button variant={ButtonVariant.Special}>Follow</Button>
+          )}
+        </div>
+        <div className="flex flex-col justify-between gap-2 px-8 text-sm">
+          <div className="flex items-center gap-4">
+            <div className="shrink-0">
+              <p className="text-2xl font-bold overflow-ellipsis whitespace-nowrap">
+                {data.firstName} {data.lastName}
+              </p>
+              <p className="text-muted-foreground">@{data.username}</p>
             </div>
-            {data.bio && <div>{data.bio}</div>}
+            <div className="basis-full" />
           </div>
+          {data.bio && <div>{data.bio}</div>}
 
-          <div className="flex flex-col items-end space-y-1">
-            <div className="flex gap-2">
-              <span>{data.school}</span>
-              <School />
-            </div>
-            <div className="flex gap-2">
+          <div className="text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <School className="h-4 w-4" />
               <span>
-                {data.academicYear - 2024}st Year · {data.major}
+                {data.school} · {data.academicYear - 2024}st Year · {data.major}
               </span>
-              <GraduationCap />
             </div>
             {data.city && (
               <div className="flex gap-2">
+                <MapPin className="h-4 w-4" />
                 <span>{data.city}</span>
-                <MapPin />
               </div>
             )}
           </div>
+
+          <div className="mb-2 flex gap-2">
+            <p>
+              <span className="font-bold">{data.followers.length + " "}</span>
+              <span className="text-muted-foreground">Followers</span>
+            </p>
+            <p>
+              <span className="font-bold">{data.following.length + " "}</span>
+              <span className="text-muted-foreground">Following</span>
+            </p>
+          </div>
         </div>
-        <div className="space-y-1"></div>
         <UserActivity />
       </section>
     </div>
