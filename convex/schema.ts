@@ -98,6 +98,7 @@ export default defineSchema({
     bio: v.optional(v.string()),
     city: v.optional(v.string()),
     academicYear: v.number(),
+    isPrivate: v.optional(v.boolean()),
   }).index("by_userId", ["userId"]),
 
   settings: defineTable({

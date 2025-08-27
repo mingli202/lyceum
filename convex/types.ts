@@ -98,6 +98,7 @@ export const ProfileData = v.object({
   bio: v.optional(v.string()),
   followers: v.array(v.id("users")),
   following: v.array(v.id("users")),
+  isPrivate: v.boolean(),
 });
 
 export const PostPreviewInfo = v.object({

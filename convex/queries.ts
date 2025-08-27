@@ -131,22 +131,29 @@ export const getDashboardData = query({
 });
 
 export const getProfileData = query({
-  args: { signature: v.optional(v.string()) },
-  returns: ProfileData,
-  handler: async (ctx, args): Promise<ProfileData> => {
-    const user = await getUserFromClerkId(ctx, args);
+  args: { userId: v.optional(v.id("users")) },
+  returns: v.union(ProfileData, v.string()),
+  handler: async (ctx, args): Promise<ProfileData | string> => {
+    const authenticatedUser = await getUserFromClerkId(ctx, {});
+
+    if (!authenticatedUser) {
+      return "Unauthenticated";
+    }
+
+    const user = await ctx.db.get(args.userId ?? authenticatedUser?._id);
 
     if (!user) {
-      throw new Error("User not found");
+      return "User not found";
     }
 
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
-      .unique();
+      .unique()
+      .catch(() => null);
 
     if (!profile) {
-      throw new Error("User profile not found");
+      return "User profile not found";
     }
 
     const profileData: ProfileData = {
@@ -163,6 +170,7 @@ export const getProfileData = query({
       followers: profile.followers,
       following: profile.following,
       clerkId: user.clerkId,
+      isPrivate: profile.isPrivate ?? false,
     };
 
     return profileData;
