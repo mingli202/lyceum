@@ -411,3 +411,46 @@ export const setLoginStats = mutation({
     });
   },
 });
+
+export const updateProfile = mutation({
+  args: v.object({
+    updatedUserInfo: v.object({
+      givenName: v.optional(v.string()),
+      familyName: v.optional(v.string()),
+      pictureUrl: v.optional(v.string()),
+      username: v.optional(v.string()),
+    }),
+    updatedProfileInfo: v.object({
+      major: v.optional(v.string()),
+      school: v.optional(v.string()),
+      bio: v.optional(v.string()),
+      city: v.optional(v.string()),
+      academicYear: v.optional(v.number()),
+      isPrivate: v.optional(v.boolean()),
+    }),
+  }),
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    const { updatedUserInfo, updatedProfileInfo } = args;
+
+    await Promise.all([
+      ctx.db.patch(authenticatedUser._id, updatedUserInfo),
+      ctx.db.patch(profile._id, updatedProfileInfo),
+    ]);
+  },
+});
