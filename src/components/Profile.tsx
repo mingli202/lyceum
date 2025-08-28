@@ -2,7 +2,7 @@ import { ProfileData } from "@convex/types";
 import { GraduationCap, MapPin, School } from "lucide-react";
 import { ProfilePicture } from "@/components/ProfilePicture";
 import { Button, ButtonVariant } from "@/components";
-import UserActivity from "@/app/(user)/profile/UserActivity";
+import UserActivity from "./UserActivity";
 
 type ProfileProps = {
   data: ProfileData;

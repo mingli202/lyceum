@@ -10,3 +10,4 @@ export * from "./TaskCard";
 export * from "./ui/Card";
 export * from "./ui/Grid";
 export * from "./Profile";
+export * from "./UserActivity";
