@@ -70,7 +70,7 @@ export default defineSchema({
     academicYear: v.number(),
     isPrivate: v.boolean(),
     isOnline: v.boolean(),
-    lastSeenAt: v.optional(v.string()),
+    lastSeenAt: v.optional(v.number()),
   }).index("by_userId", ["userId"]),
 
   settings: defineTable({

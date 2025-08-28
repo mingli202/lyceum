@@ -387,3 +387,53 @@ export const followUser = mutation({
     }
   },
 });
+
+export const setLoginStats = mutation({
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    await ctx.db.patch(profile._id, {
+      lastSeenAt: undefined,
+      isOnline: true,
+    });
+  },
+});
+
+export const setLogoutStats = mutation({
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    await ctx.db.patch(profile._id, {
+      lastSeenAt: Date.now(),
+      isOnline: false,
+    });
+  },
+});

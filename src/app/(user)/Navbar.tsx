@@ -2,7 +2,7 @@
 
 import { Button } from "@/components";
 import { cn } from "@/utils/cn";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   Calendar,
   Home,
@@ -20,6 +20,8 @@ import { useAuth } from "@clerk/nextjs";
 
 export default function NavBar() {
   const user = useQuery(api.queries.getUser, {});
+  const setLoginStats = useMutation(api.mutations.setLoginStats);
+  const setLogoutStats = useMutation(api.mutations.setLogoutStats);
 
   const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
@@ -33,6 +35,14 @@ export default function NavBar() {
       setOpen(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    setLoginStats({});
+
+    return () => {
+      setLogoutStats({});
+    };
+  }, []);
 
   const pathName = usePathname() ?? "";
 
@@ -61,7 +71,13 @@ export default function NavBar() {
           <UserIcon /> Profile
         </NavItem>
         <div className="basis-full" />
-        <Button onClick={() => signOut()} className="p-0">
+        <Button
+          onClick={async () => {
+            await setLogoutStats({});
+            signOut();
+          }}
+          className="p-0"
+        >
           Sign Out
         </Button>
       </section>
