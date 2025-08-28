@@ -64,8 +64,6 @@ export default function UserActivity({
     [Tab.Clubs]: <Volleyball className="h-4 w-4" />,
   };
 
-  console.log(canView);
-
   return (
     <div className="flex w-full flex-col gap-2">
       <div className="bg-background flex gap-2 rounded-[calc(0.25rem+0.25rem)] p-1 shadow-sm">
