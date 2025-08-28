@@ -5,7 +5,7 @@ import {
 } from "convex/server";
 import { DataModel, Id } from "./_generated/dataModel";
 import { SignatureService } from "./services/signatureService";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { CanView, User } from "./types";
 
 /**
@@ -72,7 +72,7 @@ export async function canViewUserInfo(
   authenticatedUserId: Id<"users">,
   requestedUserId?: Id<"users">,
 ): Promise<CanView> {
-  return await ctx.runQuery(internal.queries._canViewUserInfo, {
+  return await ctx.runQuery(api.queries.getCanViewUserInfo, {
     requestedUserId,
     authenticatedUserId,
   });

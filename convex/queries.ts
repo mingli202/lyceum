@@ -14,7 +14,7 @@ import {
   UserTask,
 } from "./types";
 import schema from "./schema";
-import { authorize, canViewUserInfo, getUserFromClerkId } from "./utils";
+import { authorize, getUserFromClerkId } from "./utils";
 import { Id } from "./_generated/dataModel";
 
 export const _getUserFromClerkId = internalQuery({
@@ -92,25 +92,23 @@ export const _getUserClassAverageGrade = internalQuery({
   },
 });
 
-export const _canViewUserInfo = internalQuery({
+export const getCanViewUserInfo = query({
   args: {
     requestedUserId: v.optional(v.id("users")),
-    authenticatedUserId: v.id("users"),
   },
   returns: CanView,
   handler: async (ctx, args): Promise<CanView> => {
-    const { requestedUserId, authenticatedUserId } = args;
+    const { requestedUserId } = args;
+
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      return { canView: false, reason: "User not found" } as const;
+    }
+
+    const authenticatedUserId = authenticatedUser._id;
+
     if (requestedUserId && requestedUserId !== authenticatedUserId) {
-      const requestedUserProfile = await ctx.db
-        .query("profiles")
-        .withIndex("by_userId", (q) => q.eq("userId", requestedUserId))
-        .unique()
-        .catch(() => null);
-
-      if (!requestedUserProfile) {
-        return { canView: false, reason: "User not found" } as const;
-      }
-
       const requestedUserFollowingInfo = await ctx.db
         .query("followingsInfo")
         .withIndex("by_userId_followingId", (q) =>
@@ -122,6 +120,16 @@ export const _canViewUserInfo = internalQuery({
         .catch(() => null);
 
       if (!requestedUserFollowingInfo) {
+        const requestedUserProfile = await ctx.db
+          .query("profiles")
+          .withIndex("by_userId", (q) => q.eq("userId", requestedUserId))
+          .unique()
+          .catch(() => null);
+
+        if (!requestedUserProfile) {
+          return { canView: false, reason: "User not found" } as const;
+        }
+
         if (requestedUserProfile.isPrivate) {
           return { canView: false, reason: "Private account" } as const;
         }
@@ -191,16 +199,6 @@ export const getProfileData = query({
       return "Unauthenticated";
     }
 
-    const canView = await canViewUserInfo(
-      ctx,
-      authenticatedUser._id,
-      requestedUserId,
-    );
-
-    if (canView.reason === "Blocked") {
-      return "Blocked";
-    }
-
     const user = await ctx.db.get(requestedUserId ?? authenticatedUser?._id);
 
     if (!user) {
@@ -217,20 +215,6 @@ export const getProfileData = query({
       return "User profile not found";
     }
 
-    const nFollowing = (
-      await ctx.db
-        .query("followingsInfo")
-        .withIndex("by_userId", (q) => q.eq("userId", user._id))
-        .collect()
-    ).filter((following) => following.status === "accepted").length;
-
-    const nFollowers = (
-      await ctx.db
-        .query("followingsInfo")
-        .withIndex("by_followingId", (q) => q.eq("followingId", user._id))
-        .collect()
-    ).filter((following) => following.status === "accepted").length;
-
     const profileData: ProfileData = {
       userId: user._id,
       school: profile.school,
@@ -245,12 +229,43 @@ export const getProfileData = query({
       bio: profile.bio,
       clerkId: user.clerkId,
       isPrivate: profile.isPrivate,
-      nFollowing,
-      nFollowers,
-      canView,
     };
 
     return profileData;
+  },
+});
+
+export const getFollowerCount = query({
+  args: { userId: v.id("users") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const { userId } = args;
+
+    const nFollowers = (
+      await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_followingId", (q) => q.eq("followingId", userId))
+        .collect()
+    ).filter((following) => following.status === "accepted").length;
+
+    return nFollowers;
+  },
+});
+
+export const getFollowingCount = query({
+  args: { userId: v.id("users") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const { userId } = args;
+
+    const nFollowing = (
+      await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect()
+    ).filter((following) => following.status === "accepted").length;
+
+    return nFollowing;
   },
 });
 

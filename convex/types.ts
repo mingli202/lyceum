@@ -113,9 +113,6 @@ export const ProfileData = v.object({
   followingStatus: v.optional(
     schema.tables.followingsInfo.validator.fields.status,
   ),
-  nFollowing: v.number(),
-  nFollowers: v.number(),
-  canView: CanView,
 });
 
 export const PostPreviewInfo = v.object({
