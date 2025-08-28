@@ -69,11 +69,9 @@ export async function canViewUserInfo(
     | GenericMutationCtx<DataModel>
     | GenericQueryCtx<DataModel>
     | GenericActionCtx<DataModel>,
-  authenticatedUserId: Id<"users">,
   requestedUserId?: Id<"users">,
 ): Promise<CanView> {
   return await ctx.runQuery(api.queries.getCanViewUserInfo, {
     requestedUserId,
-    authenticatedUserId,
   });
 }

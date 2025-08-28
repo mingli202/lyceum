@@ -25,7 +25,7 @@ export function ClubCard({ club }: ClubCardProps) {
       href={`/club/${club.clubId}`}
       className="ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
     >
-      <ProfilePicture src={club.imageUrl} displayName={club.name} />
+      <ProfilePicture src={club.pictureUrl} displayName={club.name} />
       <div className="space-y-1">
         <div className="flex gap-2">
           <p className="font-bold">{club.name} </p>

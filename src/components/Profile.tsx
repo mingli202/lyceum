@@ -1,7 +1,7 @@
 "use client";
 
 import { CanView, ProfileData } from "@convex/types";
-import { Dot, GraduationCap, MapPin, School } from "lucide-react";
+import { GraduationCap, MapPin, School } from "lucide-react";
 import { ProfilePicture } from "@/components/ProfilePicture";
 import { Button, ButtonVariant, LoadingSpinner } from "@/components";
 import UserActivity from "./UserActivity";
