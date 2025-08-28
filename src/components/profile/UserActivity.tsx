@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, ClassCard, PostCard } from "@/components";
-import { ClubCard } from "@/components/ClubCard";
+import { ClubCard } from "@/components";
 import { Grid } from "@/components/ui/Grid";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";

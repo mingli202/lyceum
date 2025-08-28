@@ -1,7 +1,6 @@
 import { UserCardInfo } from "@convex/types";
-import { ProfilePicture } from "./ProfilePicture";
+import { ProfilePicture, Card } from "..";
 import Link from "next/link";
-import { Card } from "./ui/Card";
 
 type UserCardProps = {
   user: UserCardInfo;

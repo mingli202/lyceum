@@ -12,11 +12,21 @@ export const ButtonVariant = {
 };
 export type ButtonVariant = RecordValues<typeof ButtonVariant>;
 
+export const PaddingSize = {
+  none: "none",
+  sm: "sm",
+  base: "base",
+  md: "md",
+  lg: "lg",
+};
+export type PaddingSize = RecordValues<typeof PaddingSize>;
+
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
   HTMLProps<HTMLButtonElement> & {
     variant?: ButtonVariant;
     isPending?: boolean;
     pendingElement?: React.ReactNode;
+    paddingSize?: PaddingSize;
   };
 
 export function Button({
@@ -25,13 +35,14 @@ export function Button({
   variant,
   isPending,
   pendingElement,
+  paddingSize = PaddingSize.base,
   ...props
 }: ButtonProps) {
   return (
     <button
       disabled={isPending}
       className={cn(
-        "relative transform cursor-pointer rounded p-2 transition-all duration-200",
+        "relative h-fit w-fit transform cursor-pointer rounded transition-all duration-200",
         {
           "text-background bg-gradient-to-r from-blue-500 to-indigo-500":
             variant === "special",
@@ -45,6 +56,13 @@ export function Button({
           "hover:from-amber-600 hover:to-red-600": variant === "destructive",
           "hover:text-foreground hover:ring-muted-foreground/80":
             variant === "muted",
+        },
+        {
+          "px-0 py-0": paddingSize === PaddingSize.none,
+          "px-1 py-0.5": paddingSize === PaddingSize.sm,
+          "px-2 py-1": paddingSize === PaddingSize.base,
+          "px-3 py-1.5": paddingSize === PaddingSize.md,
+          "px-4 py-2": paddingSize === PaddingSize.lg,
         },
         isPending &&
           "flex cursor-wait items-center justify-center hover:cursor-wait",

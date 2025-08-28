@@ -1,6 +1,6 @@
 import { DashboardData } from "@convex/types";
 import Link from "next/link";
-import { Card, CardFooter, CardHeader, CardTitle } from "./ui/Card";
+import { Card, CardFooter, CardHeader, CardTitle } from "../ui";
 
 export function ClassCard({
   classInfo,

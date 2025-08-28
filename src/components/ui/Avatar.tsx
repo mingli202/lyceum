@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProfilePicture } from "./ProfilePicture";
+import { ProfilePicture } from "..";
 
 type AvatarProps = {
   src?: string;
