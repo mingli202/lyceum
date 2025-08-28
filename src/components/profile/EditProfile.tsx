@@ -3,18 +3,46 @@
 import { Dialog } from "radix-ui";
 import { Button, ButtonVariant } from "../ui";
 import useFormState from "@/hooks/useFormState";
-import { ProfilePicture } from "./ProfilePicture";
 import { ProfileData } from "@convex/types";
 import { X } from "lucide-react";
+import { useRef } from "react";
+import { UpdateProfilePicture } from "./UpdateProfilePicture";
+import { useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 type EditProfileProps = {
   data: ProfileData;
 };
 
 export function EditProfile({ data }: EditProfileProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const fileRef = useRef<File>(null);
+
+  const { user } = useUser();
+  const updateProfile = useMutation(api.mutations.updateProfile);
+
   const [msg, handleSubmit, isPending] = useFormState(async (e) => {
+    if (!user) {
+      return "Login expired, please login again";
+    }
+
+    let imageUrl: string | undefined;
+    if (fileRef.current) {
+      const imageResource = await user.setProfileImage({
+        file: fileRef.current,
+      });
+      imageUrl = imageResource.publicUrl ?? undefined;
+    }
+
     const formData = new FormData(e.target as HTMLFormElement);
 
+    await updateProfile({
+      updatedProfileInfo: {},
+      updatedUserInfo: { pictureUrl: imageUrl },
+    });
+
+    closeButtonRef.current?.click();
     return null;
   });
 
@@ -31,7 +59,7 @@ export function EditProfile({ data }: EditProfileProps) {
             className="bg-background ring-foreground/10 m-2 flex w-lg flex-col gap-4 space-y-2 rounded-lg p-3 text-sm shadow-md ring-1 transition hover:z-10 hover:shadow-lg"
           >
             <div className="flex items-center gap-2">
-              <Dialog.Close asChild>
+              <Dialog.Close asChild ref={closeButtonRef}>
                 <Button variant={ButtonVariant.Muted} className="ring-0">
                   <X className="h-4 w-4" />
                 </Button>
@@ -39,16 +67,29 @@ export function EditProfile({ data }: EditProfileProps) {
               <Dialog.Title className="font-bold">Edit Profile</Dialog.Title>
             </div>
 
-            <div className="flex w-full items-center gap-4 p-2">
-              <ProfilePicture
-                displayName={data.firstName}
-                src={data.pictureUrl}
-                className="h-16 w-16"
-              />
-              <label className="flex flex-col gap-1">
-                <p>Profile Picture</p>
-                <Button variant={ButtonVariant.Muted}>Change</Button>
-              </label>
+            <UpdateProfilePicture
+              displayName={data.firstName}
+              src={data.pictureUrl}
+              fileRef={fileRef}
+            />
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant={ButtonVariant.Muted}
+                type="button"
+                onClick={() => {
+                  closeButtonRef.current?.click();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                isPending={isPending}
+                variant={ButtonVariant.Special}
+              >
+                Save
+              </Button>
             </div>
           </form>
         </Dialog.Content>

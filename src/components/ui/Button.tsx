@@ -42,7 +42,7 @@ export function Button({
     <button
       disabled={isPending}
       className={cn(
-        "relative h-fit w-fit transform cursor-pointer rounded transition-all duration-200",
+        "relative h-fit w-fit transform cursor-pointer rounded transition-all",
         {
           "text-background bg-gradient-to-r from-blue-500 to-indigo-500":
             variant === "special",
