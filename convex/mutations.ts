@@ -69,7 +69,7 @@ export const createNewUser = mutation({
       bio: args.bio,
       city: args.city,
       academicYear: args.academicYear,
-      isPrivate: true,
+      isPrivate: false,
       isOnline: true,
     });
 
