@@ -1,7 +1,7 @@
 "use client";
 
 import { CanView, ProfileData } from "@convex/types";
-import { GraduationCap, MapPin, School } from "lucide-react";
+import { Dot, GraduationCap, MapPin, School } from "lucide-react";
 import { ProfilePicture } from "@/components/ProfilePicture";
 import { Button, ButtonVariant, LoadingSpinner } from "@/components";
 import UserActivity from "./UserActivity";
@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
+import parseTimestamp from "@/utils/parseTimestamp";
 
 type ProfilePageProps = {
   isOwner?: boolean;
@@ -58,6 +59,11 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
   const nFollowing = useQuery(api.queries.getFollowingCount, {
     userId: data.userId,
   });
+
+  const lastSeenAt =
+    useQuery(api.queries.getUserLastSeenAt, {
+      userId: data.userId,
+    }) ?? 0;
 
   let buttonTextTmp = "Follow";
 
@@ -124,9 +130,20 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
         <div className="flex flex-col justify-between gap-2 px-6 text-sm">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
-              <p className="text-2xl font-bold overflow-ellipsis whitespace-nowrap">
-                {data.firstName} {data.lastName}
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="truncate text-2xl font-bold">
+                  {data.firstName} {data.lastName}
+                </p>
+                {Date.now() - lastSeenAt < 1000 * 60 * 11 ? (
+                  <div className="flex shrink-0 items-center gap-2 rounded-full bg-emerald-200 px-2 py-1 text-xs text-emerald-800 ring-1 ring-emerald-500">
+                    online
+                  </div>
+                ) : (
+                  <p className="flex shrink-0 items-center gap-2 rounded-full bg-slate-200 px-2 py-1 text-xs text-slate-800 ring-1 ring-slate-500">
+                    last seen {parseTimestamp(lastSeenAt)}
+                  </p>
+                )}
+              </div>
               <p className="text-muted-foreground">@{data.username}</p>
             </div>
             <div className="basis-full" />

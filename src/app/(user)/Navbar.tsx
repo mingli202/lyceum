@@ -14,17 +14,18 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { api } from "@convex/_generated/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SetupDrawer from "./SetupDrawer";
 import { useAuth } from "@clerk/nextjs";
 
 export default function NavBar() {
   const user = useQuery(api.queries.getUser, {});
   const setLoginStats = useMutation(api.mutations.setLoginStats);
-  const setLogoutStats = useMutation(api.mutations.setLogoutStats);
 
   const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const timer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // explicitely define different states
@@ -38,9 +39,19 @@ export default function NavBar() {
 
   useEffect(() => {
     setLoginStats({});
+    // ping the server every 10 minutes
+    timer.current = setInterval(
+      async () => {
+        await setLoginStats({});
+      },
+      1000 * 60 * 10,
+    );
 
     return () => {
-      setLogoutStats({});
+      if (!timer.current) {
+        return;
+      }
+      clearTimeout(timer.current);
     };
   }, []);
 
@@ -72,8 +83,7 @@ export default function NavBar() {
         </NavItem>
         <div className="basis-full" />
         <Button
-          onClick={async () => {
-            await setLogoutStats({});
+          onClick={() => {
             signOut();
           }}
           className="p-0"

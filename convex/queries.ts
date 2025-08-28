@@ -572,3 +572,25 @@ export const getClassStudents = query({
     return userCardsInfo.filter((userCardInfo) => userCardInfo !== null);
   },
 });
+
+export const getUserLastSeenAt = query({
+  args: { userId: v.id("users") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    await authorize(ctx);
+
+    const { userId } = args;
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      return 0;
+    }
+
+    return profile.lastSeenAt ?? 0;
+  },
+});
