@@ -54,26 +54,23 @@ export const createNewUser = mutation({
 
     const userId = await ctx.db.insert("users", {
       clerkId: args.clerkId,
-      privileges: [],
       givenName: args.firstName,
       familyName: args.lastName,
       pictureUrl: args.pictureUrl,
       email: args.email,
       username: args.username.replace(/\s/g, "_"),
+      state: "active",
     });
 
     await ctx.db.insert("profiles", {
       userId,
-      following: [],
-      followers: [],
-      clubs: [],
-      chats: [],
-
       major: args.major,
       school: args.school,
       bio: args.bio,
       city: args.city,
       academicYear: args.academicYear,
+      isPrivate: false,
+      isOnline: true,
     });
 
     return "ok" as const;
@@ -269,6 +266,7 @@ export const deleteTask = mutation({
 export const deleteClass = mutation({
   args: { classId: v.id("classes") },
   handler: async (ctx, args) => {
+    const { classId } = args;
     const user = await getUserFromClerkId(ctx, args);
 
     if (!user) {
@@ -278,18 +276,22 @@ export const deleteClass = mutation({
     const userClassInfo = await ctx.db
       .query("userClassInfo")
       .withIndex("by_userId_classId", (q) =>
-        q.eq("userId", user._id).eq("classId", args.classId),
+        q.eq("userId", user._id).eq("classId", classId),
       )
       .unique();
 
     if (userClassInfo) {
+      if (userClassInfo.userId !== user._id) {
+        throw new Error("Not your class");
+      }
+
       await ctx.db.delete(userClassInfo._id);
     }
 
     const userTasks = await ctx.db
       .query("userTasks")
       .withIndex("by_userId_classId", (q) =>
-        q.eq("userId", user._id).eq("classId", args.classId),
+        q.eq("userId", user._id).eq("classId", classId),
       )
       .collect();
 
@@ -297,7 +299,7 @@ export const deleteClass = mutation({
 
     const nStudents = await ctx.db
       .query("userClassInfo")
-      .withIndex("by_classId", (q) => q.eq("classId", args.classId))
+      .withIndex("by_classId", (q) => q.eq("classId", classId))
       .collect();
 
     if (nStudents.length === 0) {
@@ -319,17 +321,93 @@ export const editTargetGrade = mutation({
       throw new Error("User not found");
     }
 
-    const classInfo = await ctx.db
+    const userClassInfo = await ctx.db
       .query("userClassInfo")
       .withIndex("by_userId_classId", (q) =>
         q.eq("userId", user._id).eq("classId", args.classId),
       )
       .unique();
 
-    if (!classInfo) {
+    if (!userClassInfo) {
       throw new Error("Class not found");
     }
 
-    await ctx.db.patch(classInfo._id, { targetGrade: args.targetGrade });
+    if (userClassInfo.userId !== user._id) {
+      throw new Error("Not your class");
+    }
+
+    await ctx.db.patch(userClassInfo._id, { targetGrade: args.targetGrade });
+  },
+});
+
+export const followUser = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const { userId } = args;
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    if (authenticatedUser._id === userId) {
+      throw new Error("Cannot follow yourself");
+    }
+
+    const userFollowingInfo = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_userId_followingId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("followingId", userId),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (userFollowingInfo) {
+      if (userFollowingInfo.status === "blocked") {
+        throw new Error("Blocked");
+      } else {
+        await ctx.db.delete(userFollowingInfo._id);
+      }
+    } else {
+      const otherUserProfile = await ctx.db
+        .query("profiles")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .unique()
+        .catch(() => null);
+
+      if (!otherUserProfile) {
+        throw new Error("User not found");
+      }
+
+      await ctx.db.insert("followingsInfo", {
+        userId: authenticatedUser._id,
+        followingId: args.userId,
+        status: otherUserProfile.isPrivate ? "requested" : "accepted",
+      });
+    }
+  },
+});
+
+export const setLoginStats = mutation({
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    await ctx.db.patch(profile._id, {
+      lastSeenAt: Date.now(),
+    });
   },
 });

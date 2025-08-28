@@ -2,10 +2,10 @@ import { internalQuery, query } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
+  CanView,
   ClassInfo,
   ClassPageData,
   ClubPreviewInfo,
-  ClubUserStatus,
   DashboardData,
   PostPreviewInfo,
   ProfileData,
@@ -92,6 +92,65 @@ export const _getUserClassAverageGrade = internalQuery({
   },
 });
 
+export const getCanViewUserInfo = query({
+  args: {
+    requestedUserId: v.optional(v.id("users")),
+  },
+  returns: CanView,
+  handler: async (ctx, args): Promise<CanView> => {
+    const { requestedUserId } = args;
+
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      return { canView: false, reason: "User not found" } as const;
+    }
+
+    const authenticatedUserId = authenticatedUser._id;
+
+    if (requestedUserId && requestedUserId !== authenticatedUserId) {
+      const requestedUserFollowingInfo = await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_userId_followingId", (q) =>
+          q
+            .eq("userId", authenticatedUserId)
+            .eq("followingId", requestedUserId),
+        )
+        .unique()
+        .catch(() => null);
+
+      if (!requestedUserFollowingInfo) {
+        const requestedUserProfile = await ctx.db
+          .query("profiles")
+          .withIndex("by_userId", (q) => q.eq("userId", requestedUserId))
+          .unique()
+          .catch(() => null);
+
+        if (!requestedUserProfile) {
+          return { canView: false, reason: "User not found" } as const;
+        }
+
+        if (requestedUserProfile.isPrivate) {
+          return { canView: false, reason: "Private account" } as const;
+        }
+
+        return { canView: true, reason: "Public account" } as const;
+      }
+
+      switch (requestedUserFollowingInfo.status) {
+        case "requested":
+          return { canView: false, reason: "Requested" } as const;
+        case "accepted":
+          return { canView: true, reason: "Following" } as const;
+        case "blocked":
+          return { canView: false, reason: "Blocked" } as const;
+      }
+    }
+
+    return { canView: true, reason: "Own account" } as const;
+  },
+});
+
 export const getUser = query({
   args: v.object({ signature: v.optional(v.string()) }),
   returns: v.union(
@@ -110,12 +169,11 @@ export const getUser = query({
 });
 
 export const getDashboardData = query({
-  args: { signature: v.optional(v.string()) },
   returns: DashboardData,
-  handler: async (ctx, args): Promise<DashboardData> => {
+  handler: async (ctx): Promise<DashboardData> => {
     const classes: ClassInfo[] = await ctx.runQuery(
       api.queries.getUserClasses,
-      { signature: args.signature },
+      { canView: true },
     );
 
     return {
@@ -131,25 +189,34 @@ export const getDashboardData = query({
 });
 
 export const getProfileData = query({
-  args: { signature: v.optional(v.string()) },
-  returns: ProfileData,
-  handler: async (ctx, args): Promise<ProfileData> => {
-    const user = await getUserFromClerkId(ctx, args);
+  args: { requestedUserId: v.optional(v.id("users")) },
+  returns: v.union(ProfileData, v.string()),
+  handler: async (ctx, args): Promise<ProfileData | string> => {
+    const { requestedUserId } = args;
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      return "Unauthenticated";
+    }
+
+    const user = await ctx.db.get(requestedUserId ?? authenticatedUser?._id);
 
     if (!user) {
-      throw new Error("User not found");
+      return "User not found";
     }
 
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
-      .unique();
+      .unique()
+      .catch(() => null);
 
     if (!profile) {
-      throw new Error("User profile not found");
+      return "User profile not found";
     }
 
     const profileData: ProfileData = {
+      userId: user._id,
       school: profile.school,
       major: profile.major,
       firstName: user.givenName,
@@ -160,49 +227,89 @@ export const getProfileData = query({
       email: user.email,
       pictureUrl: user.pictureUrl,
       bio: profile.bio,
-      followers: profile.followers,
-      following: profile.following,
       clerkId: user.clerkId,
+      isPrivate: profile.isPrivate,
     };
 
     return profileData;
   },
 });
 
+export const getFollowerCount = query({
+  args: { userId: v.id("users") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const { userId } = args;
+
+    const nFollowers = (
+      await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_followingId", (q) => q.eq("followingId", userId))
+        .collect()
+    ).filter((following) => following.status === "accepted").length;
+
+    return nFollowers;
+  },
+});
+
+export const getFollowingCount = query({
+  args: { userId: v.id("users") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const { userId } = args;
+
+    const nFollowing = (
+      await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect()
+    ).filter((following) => following.status === "accepted").length;
+
+    return nFollowing;
+  },
+});
+
 export const getUserPosts = query({
-  args: { signature: v.optional(v.string()) },
+  args: { requestedUserId: v.optional(v.id("users")), canView: v.boolean() },
   returns: v.array(PostPreviewInfo),
   handler: async (ctx, args): Promise<PostPreviewInfo[]> => {
-    const user = await getUserFromClerkId(ctx, args);
+    const { requestedUserId, canView } = args;
 
-    if (!user) {
+    if (!canView) {
       return [];
     }
 
-    const posts = await ctx.db
-      .query("posts")
-      .withIndex("by_authorId", (q) => q.eq("authorId", user._id))
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      return [];
+    }
+
+    const userId = requestedUserId ?? authenticatedUser._id;
+
+    const userPosts = await ctx.db
+      .query("userPosts")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
 
     const postsInfo = await Promise.all(
-      posts.map(async (post) => {
-        const author = await ctx.db.get(post.authorId);
+      userPosts.map(async (userPost) => {
+        const author = await ctx.db.get(userId);
 
         if (!author) {
           return null;
         }
 
-        const clubInfo = post.club
-          ? {
-              clubName: (await ctx.db.get(post.club.id))?.name ?? "N/A",
-              private: post.club.private,
-            }
-          : null;
+        const post = await ctx.db.get(userPost.postId);
+
+        if (!post) {
+          return null;
+        }
 
         const postPreviewInfo: PostPreviewInfo = {
-          postId: post._id,
+          postId: userPost.postId,
           author: {
-            authorId: post.authorId,
+            authorId: userId,
             pictureUrl: author.pictureUrl,
             firstName: author.givenName,
             lastName: author.familyName,
@@ -222,7 +329,6 @@ export const getUserPosts = query({
           ).length,
           nLikes: post.likes.length,
           createdAt: post._creationTime,
-          clubInfo,
           description: post.description,
           imageUrl: post.imageUrl,
         };
@@ -236,18 +342,26 @@ export const getUserPosts = query({
 });
 
 export const getUserClasses = query({
-  args: { signature: v.optional(v.string()) },
+  args: { requestedUserId: v.optional(v.id("users")), canView: v.boolean() },
   returns: v.array(ClassInfo),
   handler: async (ctx, args): Promise<ClassInfo[]> => {
-    const user = await getUserFromClerkId(ctx, args);
+    const { canView, requestedUserId } = args;
 
-    if (!user) {
+    if (!canView) {
       return [];
     }
 
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      return [];
+    }
+
+    const userId = requestedUserId ?? authenticatedUser._id;
+
     const userClassesInfo = await ctx.db
       .query("userClassInfo")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
 
     return (
@@ -268,7 +382,7 @@ export const getUserClasses = query({
             grade: (
               await ctx.runQuery(internal.queries._getUserClassAverageGrade, {
                 classId: classInfo._id,
-                userId: user._id,
+                userId,
               })
             ).currentGrade,
           };
@@ -279,51 +393,56 @@ export const getUserClasses = query({
 });
 
 export const getUserClubs = query({
-  args: { signature: v.optional(v.string()) },
+  args: { requestedUserId: v.optional(v.id("users")), canView: v.boolean() },
   returns: v.array(ClubPreviewInfo),
   handler: async (ctx, args): Promise<ClubPreviewInfo[]> => {
-    const user = await getUserFromClerkId(ctx, args);
+    const { canView, requestedUserId } = args;
 
-    if (!user) {
+    if (!canView) {
       return [];
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
-      .unique();
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
 
-    if (!profile) {
+    if (!authenticatedUser) {
+      return [];
+    }
+
+    const userId = requestedUserId ?? authenticatedUser._id;
+
+    const userClubsInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect()
+      .catch(() => null);
+
+    if (!userClubsInfo) {
       return [];
     }
 
     const clubsPreviewInfo: ClubPreviewInfo[] = (
       await Promise.all(
-        profile.clubs.map(async (clubId) => {
-          const club = await ctx.db.get(clubId);
+        userClubsInfo.map(async (userClubInfo) => {
+          const club = await ctx.db.get(userClubInfo.clubId);
+
           if (!club) {
             return null;
           }
 
-          let status: ClubUserStatus;
-
-          if (club.adminId === user._id) {
-            status = "admin";
-          } else if (club.members.includes(user._id)) {
-            status = "member";
-          } else {
-            status = "following";
-          }
+          const members = await ctx.db
+            .query("userClubsInfo")
+            .withIndex("by_clubId")
+            .collect();
 
           const clubPreviewInfo: ClubPreviewInfo = {
             category: club.category,
             clubId: club._id,
             description: club.description,
-            imageUrl: club.imageUrl,
+            pictureUrl: club.pictureUrl,
             name: club.name,
             isPrivate: club.isPrivate,
-            nMembers: club.members.length,
-            status,
+            nMembers: members.length,
+            status: userClubInfo.status,
           };
 
           return clubPreviewInfo;
@@ -336,7 +455,7 @@ export const getUserClubs = query({
 });
 
 export const getClassPageData = query({
-  args: { classId: v.optional(v.string()), signature: v.optional(v.string()) },
+  args: { classId: v.optional(v.string()) },
   returns: v.union(ClassPageData, v.string()),
   handler: async (ctx, args): Promise<ClassPageData | string> => {
     const user = await getUserFromClerkId(ctx, args);
@@ -451,5 +570,27 @@ export const getClassStudents = query({
     );
 
     return userCardsInfo.filter((userCardInfo) => userCardInfo !== null);
+  },
+});
+
+export const getUserLastSeenAt = query({
+  args: { userId: v.id("users") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    await authorize(ctx);
+
+    const { userId } = args;
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      return 0;
+    }
+
+    return profile.lastSeenAt ?? 0;
   },
 });

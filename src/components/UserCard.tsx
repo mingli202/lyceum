@@ -8,7 +8,7 @@ type UserCardProps = {
 };
 export function UserCard({ user }: UserCardProps) {
   return (
-    <Link href={`/user/${user.userId}`}>
+    <Link href={`/user?id=${user.userId}`}>
       <Card className="flex flex-row items-center" clickable>
         <ProfilePicture src={user.pictureUrl} displayName={user.firstName} />
         <div className="flex h-fit flex-col justify-center">
