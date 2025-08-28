@@ -1,31 +1,81 @@
 "use client";
 
-import { ProfileData } from "@convex/types";
+import { CanView, ProfileData } from "@convex/types";
 import { GraduationCap, MapPin, School } from "lucide-react";
 import { ProfilePicture } from "@/components/ProfilePicture";
-import { Button, ButtonVariant } from "@/components";
+import { Button, ButtonVariant, LoadingSpinner } from "@/components";
 import UserActivity from "./UserActivity";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
+import { Id } from "@convex/_generated/dataModel";
+
+type ProfilePageProps = {
+  isOwner?: boolean;
+};
+export function ProfilePage({ isOwner }: ProfilePageProps) {
+  const { userId } = useAuth();
+
+  const searchParams = useSearchParams();
+  const id = isOwner ? undefined : searchParams.get("id")?.toString();
+
+  const data = useQuery(api.queries.getProfileData, {
+    requestedUserId: id as Id<"users"> | undefined,
+  });
+  const canView = useQuery(api.queries.getCanViewUserInfo, {
+    requestedUserId: id as Id<"users"> | undefined,
+  });
+
+  if (!data || !canView) {
+    return <LoadingSpinner />;
+  }
+
+  if (typeof data === "string") {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-red-500">
+        {data}
+      </div>
+    );
+  }
+
+  return <Profile data={data} currentClerkId={userId} canView={canView} />;
+}
 
 type ProfileProps = {
   data: ProfileData;
+  canView: CanView;
   currentClerkId?: string | null;
 };
-export function Profile({ data, currentClerkId }: ProfileProps) {
+export function Profile({ data, currentClerkId, canView }: ProfileProps) {
   const followUser = useMutation(api.mutations.followUser);
 
-  let buttonText = "Follow";
+  const nFollowers = useQuery(api.queries.getFollowerCount, {
+    userId: data.userId,
+  });
 
-  if (data.canView.canView) {
-    if (data.canView.reason === "Following") {
-      buttonText = "Unfollow";
+  const nFollowing = useQuery(api.queries.getFollowingCount, {
+    userId: data.userId,
+  });
+
+  let buttonTextTmp = "Follow";
+
+  if (canView.canView) {
+    if (canView.reason === "Following") {
+      buttonTextTmp = "Unfollow";
     }
   } else {
-    if (data.canView.reason === "Requested") {
-      buttonText = "Requested";
+    if (canView.reason === "Requested") {
+      buttonTextTmp = "Requested";
     }
   }
+
+  const [buttonText, setButtonText] = useState(buttonTextTmp);
+
+  useEffect(() => {
+    setButtonText(buttonTextTmp);
+  }, [buttonTextTmp]);
 
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
@@ -48,12 +98,24 @@ export function Profile({ data, currentClerkId }: ProfileProps) {
                   : ButtonVariant.Muted
               }
               onClick={async () => {
-                if (data.canView.reason === "Blocked") {
+                if (canView.reason === "Blocked") {
                   return;
                 }
-                await followUser({ userId: data.userId });
+
+                followUser({ userId: data.userId });
+                // immediate feedback
+                if (canView.reason === "Public account") {
+                  setButtonText("Unfollow");
+                } else if (
+                  canView.reason === "Requested" ||
+                  canView.reason === "Following"
+                ) {
+                  setButtonText("Follow");
+                } else if (canView.reason === "Private account") {
+                  setButtonText("Requested");
+                }
               }}
-              disabled={data.canView.reason === "Blocked"}
+              disabled={canView.reason === "Blocked"}
             >
               {buttonText}
             </Button>
@@ -91,17 +153,17 @@ export function Profile({ data, currentClerkId }: ProfileProps) {
           </div>
 
           <div className="mb-4 flex gap-2">
-            <p>
-              <span className="font-bold">{data.nFollowers + " "}</span>
+            <p className="flex items-center gap-1">
+              <span className="font-bold">{nFollowers ?? 0}</span>
               <span className="text-muted-foreground">Followers</span>
             </p>
-            <p>
-              <span className="font-bold">{data.nFollowing + " "}</span>
+            <p className="flex items-center gap-1">
+              <span className="font-bold">{nFollowing ?? 0}</span>
               <span className="text-muted-foreground">Following</span>
             </p>
           </div>
         </div>
-        <UserActivity canView={data.canView} requestedUserId={data.userId} />
+        <UserActivity canView={canView} requestedUserId={data.userId} />
       </section>
     </div>
   );
