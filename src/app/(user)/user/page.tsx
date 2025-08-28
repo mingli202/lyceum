@@ -14,7 +14,7 @@ export default function UserPage() {
   const id = searchParams.get("id")?.toString();
 
   const profileData = useQuery(api.queries.getProfileData, {
-    userId: id as Id<"users">,
+    requestedUserId: id as Id<"users">,
   });
 
   if (!profileData) {

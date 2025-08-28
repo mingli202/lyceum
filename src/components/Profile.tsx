@@ -59,16 +59,16 @@ export function Profile({ data, currentClerkId }: ProfileProps) {
 
           <div className="mb-4 flex gap-2">
             <p>
-              <span className="font-bold">{data.followers.length + " "}</span>
+              <span className="font-bold">{data.nFollowers + " "}</span>
               <span className="text-muted-foreground">Followers</span>
             </p>
             <p>
-              <span className="font-bold">{data.following.length + " "}</span>
+              <span className="font-bold">{data.nFollowing + " "}</span>
               <span className="text-muted-foreground">Following</span>
             </p>
           </div>
         </div>
-        <UserActivity />
+        <UserActivity canView={data.canView} requestedUserId={data.userId} />
       </section>
     </div>
   );

@@ -13,5 +13,13 @@ export default function ProfilePage() {
     return <LoadingSpinner />;
   }
 
+  if (typeof data === "string") {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-red-500">
+        {data}
+      </div>
+    );
+  }
+
   return <Profile data={data} currentClerkId={userId} />;
 }
