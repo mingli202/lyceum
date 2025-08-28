@@ -1,14 +1,32 @@
+"use client";
+
 import { ProfileData } from "@convex/types";
 import { GraduationCap, MapPin, School } from "lucide-react";
 import { ProfilePicture } from "@/components/ProfilePicture";
 import { Button, ButtonVariant } from "@/components";
 import UserActivity from "./UserActivity";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 type ProfileProps = {
   data: ProfileData;
   currentClerkId?: string | null;
 };
 export function Profile({ data, currentClerkId }: ProfileProps) {
+  const followUser = useMutation(api.mutations.followUser);
+
+  let buttonText = "Follow";
+
+  if (data.canView.canView) {
+    if (data.canView.reason === "Following") {
+      buttonText = "Unfollow";
+    }
+  } else {
+    if (data.canView.reason === "Requested") {
+      buttonText = "Requested";
+    }
+  }
+
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
       <section className="flex h-fit w-full max-w-2xl flex-col">
@@ -23,7 +41,22 @@ export function Profile({ data, currentClerkId }: ProfileProps) {
           {currentClerkId && data.clerkId === currentClerkId ? (
             <Button variant={ButtonVariant.Muted}>Edit</Button>
           ) : (
-            <Button variant={ButtonVariant.Special}>Follow</Button>
+            <Button
+              variant={
+                buttonText === "Follow"
+                  ? ButtonVariant.Special
+                  : ButtonVariant.Muted
+              }
+              onClick={async () => {
+                if (data.canView.reason === "Blocked") {
+                  return;
+                }
+                await followUser({ userId: data.userId });
+              }}
+              disabled={data.canView.reason === "Blocked"}
+            >
+              {buttonText}
+            </Button>
           )}
         </div>
         <div className="flex flex-col justify-between gap-2 px-6 text-sm">

@@ -86,14 +86,14 @@ export const AddClassArgs = v.object({
 
 export const CanView = v.object({
   canView: v.boolean(),
-  reason: v.optional(
-    v.union(
-      v.literal("Blocked"),
-      v.literal("Requested"),
-      v.literal("Private account"),
-      v.literal("User not found"),
-      v.literal("Not following"),
-    ),
+  reason: v.union(
+    v.literal("Blocked"),
+    v.literal("Requested"),
+    v.literal("Private account"),
+    v.literal("User not found"),
+    v.literal("Public account"),
+    v.literal("Following"),
+    v.literal("Own account"),
   ),
 });
 export const ProfileData = v.object({

@@ -71,7 +71,7 @@ export async function canViewUserInfo(
     | GenericActionCtx<DataModel>,
   authenticatedUserId: Id<"users">,
   requestedUserId?: Id<"users">,
-): Promise<{ canView: boolean; reason?: CanView["reason"] }> {
+): Promise<CanView> {
   return await ctx.runQuery(internal.queries._canViewUserInfo, {
     requestedUserId,
     authenticatedUserId,

@@ -98,10 +98,7 @@ export const _canViewUserInfo = internalQuery({
     authenticatedUserId: v.id("users"),
   },
   returns: CanView,
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{ canView: boolean; reason?: CanView["reason"] }> => {
+  handler: async (ctx, args): Promise<CanView> => {
     const { requestedUserId, authenticatedUserId } = args;
     if (requestedUserId && requestedUserId !== authenticatedUserId) {
       const requestedUserProfile = await ctx.db
@@ -129,20 +126,20 @@ export const _canViewUserInfo = internalQuery({
           return { canView: false, reason: "Private account" } as const;
         }
 
-        return { canView: false, reason: "Not following" } as const;
+        return { canView: true, reason: "Public account" } as const;
       }
 
       switch (requestedUserFollowingInfo.status) {
         case "requested":
           return { canView: false, reason: "Requested" } as const;
         case "accepted":
-          return { canView: true } as const;
+          return { canView: true, reason: "Following" } as const;
         case "blocked":
           return { canView: false, reason: "Blocked" } as const;
       }
     }
 
-    return { canView: true } as const;
+    return { canView: true, reason: "Own account" } as const;
   },
 });
 

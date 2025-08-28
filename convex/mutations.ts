@@ -339,3 +339,51 @@ export const editTargetGrade = mutation({
     await ctx.db.patch(userClassInfo._id, { targetGrade: args.targetGrade });
   },
 });
+
+export const followUser = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const { userId } = args;
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    if (authenticatedUser._id === userId) {
+      throw new Error("Cannot follow yourself");
+    }
+
+    const userFollowingInfo = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_userId_followingId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("followingId", userId),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (userFollowingInfo) {
+      if (userFollowingInfo.status === "blocked") {
+        throw new Error("Blocked");
+      } else {
+        await ctx.db.delete(userFollowingInfo._id);
+      }
+    } else {
+      const otherUserProfile = await ctx.db
+        .query("profiles")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .unique()
+        .catch(() => null);
+
+      if (!otherUserProfile) {
+        throw new Error("User not found");
+      }
+
+      await ctx.db.insert("followingsInfo", {
+        userId: authenticatedUser._id,
+        followingId: args.userId,
+        status: otherUserProfile.isPrivate ? "requested" : "accepted",
+      });
+    }
+  },
+});
