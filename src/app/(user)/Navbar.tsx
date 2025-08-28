@@ -2,7 +2,7 @@
 
 import { Button } from "@/components";
 import { cn } from "@/utils/cn";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   Calendar,
   Home,
@@ -14,15 +14,18 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { api } from "@convex/_generated/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SetupDrawer from "./SetupDrawer";
 import { useAuth } from "@clerk/nextjs";
 
 export default function NavBar() {
   const user = useQuery(api.queries.getUser, {});
+  const setLoginStats = useMutation(api.mutations.setLoginStats);
 
   const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const timer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // explicitely define different states
@@ -33,6 +36,24 @@ export default function NavBar() {
       setOpen(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    setLoginStats({});
+    // ping the server every 10 minutes
+    timer.current = setInterval(
+      async () => {
+        await setLoginStats({});
+      },
+      1000 * 60 * 10,
+    );
+
+    return () => {
+      if (!timer.current) {
+        return;
+      }
+      clearTimeout(timer.current);
+    };
+  }, []);
 
   const pathName = usePathname() ?? "";
 
@@ -61,7 +82,12 @@ export default function NavBar() {
           <UserIcon /> Profile
         </NavItem>
         <div className="basis-full" />
-        <Button onClick={() => signOut()} className="p-0">
+        <Button
+          onClick={() => {
+            signOut();
+          }}
+          className="p-0"
+        >
           Sign Out
         </Button>
       </section>

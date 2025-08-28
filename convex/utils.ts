@@ -3,10 +3,10 @@ import {
   GenericMutationCtx,
   GenericQueryCtx,
 } from "convex/server";
-import { DataModel } from "./_generated/dataModel";
+import { DataModel, Id } from "./_generated/dataModel";
 import { SignatureService } from "./services/signatureService";
-import { internal } from "./_generated/api";
-import { User } from "./types";
+import { api, internal } from "./_generated/api";
+import { CanView, User } from "./types";
 
 /**
  * Helper function to authorize a request.
@@ -61,5 +61,17 @@ export async function getUserFromClerkId(
 ): Promise<User | null> {
   return await ctx.runQuery(internal.queries._getUserFromClerkId, {
     signature: args.signature,
+  });
+}
+
+export async function canViewUserInfo(
+  ctx:
+    | GenericMutationCtx<DataModel>
+    | GenericQueryCtx<DataModel>
+    | GenericActionCtx<DataModel>,
+  requestedUserId?: Id<"users">,
+): Promise<CanView> {
+  return await ctx.runQuery(api.queries.getCanViewUserInfo, {
+    requestedUserId,
   });
 }

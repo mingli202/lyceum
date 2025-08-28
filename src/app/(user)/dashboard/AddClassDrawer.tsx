@@ -38,7 +38,7 @@ export default function AddClassDrawer() {
   }, []);
 
   const [error, handleSubmit, isPending] = useFormState(async (e) => {
-    let body: AddClassArgs;
+    let body: AddClassArgs | null = null;
 
     if (isManual) {
       const formData = new FormData(e.currentTarget);
@@ -74,7 +74,11 @@ export default function AddClassDrawer() {
       intervalId.current = setInterval(() => {
         setTimeS((s) => s + 0.1);
       }, 100);
-      body = await parseSyllabus(file);
+      body = await parseSyllabus(file).catch(() => null);
+    }
+
+    if (!body) {
+      return "Error while parsing syllabus";
     }
 
     try {
@@ -86,7 +90,7 @@ export default function AddClassDrawer() {
         if (e instanceof Error) {
           return e.message;
         }
-        return "Error while checking for class times overlap";
+        return "Error while checking for class times overlap. Maybe the syllabus is not a syllabus?";
       }
     }
 
