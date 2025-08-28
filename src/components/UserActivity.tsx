@@ -93,16 +93,20 @@ export default function UserActivity({
             ) : (
               <div className="flex w-full flex-col items-center justify-center p-6">
                 <Grid3x3 className="text-muted-foreground h-20 w-20 stroke-1" />
-                <p>
-                  Add a post in{" "}
-                  <Link
-                    href="/feed"
-                    className="text-blue-600 underline hover:cursor-pointer"
-                  >
-                    feed
-                  </Link>{" "}
-                  to get started!
-                </p>
+                {canView.reason === "Own account" ? (
+                  <p>
+                    Add a post in{" "}
+                    <Link
+                      href="/feed"
+                      className="text-blue-600 underline hover:cursor-pointer"
+                    >
+                      feed
+                    </Link>{" "}
+                    to get started!
+                  </p>
+                ) : (
+                  <p>No posts yet!</p>
+                )}
               </div>
             ))}
           {selectedTab === "Clubs" &&
@@ -115,16 +119,20 @@ export default function UserActivity({
             ) : (
               <div className="flex w-full flex-col items-center justify-center p-6">
                 <Volleyball className="text-muted-foreground h-20 w-20 stroke-1" />
-                <p>
-                  Add a club in{" "}
-                  <Link
-                    href="/clubs"
-                    className="text-blue-600 underline hover:cursor-pointer"
-                  >
-                    clubs
-                  </Link>{" "}
-                  to get started!
-                </p>
+                {canView.reason === "Own account" ? (
+                  <p>
+                    Add a club in{" "}
+                    <Link
+                      href="/clubs"
+                      className="text-blue-600 underline hover:cursor-pointer"
+                    >
+                      clubs
+                    </Link>{" "}
+                    to get started!
+                  </p>
+                ) : (
+                  <p>No clubs yet!</p>
+                )}
               </div>
             ))}
           {selectedTab === "Classes" &&
@@ -137,16 +145,20 @@ export default function UserActivity({
             ) : (
               <div className="flex w-full flex-col items-center justify-center p-6">
                 <BookOpen className="text-muted-foreground h-20 w-20 stroke-1" />
-                <p>
-                  Add a class in{" "}
-                  <Link
-                    href="/dashboard"
-                    className="text-blue-600 underline hover:cursor-pointer"
-                  >
-                    dashboard
-                  </Link>{" "}
-                  to get started!
-                </p>
+                {canView.reason === "Own account" ? (
+                  <p>
+                    Add a class in{" "}
+                    <Link
+                      href="/dashboard"
+                      className="text-blue-600 underline hover:cursor-pointer"
+                    >
+                      dashboard
+                    </Link>{" "}
+                    to get started!
+                  </p>
+                ) : (
+                  <p>No classes yet!</p>
+                )}
               </div>
             ))}
         </>
