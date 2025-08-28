@@ -6,7 +6,7 @@ import {
 import { DataModel, Id } from "./_generated/dataModel";
 import { SignatureService } from "./services/signatureService";
 import { internal } from "./_generated/api";
-import { User } from "./types";
+import { CanView, User } from "./types";
 
 /**
  * Helper function to authorize a request.
@@ -71,7 +71,7 @@ export async function canViewUserInfo(
     | GenericActionCtx<DataModel>,
   authenticatedUserId: Id<"users">,
   requestedUserId?: Id<"users">,
-): Promise<{ canView: boolean; reason?: string }> {
+): Promise<{ canView: boolean; reason?: CanView["reason"] }> {
   return await ctx.runQuery(internal.queries._canViewUserInfo, {
     requestedUserId,
     authenticatedUserId,

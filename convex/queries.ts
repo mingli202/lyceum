@@ -2,6 +2,7 @@ import { internalQuery, query } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
+  CanView,
   ClassInfo,
   ClassPageData,
   ClubPreviewInfo,
@@ -96,14 +97,11 @@ export const _canViewUserInfo = internalQuery({
     requestedUserId: v.optional(v.id("users")),
     authenticatedUserId: v.id("users"),
   },
-  returns: v.object({
-    canView: v.boolean(),
-    reason: v.optional(v.string()),
-  }),
+  returns: CanView,
   handler: async (
     ctx,
     args,
-  ): Promise<{ canView: boolean; reason?: string }> => {
+  ): Promise<{ canView: boolean; reason?: CanView["reason"] }> => {
     const { requestedUserId, authenticatedUserId } = args;
     if (requestedUserId && requestedUserId !== authenticatedUserId) {
       const requestedUserProfile = await ctx.db
@@ -113,7 +111,7 @@ export const _canViewUserInfo = internalQuery({
         .catch(() => null);
 
       if (!requestedUserProfile) {
-        return { canView: false, reason: "User not found" };
+        return { canView: false, reason: "User not found" } as const;
       }
 
       const requestedUserFollowingInfo = await ctx.db
@@ -128,23 +126,23 @@ export const _canViewUserInfo = internalQuery({
 
       if (!requestedUserFollowingInfo) {
         if (requestedUserProfile.isPrivate) {
-          return { canView: false, reason: "Private account" };
+          return { canView: false, reason: "Private account" } as const;
         }
 
-        return { canView: false, reason: "Not following" };
+        return { canView: false, reason: "Not following" } as const;
       }
 
       switch (requestedUserFollowingInfo.status) {
         case "requested":
-          return { canView: false, reason: "Requested" };
+          return { canView: false, reason: "Requested" } as const;
         case "accepted":
-          return { canView: true };
+          return { canView: true } as const;
         case "blocked":
-          return { canView: false, reason: "Blocked" };
+          return { canView: false, reason: "Blocked" } as const;
       }
     }
 
-    return { canView: true };
+    return { canView: true } as const;
   },
 });
 
@@ -167,7 +165,7 @@ export const getUser = query({
 
 export const getDashboardData = query({
   returns: DashboardData,
-  handler: async (ctx, args): Promise<DashboardData> => {
+  handler: async (ctx): Promise<DashboardData> => {
     const classes: ClassInfo[] = await ctx.runQuery(
       api.queries.getUserClasses,
       { canView: true },
@@ -202,8 +200,8 @@ export const getProfileData = query({
       requestedUserId,
     );
 
-    if (!canView.canView) {
-      return canView.reason ?? "Can't view user info";
+    if (canView.reason === "Blocked") {
+      return "Blocked";
     }
 
     const user = await ctx.db.get(requestedUserId ?? authenticatedUser?._id);
@@ -222,7 +220,22 @@ export const getProfileData = query({
       return "User profile not found";
     }
 
+    const nFollowing = (
+      await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_userId", (q) => q.eq("userId", user._id))
+        .collect()
+    ).filter((following) => following.status === "accepted").length;
+
+    const nFollowers = (
+      await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_followingId", (q) => q.eq("followingId", user._id))
+        .collect()
+    ).filter((following) => following.status === "accepted").length;
+
     const profileData: ProfileData = {
+      userId: user._id,
       school: profile.school,
       major: profile.major,
       firstName: user.givenName,
@@ -235,6 +248,9 @@ export const getProfileData = query({
       bio: profile.bio,
       clerkId: user.clerkId,
       isPrivate: profile.isPrivate,
+      nFollowing,
+      nFollowers,
+      canView,
     };
 
     return profileData;

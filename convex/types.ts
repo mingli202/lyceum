@@ -84,7 +84,20 @@ export const AddClassArgs = v.object({
   school: v.optional(v.string()),
 });
 
+export const CanView = v.object({
+  canView: v.boolean(),
+  reason: v.optional(
+    v.union(
+      v.literal("Blocked"),
+      v.literal("Requested"),
+      v.literal("Private account"),
+      v.literal("User not found"),
+      v.literal("Not following"),
+    ),
+  ),
+});
 export const ProfileData = v.object({
+  userId: v.id("users"),
   clerkId: v.string(),
   school: v.string(),
   major: v.string(),
@@ -100,6 +113,9 @@ export const ProfileData = v.object({
   followingStatus: v.optional(
     schema.tables.followingsInfo.validator.fields.status,
   ),
+  nFollowing: v.number(),
+  nFollowers: v.number(),
+  canView: CanView,
 });
 
 export const PostPreviewInfo = v.object({
@@ -184,3 +200,4 @@ export type ClubCategory = typeof ClubCategory.type;
 export type ClubUserStatus = typeof ClubUserStatus.type;
 export type ClassPageData = typeof ClassPageData.type;
 export type UserCardInfo = typeof UserCardInfo.type;
+export type CanView = typeof CanView.type;
