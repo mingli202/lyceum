@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Dialog } from "radix-ui";
 import { Button, ButtonVariant } from "../ui";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { LoadingSpinner } from "../LoadingSpinner";
 import useFormState from "@/hooks/useFormState";
 import { useMutation } from "convex/react";
@@ -12,12 +12,10 @@ type BannerPictureProps = {
 };
 
 export function BannerPicture({ bannerUrl }: BannerPictureProps) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Root>
       <Dialog.Trigger>
-        <div className="bg-muted-foreground/10 relative h-50 w-full">
+        <div className="bg-muted-foreground/10 relative h-50 w-full hover:cursor-pointer">
           {bannerUrl ? (
             <Image src={bannerUrl} alt="banner" fill className="object-cover" />
           ) : null}
@@ -26,17 +24,14 @@ export function BannerPicture({ bannerUrl }: BannerPictureProps) {
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
         <Dialog.Content className="animate-pop-in fixed top-1/2 left-1/2 z-10 h-fit -translate-1/2">
-          <UploadBannerPicture setOpen={setOpen} bannerUrl={bannerUrl} />
+          <UploadBannerPicture bannerUrl={bannerUrl} />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   );
 }
 
-function UploadBannerPicture({
-  bannerUrl,
-  setOpen,
-}: BannerPictureProps & { setOpen: Dispatch<SetStateAction<boolean>> }) {
+function UploadBannerPicture({ bannerUrl }: BannerPictureProps) {
   const [file, setFile] = useState<File | undefined | "remove">();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -46,6 +41,7 @@ function UploadBannerPicture({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localFileUrl = useRef<string>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   function handleFileUpload(uploadedFile?: File) {
     setIsUploading(false);
@@ -62,35 +58,34 @@ function UploadBannerPicture({
     setFile(uploadedFile);
   }
 
-  const [msg, handleSubmit, isPending] = useFormState(async (e) => {
+  const [msg, handleSubmit, isPending] = useFormState(async () => {
     if (!file) {
       return "Please upload a banner picture or remove the current one";
     }
     if (file === "remove") {
       await removeBannerPicture({});
-      return;
+    } else {
+      const uploadUrl = await generateUploadUrl({});
+
+      const result = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await result.json();
+
+      const res = await setBannerPicture({ storageId });
+
+      if (res) {
+        return res;
+      }
     }
 
-    const uploadUrl = await generateUploadUrl({});
-
-    const result = await fetch(uploadUrl, {
-      method: "POST",
-      headers: { "Content-Type": file.type },
-      body: file,
-    });
-    const { storageId } = await result.json();
-
-    const res = await setBannerPicture({ storageId });
-
-    if (res) {
-      return res;
-    }
-
-    setOpen(false);
+    closeButtonRef.current?.click?.();
   });
 
   return (
-    <div className="bg-background w-2xl overflow-hidden rounded-lg">
+    <div className="bg-background w-[min(42rem,50vw)] overflow-hidden rounded-lg">
       <div className="bg-muted-foreground/10 relative h-50 w-full overflow-hidden">
         {file === "remove" ? null : localFileUrl.current || bannerUrl ? (
           <Image
@@ -155,6 +150,7 @@ function UploadBannerPicture({
         </form>
       </div>
       {msg && <p className="px-4 pb-4 text-red-500">{msg}</p>}
+      <Dialog.Close className="hidden" ref={closeButtonRef} />
     </div>
   );
 }
