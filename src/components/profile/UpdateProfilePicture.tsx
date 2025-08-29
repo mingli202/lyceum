@@ -1,16 +1,19 @@
-import { RefObject, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { ProfilePicture } from "./ProfilePicture";
 import { LoadingSpinner } from "../LoadingSpinner";
+import { Button, ButtonVariant } from "../ui";
 
 type UpdateProfilePictureProps = {
   displayName: string;
-  fileRef: RefObject<File | null>;
+  setFile: Dispatch<SetStateAction<File | undefined | "remove">>;
+  file: File | undefined | "remove";
   src?: string;
 };
 
 export function UpdateProfilePicture({
   displayName,
-  fileRef,
+  setFile,
+  file,
   src,
 }: UpdateProfilePictureProps) {
   const [isUploading, setIsUploading] = useState(false);
@@ -18,19 +21,19 @@ export function UpdateProfilePicture({
 
   const localFileUrl = useRef<string>(null);
 
-  function handleFileUpload(file?: File) {
+  function handleFileUpload(uploadedFile?: File) {
     setIsUploading(false);
 
-    if (!file) {
+    if (!uploadedFile) {
       return;
     }
 
     if (localFileUrl.current) {
       URL.revokeObjectURL(localFileUrl.current);
     }
-    localFileUrl.current = URL.createObjectURL(file);
+    localFileUrl.current = URL.createObjectURL(uploadedFile);
 
-    fileRef.current = file;
+    setFile(uploadedFile);
   }
 
   useEffect(() => {
@@ -45,45 +48,53 @@ export function UpdateProfilePicture({
     <div className="flex w-full items-center gap-4 p-2">
       <ProfilePicture
         displayName={displayName}
-        src={localFileUrl.current ?? src}
+        src={file === "remove" ? undefined : (localFileUrl.current ?? src)}
         className="h-16 w-16"
       />
       <div className="justify-center-center flex flex-col gap-2">
         <p>Profile Picture</p>
-        <label
-          htmlFor="profile-picture"
-          className="flex w-fit items-center justify-center rounded-md border-2 border-dashed border-indigo-300 px-2 py-1 transition hover:cursor-pointer hover:border-indigo-500"
-          onClick={() => {
-            if (isUploading) {
-              return;
-            }
-            setIsUploading(true);
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="profile-picture"
+            className="flex w-fit items-center justify-center rounded-md border-2 border-dashed border-indigo-300 px-2 py-1 transition hover:cursor-pointer hover:border-indigo-500"
+            onClick={() => {
+              if (isUploading) {
+                return;
+              }
+              setIsUploading(true);
 
-            // why is there no event listener for cancel? (v2)
-            const f = () => setIsUploading(false);
-            fileInputRef.current?.addEventListener("cancel", f, {
-              once: true,
-            });
-            // fileInputRef.current?.removeEventListener("change", f);
-          }}
-        >
-          {isUploading ? (
-            <LoadingSpinner hideLoadingText className="h-5 w-5" />
-          ) : (
-            <>Change</>
-          )}
-          <input
-            type="file"
-            name="profile-picture"
-            accept=".png, .jpg, .jpeg"
-            id="profile-picture"
-            className="hidden"
-            onChange={(e) => {
-              handleFileUpload(e.target.files?.[0]);
+              // why is there no event listener for cancel? (v2)
+              const f = () => setIsUploading(false);
+              fileInputRef.current?.addEventListener("cancel", f, {
+                once: true,
+              });
             }}
-            ref={fileInputRef}
-          />
-        </label>
+          >
+            {isUploading ? (
+              <LoadingSpinner hideLoadingText className="h-5 w-5" />
+            ) : (
+              <>Change</>
+            )}
+            <input
+              type="file"
+              name="profile-picture"
+              accept=".png, .jpg, .jpeg"
+              id="profile-picture"
+              className="hidden"
+              onChange={(e) => {
+                handleFileUpload(e.target.files?.[0]);
+              }}
+              ref={fileInputRef}
+            />
+          </label>
+          <Button
+            variant={ButtonVariant.Muted}
+            onClick={() => setFile("remove")}
+            type="button"
+          >
+            Remove
+          </Button>
+        </div>
       </div>
     </div>
   );

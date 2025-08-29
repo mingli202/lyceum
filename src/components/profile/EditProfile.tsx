@@ -5,7 +5,7 @@ import { Button, ButtonVariant } from "../ui";
 import useFormState from "@/hooks/useFormState";
 import { ProfileData } from "@convex/types";
 import { X } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { UpdateProfilePicture } from "./UpdateProfilePicture";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
@@ -17,10 +17,11 @@ type EditProfileProps = {
 
 export function EditProfile({ data }: EditProfileProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const fileRef = useRef<File>(null);
+  const [file, setFile] = useState<File | undefined | "remove">();
 
   const { user } = useUser();
   const updateProfile = useMutation(api.mutations.updateProfile);
+  const removeProfilePicture = useMutation(api.mutations.removeProfilePicture);
 
   const [msg, handleSubmit, isPending] = useFormState(async (e) => {
     if (!user) {
@@ -28,11 +29,16 @@ export function EditProfile({ data }: EditProfileProps) {
     }
 
     let imageUrl: string | undefined;
-    if (fileRef.current) {
-      const imageResource = await user.setProfileImage({
-        file: fileRef.current,
-      });
-      imageUrl = imageResource.publicUrl ?? undefined;
+    if (file) {
+      if (file === "remove") {
+        await user.setProfileImage({ file: null });
+        await removeProfilePicture({});
+      } else {
+        const imageResource = await user.setProfileImage({
+          file,
+        });
+        imageUrl = imageResource.publicUrl ?? undefined;
+      }
     }
 
     const formData = new FormData(e.target as HTMLFormElement);
@@ -70,7 +76,8 @@ export function EditProfile({ data }: EditProfileProps) {
             <UpdateProfilePicture
               displayName={data.firstName}
               src={data.pictureUrl}
-              fileRef={fileRef}
+              file={file}
+              setFile={setFile}
             />
 
             <div className="flex items-center justify-end gap-2">

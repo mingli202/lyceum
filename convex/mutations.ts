@@ -454,3 +454,17 @@ export const updateProfile = mutation({
     ]);
   },
 });
+
+export const removeProfilePicture = mutation({
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(authenticatedUser._id, {
+      pictureUrl: undefined,
+    });
+  },
+});
