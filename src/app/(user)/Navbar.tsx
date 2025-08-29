@@ -86,7 +86,7 @@ export default function NavBar() {
           onClick={() => {
             signOut();
           }}
-          className="p-0 ring-0"
+          className="w-full p-0 text-center ring-0"
           variant={ButtonVariant.Muted}
         >
           Sign Out
