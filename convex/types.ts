@@ -116,7 +116,7 @@ export const ProfileData = v.object({
   bannerUrl: v.optional(v.string()),
 });
 
-export const PostPreviewInfo = v.object({
+export const UserPostPreviewInfo = v.object({
   postId: v.id("posts"),
   author: v.object({
     authorId: v.id("users"),
@@ -131,6 +131,22 @@ export const PostPreviewInfo = v.object({
   createdAt: v.number(),
   description: v.string(),
   imageUrl: v.optional(v.string()),
+});
+
+export const ClubPostPreviewInfo = v.object({
+  postId: v.id("posts"),
+  club: v.object({
+    clubId: v.id("clubs"),
+    pictureUrl: v.optional(v.string()),
+    name: v.string(),
+  }),
+  nComments: v.number(),
+  nReplies: v.number(),
+  nLikes: v.number(),
+  createdAt: v.number(),
+  description: v.string(),
+  imageUrl: v.optional(v.string()),
+  isMembersOnly: v.boolean(),
 });
 
 export const ClubUserStatus =
@@ -192,10 +208,11 @@ export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
 export type AddClassArgs = typeof AddClassArgs.type;
 export type ClassTime = typeof ClassTime.type;
 export type ProfileData = typeof ProfileData.type;
-export type PostPreviewInfo = typeof PostPreviewInfo.type;
+export type UserPostPreviewInfo = typeof UserPostPreviewInfo.type;
 export type ClubPreviewInfo = typeof ClubPreviewInfo.type;
 export type ClubCategory = typeof ClubCategory.type;
 export type ClubUserStatus = typeof ClubUserStatus.type;
 export type ClassPageData = typeof ClassPageData.type;
 export type UserCardInfo = typeof UserCardInfo.type;
 export type CanView = typeof CanView.type;
+export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;

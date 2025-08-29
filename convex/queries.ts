@@ -7,11 +7,12 @@ import {
   ClassPageData,
   ClubPreviewInfo,
   DashboardData,
-  PostPreviewInfo,
+  UserPostPreviewInfo,
   ProfileData,
   User,
   UserCardInfo,
   UserTask,
+  ClubPostPreviewInfo,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -276,8 +277,8 @@ export const getFollowingCount = query({
 
 export const getUserPosts = query({
   args: { requestedUserId: v.optional(v.id("users")), canView: v.boolean() },
-  returns: v.array(PostPreviewInfo),
-  handler: async (ctx, args): Promise<PostPreviewInfo[]> => {
+  returns: v.array(UserPostPreviewInfo),
+  handler: async (ctx, args): Promise<UserPostPreviewInfo[]> => {
     const { requestedUserId, canView } = args;
 
     if (!canView) {
@@ -311,7 +312,13 @@ export const getUserPosts = query({
           return null;
         }
 
-        const postPreviewInfo: PostPreviewInfo = {
+        let imageUrl;
+
+        if (post.imageId) {
+          imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+        }
+
+        const postPreviewInfo: UserPostPreviewInfo = {
           postId: userPost.postId,
           author: {
             authorId: userId,
@@ -335,7 +342,7 @@ export const getUserPosts = query({
           nLikes: post.likes.length,
           createdAt: post._creationTime,
           description: post.description,
-          imageUrl: post.imageUrl,
+          imageUrl,
         };
 
         return postPreviewInfo;
@@ -597,5 +604,127 @@ export const getUserLastSeenAt = query({
     }
 
     return profile.lastSeenAt ?? 0;
+  },
+});
+
+export const getFeedData = query({
+  returns: v.array(v.union(UserPostPreviewInfo, ClubPostPreviewInfo)),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<(UserPostPreviewInfo | ClubPostPreviewInfo)[]> => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      return [];
+    }
+
+    const recentPosts = await ctx.db
+      .query("posts")
+      .withIndex("by_creation_time")
+      .order("asc")
+      .take(10);
+
+    const postsInfo = await Promise.all(
+      recentPosts.map(async (post) => {
+        const userPost = await ctx.db
+          .query("userPosts")
+          .withIndex("by_postId", (q) => q.eq("postId", post._id))
+          .unique();
+
+        if (userPost) {
+          const author = await ctx.db.get(userPost.userId);
+
+          if (!author) {
+            return null;
+          }
+
+          let imageUrl;
+
+          if (post.imageId) {
+            imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+          }
+
+          const userPostPreviewInfo: UserPostPreviewInfo = {
+            postId: post._id,
+            author: {
+              authorId: author._id,
+              pictureUrl: author.pictureUrl,
+              firstName: author.givenName,
+              lastName: author.familyName,
+              username: author.username,
+            },
+            nComments: (
+              await ctx.db
+                .query("comments")
+                .withIndex("by_postId", (q) => q.eq("postId", post._id))
+                .collect()
+            ).length,
+            nReplies: (
+              await ctx.db
+                .query("replies")
+                .withIndex("by_postId", (q) => q.eq("postId", post._id))
+                .collect()
+            ).length,
+            nLikes: post.likes.length,
+            createdAt: post._creationTime,
+            description: post.description,
+            imageUrl,
+          };
+          return userPostPreviewInfo;
+        } else {
+          const clubPost = await ctx.db
+            .query("clubPosts")
+            .withIndex("by_postId", (q) => q.eq("postId", post._id))
+            .unique();
+
+          if (!clubPost) {
+            return null;
+          }
+
+          const club = await ctx.db.get(clubPost.clubId);
+
+          if (!club) {
+            return null;
+          }
+
+          let imageUrl;
+
+          if (post.imageId) {
+            imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+          }
+
+          const clubPostPreviewInfo: ClubPostPreviewInfo = {
+            postId: post._id,
+            club: {
+              clubId: club._id,
+              pictureUrl: club.pictureUrl,
+              name: club.name,
+            },
+            nComments: (
+              await ctx.db
+                .query("comments")
+                .withIndex("by_postId", (q) => q.eq("postId", post._id))
+                .collect()
+            ).length,
+            nReplies: (
+              await ctx.db
+                .query("replies")
+                .withIndex("by_postId", (q) => q.eq("postId", post._id))
+                .collect()
+            ).length,
+            nLikes: post.likes.length,
+            createdAt: post._creationTime,
+            description: post.description,
+            imageUrl,
+            isMembersOnly: clubPost.isMembersOnly,
+          };
+
+          return clubPostPreviewInfo;
+        }
+      }),
+    );
+
+    return postsInfo.filter((postInfo) => postInfo !== null);
   },
 });
