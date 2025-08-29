@@ -446,6 +446,10 @@ export const updateProfile = mutation({
       throw new Error("User profile not found");
     }
 
+    if (profile.userId !== authenticatedUser._id) {
+      throw new Error("Not your profile");
+    }
+
     const { updatedUserInfo, updatedProfileInfo } = args;
 
     await Promise.all([
@@ -505,6 +509,10 @@ export const setBannerPicture = mutation({
       throw new Error("User profile not found");
     }
 
+    if (profile.userId !== authenticatedUser._id) {
+      throw new Error("Not your profile");
+    }
+
     if (profile.bannerId) {
       await ctx.storage.delete(profile.bannerId);
     }
@@ -531,6 +539,10 @@ export const removeBannerPicture = mutation({
 
     if (!profile) {
       throw new Error("User profile not found");
+    }
+
+    if (profile.userId !== authenticatedUser._id) {
+      throw new Error("Not your profile");
     }
 
     const bannerId = profile.bannerId;
