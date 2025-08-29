@@ -93,7 +93,7 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
 
   return (
     <>
-      <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
+      <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto pb-6">
         <section className="flex h-fit w-full max-w-2xl flex-col">
           {isOwner ? (
             <BannerPicture bannerUrl={data.bannerUrl} />

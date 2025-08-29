@@ -8,11 +8,13 @@ import parseTimestamp from "@/utils/parseTimestamp";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import getImageDimensions from "@/utils/getImageDimensions";
+import { useRouter } from "next/navigation";
 
 export function PostCard({ post: p }: { post: UserOrClubPost }) {
   const { type, post } = p;
 
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (p.post.imageUrl) {
@@ -35,16 +37,34 @@ export function PostCard({ post: p }: { post: UserOrClubPost }) {
         <ProfilePicture
           src={post.author.pictureUrl}
           displayName={post.author.firstName}
+          onClick={(e) => {
+            e.preventDefault();
+            router.push(`/user?id=${post.author.authorId}`);
+          }}
         />
       ) : (
         <ProfilePicture
           src={post.club.pictureUrl}
           displayName={post.club.name}
+          onClick={(e) => {
+            e.preventDefault();
+            router.push(`/club?id=${post.club.clubId}`);
+          }}
         />
       )}
       <div className="w-full space-y-1">
         <div className="flex gap-1">
-          <p className="font-bold">
+          <p
+            className="font-bold hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              if (type === "user") {
+                router.push(`/user?id=${post.author.authorId}`);
+              } else {
+                router.push(`/club?id=${post.club.clubId}`);
+              }
+            }}
+          >
             {type === "user" ? post.author.firstName : post.club.name}
           </p>
           <p className="text-muted-foreground">
