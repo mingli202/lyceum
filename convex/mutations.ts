@@ -589,3 +589,57 @@ export const newUserPost = mutation({
     });
   },
 });
+
+export const deletePost = mutation({
+  args: { postId: v.id("posts") },
+  handler: async (ctx, args) => {
+    const { postId } = args;
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const post = await ctx.db.get(postId);
+
+    const userPost = await ctx.db
+      .query("userPosts")
+      .withIndex("by_postId", (q) => q.eq("postId", postId))
+      .unique()
+      .catch(() => null);
+
+    if (userPost) {
+      if (userPost.userId !== authenticatedUser._id) {
+        throw new Error("Not your post");
+      }
+
+      await ctx.db.delete(userPost._id);
+    } else {
+      const clubPost = await ctx.db
+        .query("clubPosts")
+        .withIndex("by_postId", (q) => q.eq("postId", postId))
+        .unique()
+        .catch(() => null);
+
+      if (clubPost) {
+        const userClubInfo = await ctx.db
+          .query("userClubsInfo")
+          .withIndex("by_userId_clubId", (q) =>
+            q.eq("userId", authenticatedUser._id).eq("clubId", clubPost.clubId),
+          )
+          .unique()
+          .catch(() => null);
+
+        if (!userClubInfo || userClubInfo.status !== "admin") {
+          throw new Error("Cannot delete club post");
+        }
+
+        await ctx.db.delete(clubPost._id);
+      }
+    }
+
+    if (post) {
+      await ctx.db.delete(post._id);
+    }
+  },
+});

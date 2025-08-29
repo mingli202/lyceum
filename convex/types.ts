@@ -131,6 +131,7 @@ export const UserPostPreviewInfo = v.object({
   createdAt: v.number(),
   description: v.string(),
   imageUrl: v.optional(v.string()),
+  isOwner: v.boolean(),
 });
 
 export const ClubPostPreviewInfo = v.object({

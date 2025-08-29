@@ -1,7 +1,7 @@
 "use client";
 
 import { UserOrClubPost } from "@convex/types";
-import { Heart, MessageCircle } from "lucide-react";
+import { Ellipsis, Heart, MessageCircle, Trash } from "lucide-react";
 import { ProfilePicture } from "../profile";
 import Link from "next/link";
 import parseTimestamp from "@/utils/parseTimestamp";
@@ -9,9 +9,18 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import getImageDimensions from "@/utils/getImageDimensions";
 import { useRouter } from "next/navigation";
+import { Id } from "@convex/_generated/dataModel";
+import { DropdownMenu } from "radix-ui";
+import { Button, ButtonVariant } from "../ui";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 
-export function PostCard({ post: p }: { post: UserOrClubPost }) {
+type PostCardProps = {
+  post: UserOrClubPost;
+};
+export function PostCard({ post: p }: PostCardProps) {
   const { type, post } = p;
+  const isOwner = type === "user" && post.isOwner;
 
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const router = useRouter();
@@ -53,24 +62,27 @@ export function PostCard({ post: p }: { post: UserOrClubPost }) {
         />
       )}
       <div className="w-full space-y-1">
-        <div className="flex gap-1">
-          <p
-            className="font-bold hover:underline"
-            onClick={(e) => {
-              e.preventDefault();
-              if (type === "user") {
-                router.push(`/user?id=${post.author.authorId}`);
-              } else {
-                router.push(`/club?id=${post.club.clubId}`);
-              }
-            }}
-          >
-            {type === "user" ? post.author.firstName : post.club.name}
-          </p>
-          <p className="text-muted-foreground">
-            {type === "user" && `@${post.author.username} `}(
-            {parseTimestamp(post.createdAt)})
-          </p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex gap-1">
+            <p
+              className="font-bold hover:underline"
+              onClick={(e) => {
+                e.preventDefault();
+                if (type === "user") {
+                  router.push(`/user?id=${post.author.authorId}`);
+                } else {
+                  router.push(`/club?id=${post.club.clubId}`);
+                }
+              }}
+            >
+              {type === "user" ? post.author.firstName : post.club.name}
+            </p>
+            <p className="text-muted-foreground">
+              {type === "user" && `@${post.author.username} `}(
+              {parseTimestamp(post.createdAt)})
+            </p>
+          </div>
+          {isOwner && <PostDropDownMenu postId={post.postId} />}
         </div>
         <div className="whitespace-pre-wrap">{post.description}</div>
         {post.imageUrl && aspectRatio && (
@@ -100,5 +112,40 @@ export function PostCard({ post: p }: { post: UserOrClubPost }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function PostDropDownMenu({ postId }: { postId: Id<"posts"> }) {
+  const deletePost = useMutation(api.mutations.deletePost);
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <Button
+          variant={ButtonVariant.Muted}
+          className="p-0 ring-0"
+          onClick={(e) => e.preventDefault()}
+        >
+          <Ellipsis />
+        </Button>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          className="bg-background ring-foreground/10 rounded-[calc(0.25rem+0.25rem)] p-1 shadow-md ring-1"
+          onClick={(e) => e.preventDefault()}
+        >
+          <DropdownMenu.Item
+            className="flex w-full items-center justify-between gap-2 rounded p-1 text-red-500 transition outline-none hover:cursor-pointer hover:bg-red-500/10 hover:text-red-500"
+            onClick={async (e) => {
+              e.preventDefault();
+              await deletePost({ postId });
+            }}
+          >
+            <Trash className="h-4 w-4" /> Delete
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 }

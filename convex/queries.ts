@@ -321,6 +321,7 @@ export const getUserPosts = query({
 
         const postPreviewInfo: UserPostPreviewInfo = {
           postId: userPost.postId,
+          isOwner: authenticatedUser._id === author._id,
           author: {
             authorId: userId,
             pictureUrl: author.pictureUrl,
@@ -645,6 +646,7 @@ export const getFeedData = query({
 
           const userPostPreviewInfo: UserPostPreviewInfo = {
             postId: post._id,
+            isOwner: authenticatedUser._id === author._id,
             author: {
               authorId: author._id,
               pictureUrl: author.pictureUrl,
