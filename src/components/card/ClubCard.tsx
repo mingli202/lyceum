@@ -1,6 +1,6 @@
 import { ClubCategory, ClubPreviewInfo } from "@convex/types";
 import Link from "next/link";
-import { ProfilePicture } from "./ProfilePicture";
+import { ProfilePicture } from "../profile";
 import { User } from "lucide-react";
 import { cn } from "@/utils/cn";
 

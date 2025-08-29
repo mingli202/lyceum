@@ -5,7 +5,7 @@ import { Id } from "@convex/_generated/dataModel";
 import { UserTask } from "@convex/types";
 import { Calendar, Edit, Trash } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
-import { Card } from "./ui/Card";
+import { Card } from "../ui";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { TaskStatus } from "@/types";

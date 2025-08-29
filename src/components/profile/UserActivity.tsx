@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, ClassCard, PostCard } from "@/components";
-import { ClubCard } from "@/components/ClubCard";
+import { ClubCard } from "@/components";
 import { Grid } from "@/components/ui/Grid";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
@@ -63,8 +63,6 @@ export default function UserActivity({
     [Tab.Classes]: <BookOpen className="h-4 w-4" />,
     [Tab.Clubs]: <Volleyball className="h-4 w-4" />,
   };
-
-  console.log(canView);
 
   return (
     <div className="flex w-full flex-col gap-2">

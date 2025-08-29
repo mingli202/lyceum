@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components";
+import { Button, ButtonVariant } from "@/components";
 import { cn } from "@/utils/cn";
 import { useMutation, useQuery } from "convex/react";
 import {
@@ -86,7 +86,8 @@ export default function NavBar() {
           onClick={() => {
             signOut();
           }}
-          className="p-0"
+          className="w-full p-0 text-center ring-0"
+          variant={ButtonVariant.Muted}
         >
           Sign Out
         </Button>

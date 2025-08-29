@@ -154,7 +154,7 @@ export default function AddClassDrawer() {
                       fileInputRef.current?.addEventListener("cancel", f, {
                         once: true,
                       });
-                      fileInputRef.current?.removeEventListener("change", f);
+                      // fileInputRef.current?.removeEventListener("change", f);
                     }}
                   >
                     {isUploading ? (

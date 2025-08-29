@@ -71,6 +71,7 @@ export default defineSchema({
     isPrivate: v.boolean(),
     isOnline: v.boolean(),
     lastSeenAt: v.optional(v.number()),
+    bannerId: v.optional(v.id("_storage")),
   }).index("by_userId", ["userId"]),
 
   settings: defineTable({

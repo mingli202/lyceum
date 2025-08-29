@@ -168,8 +168,6 @@ export default function EditTask({
               placeholder="e.g. 30"
               ref={weightRef}
               required
-              min={0}
-              max={100}
             />
           </label>
         </div>
@@ -233,7 +231,7 @@ export default function EditTask({
             placeholder="e.g. 100"
             ref={scoreObtainedRef}
             required
-            min={0}
+            autoFocus
           />
         </label>
         /
