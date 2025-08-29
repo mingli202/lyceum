@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
 import parseTimestamp from "@/utils/parseTimestamp";
 import { BannerPicture } from "./BannerPicture";
+import Image from "next/image";
 
 type ProfilePageProps = {
   isOwner?: boolean;
@@ -94,7 +95,20 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
     <>
       <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
         <section className="flex h-fit w-full max-w-2xl flex-col">
-          <BannerPicture bannerUrl={data.bannerUrl} />
+          {isOwner ? (
+            <BannerPicture bannerUrl={data.bannerUrl} />
+          ) : (
+            <div className="bg-muted-foreground/10 relative h-50 w-full">
+              {data.bannerUrl ? (
+                <Image
+                  src={data.bannerUrl}
+                  alt="banner"
+                  fill
+                  className="object-cover"
+                />
+              ) : null}
+            </div>
+          )}
           <div className="relative flex w-full justify-end p-6">
             <ProfilePicture
               src={data.pictureUrl}
