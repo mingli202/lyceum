@@ -202,6 +202,17 @@ export const UserCardInfo = v.object({
   username: v.string(),
 });
 
+export const UserOrClubPost = v.union(
+  v.object({
+    type: v.literal("user"),
+    post: UserPostPreviewInfo,
+  }),
+  v.object({
+    type: v.literal("club"),
+    post: ClubPostPreviewInfo,
+  }),
+);
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
@@ -216,3 +227,4 @@ export type ClassPageData = typeof ClassPageData.type;
 export type UserCardInfo = typeof UserCardInfo.type;
 export type CanView = typeof CanView.type;
 export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;
+export type UserOrClubPost = typeof UserOrClubPost.type;

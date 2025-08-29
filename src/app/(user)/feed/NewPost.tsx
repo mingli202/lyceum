@@ -8,6 +8,7 @@ import {
   ProfilePicture,
 } from "@/components";
 import useFormState from "@/hooks/useFormState";
+import getImageDimensions from "@/utils/getImageDimensions";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -29,7 +30,8 @@ export default function NewPost() {
   const aspectRatio = useRef<number>(16 / 9);
 
   const [msg, handleSubmit, isPending] = useFormState(async (e) => {
-    const formdata = new FormData(e.target as HTMLFormElement);
+    const form = e.target as HTMLFormElement;
+    const formdata = new FormData(form);
     const description = formdata.get("description")!.toString();
 
     let imageId: Id<"_storage"> | undefined;
@@ -51,6 +53,12 @@ export default function NewPost() {
     if (res) {
       return "Something went wrong, try again.";
     }
+
+    form.reset();
+
+    file.current = undefined;
+    aspectRatio.current = 16 / 9;
+    setLocalFileUrl(null);
   });
 
   async function handleFileUpload(uploadedFile?: File) {
@@ -65,18 +73,9 @@ export default function NewPost() {
     }
     const url = URL.createObjectURL(uploadedFile);
 
-    const res: { height: number; width: number } = await new Promise(
-      (resolve) => {
-        const image = new Image();
+    const { width, height } = await getImageDimensions(url);
 
-        image.onload = () =>
-          resolve({ height: image.height, width: image.width });
-
-        image.src = url;
-      },
-    );
-
-    aspectRatio.current = Math.max(res.width / res.height, 9 / 16);
+    aspectRatio.current = Math.max(width / height, 9 / 16);
 
     setLocalFileUrl(url);
 
@@ -102,6 +101,8 @@ export default function NewPost() {
         <textarea
           placeholder="What's happening?"
           className="w-full resize-none outline-none"
+          id="description"
+          name="description"
           rows={1}
           required
           disabled={isPending}

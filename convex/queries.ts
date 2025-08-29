@@ -13,6 +13,7 @@ import {
   UserCardInfo,
   UserTask,
   ClubPostPreviewInfo,
+  UserOrClubPost,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -608,11 +609,8 @@ export const getUserLastSeenAt = query({
 });
 
 export const getFeedData = query({
-  returns: v.array(v.union(UserPostPreviewInfo, ClubPostPreviewInfo)),
-  handler: async (
-    ctx,
-    args,
-  ): Promise<(UserPostPreviewInfo | ClubPostPreviewInfo)[]> => {
+  returns: v.array(UserOrClubPost),
+  handler: async (ctx, args): Promise<UserOrClubPost[]> => {
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
     if (!authenticatedUser) {
@@ -671,7 +669,7 @@ export const getFeedData = query({
             description: post.description,
             imageUrl,
           };
-          return userPostPreviewInfo;
+          return { type: "user", post: userPostPreviewInfo } as const;
         } else {
           const clubPost = await ctx.db
             .query("clubPosts")
@@ -720,7 +718,7 @@ export const getFeedData = query({
             isMembersOnly: clubPost.isMembersOnly,
           };
 
-          return clubPostPreviewInfo;
+          return { type: "club", post: clubPostPreviewInfo } as const;
         }
       }),
     );
