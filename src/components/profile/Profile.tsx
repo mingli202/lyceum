@@ -63,10 +63,9 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
     userId: data.userId,
   });
 
-  const lastSeenAt =
-    useQuery(api.queries.getUserLastSeenAt, {
-      userId: data.userId,
-    }) ?? 0;
+  const lastSeenAt = useQuery(api.queries.getUserLastSeenAt, {
+    userId: data.userId,
+  });
 
   let buttonTextTmp = "Follow";
 
@@ -142,15 +141,16 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
                   <p className="truncate text-2xl font-bold">
                     {data.firstName} {data.lastName}
                   </p>
-                  {Date.now() - lastSeenAt < 1000 * 60 * 11 ? (
-                    <div className="flex shrink-0 items-center gap-2 rounded-full bg-emerald-200 px-2 py-1 text-xs text-emerald-800 ring-1 ring-emerald-500">
-                      online
-                    </div>
-                  ) : (
-                    <p className="flex shrink-0 items-center gap-2 rounded-full bg-slate-200 px-2 py-1 text-xs text-slate-800 ring-1 ring-slate-500">
-                      last seen {parseTimestamp(lastSeenAt)}
-                    </p>
-                  )}
+                  {lastSeenAt &&
+                    (Date.now() - lastSeenAt < 1000 * 60 * 11 ? (
+                      <div className="flex shrink-0 items-center gap-2 rounded-full bg-emerald-200 px-2 py-1 text-xs text-emerald-800 ring-1 ring-emerald-500">
+                        online
+                      </div>
+                    ) : (
+                      <p className="flex shrink-0 items-center gap-2 rounded-full bg-slate-200 px-2 py-1 text-xs text-slate-800 ring-1 ring-slate-500">
+                        last seen {parseTimestamp(lastSeenAt)}
+                      </p>
+                    ))}
                 </div>
                 <p className="text-muted-foreground">@{data.username}</p>
               </div>
