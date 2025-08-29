@@ -82,11 +82,10 @@ export default defineSchema({
   }).index("by_userId", ["userId"]),
 
   posts: defineTable({
-    comments: v.id("comments"),
     likes: v.array(v.id("users")),
 
     description: v.string(),
-    imageUrl: v.string(),
+    imageId: v.optional(v.id("_storage")),
   }),
 
   clubPosts: defineTable({

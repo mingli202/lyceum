@@ -556,3 +556,36 @@ export const removeBannerPicture = mutation({
     });
   },
 });
+
+export const newUserPost = mutation({
+  args: { description: v.string(), imageId: v.optional(v.id("_storage")) },
+  handler: async (ctx, args) => {
+    const { description, imageId } = args;
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const user = await ctx.db.get(authenticatedUser._id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.state !== "active") {
+      throw new Error("User not active");
+    }
+
+    const postId = await ctx.db.insert("posts", {
+      description,
+      imageId,
+      likes: [],
+    });
+
+    await ctx.db.insert("userPosts", {
+      userId: authenticatedUser._id,
+      postId,
+    });
+  },
+});
