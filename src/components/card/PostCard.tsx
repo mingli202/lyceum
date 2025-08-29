@@ -1,6 +1,6 @@
 import { PostPreviewInfo } from "@convex/types";
 import { Heart, MessageCircle } from "lucide-react";
-import { ProfilePicture } from "./ProfilePicture";
+import { ProfilePicture } from "../profile";
 import Link from "next/link";
 import parseTimestamp from "@/utils/parseTimestamp";
 

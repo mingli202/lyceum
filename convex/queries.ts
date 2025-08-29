@@ -215,6 +215,10 @@ export const getProfileData = query({
       return "User profile not found";
     }
 
+    const bannerUrl = profile.bannerId
+      ? ((await ctx.storage.getUrl(profile.bannerId)) ?? undefined)
+      : undefined;
+
     const profileData: ProfileData = {
       userId: user._id,
       school: profile.school,
@@ -229,6 +233,7 @@ export const getProfileData = query({
       bio: profile.bio,
       clerkId: user.clerkId,
       isPrivate: profile.isPrivate,
+      bannerUrl,
     };
 
     return profileData;
