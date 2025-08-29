@@ -417,16 +417,16 @@ export const updateProfile = mutation({
     updatedUserInfo: v.object({
       givenName: v.optional(v.string()),
       familyName: v.optional(v.string()),
-      pictureUrl: v.optional(v.string()),
       username: v.optional(v.string()),
+      pictureUrl: v.union(v.string(), v.null()),
     }),
     updatedProfileInfo: v.object({
       major: v.optional(v.string()),
       school: v.optional(v.string()),
-      bio: v.optional(v.string()),
-      city: v.optional(v.string()),
       academicYear: v.optional(v.number()),
       isPrivate: v.optional(v.boolean()),
+      bio: v.union(v.string(), v.null()),
+      city: v.union(v.string(), v.null()),
     }),
   }),
   handler: async (ctx, args) => {
@@ -449,8 +449,15 @@ export const updateProfile = mutation({
     const { updatedUserInfo, updatedProfileInfo } = args;
 
     await Promise.all([
-      ctx.db.patch(authenticatedUser._id, updatedUserInfo),
-      ctx.db.patch(profile._id, updatedProfileInfo),
+      ctx.db.patch(authenticatedUser._id, {
+        ...updatedUserInfo,
+        pictureUrl: updatedUserInfo.pictureUrl ?? undefined,
+      }),
+      ctx.db.patch(profile._id, {
+        ...updatedProfileInfo,
+        bio: updatedProfileInfo.bio ?? undefined,
+        city: updatedProfileInfo.city ?? undefined,
+      }),
     ]);
   },
 });

@@ -156,7 +156,7 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
               </div>
               <div className="basis-full" />
             </div>
-            {data.bio && <div>{data.bio}</div>}
+            {data.bio && data.bio.trim() !== "" && <div>{data.bio}</div>}
 
             <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-0">
               <div className="flex items-center gap-1">
@@ -169,7 +169,7 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
                   {data.academicYear - 2024}st Year · {data.major}
                 </span>
               </div>
-              {data.city && (
+              {data.city && data.city.trim() !== "" && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   <span>{data.city}</span>

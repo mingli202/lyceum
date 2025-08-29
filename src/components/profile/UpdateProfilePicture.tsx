@@ -10,6 +10,8 @@ type UpdateProfilePictureProps = {
   src?: string;
 };
 
+// TODO: crop image and allow user to choose which part of the image to upload
+// use this library: https://sharp.pixelplumbing.com/api-resize/
 export function UpdateProfilePicture({
   displayName,
   setFile,
@@ -45,7 +47,7 @@ export function UpdateProfilePicture({
   }, []);
 
   return (
-    <div className="flex w-full items-center gap-4 p-2">
+    <div className="flex w-full items-center gap-4">
       <ProfilePicture
         displayName={displayName}
         src={file === "remove" ? undefined : (localFileUrl.current ?? src)}
