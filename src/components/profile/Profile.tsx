@@ -12,6 +12,8 @@ import { useAuth } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
 import parseTimestamp from "@/utils/parseTimestamp";
+import Image from "next/image";
+import { BannerPicture } from "./BannerPicture";
 
 type ProfilePageProps = {
   isOwner?: boolean;
@@ -93,14 +95,14 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
     <>
       <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
         <section className="flex h-fit w-full max-w-2xl flex-col">
-          <div className="bg-muted-foreground/10 relative h-50 w-full">
+          <BannerPicture bannerUrl={data.bannerUrl} />
+          <div className="relative flex w-full justify-end p-6">
             <ProfilePicture
               src={data.pictureUrl}
               displayName={data.firstName}
-              className="absolute bottom-0 left-6 h-34 w-34 translate-y-1/2"
+              className="absolute top-0 left-6 h-34 w-34 -translate-y-1/2"
             />
-          </div>
-          <div className="flex w-full justify-end p-6">
+
             {isOwner ? (
               <EditProfile data={data} />
             ) : (

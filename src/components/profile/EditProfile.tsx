@@ -44,17 +44,17 @@ function EditProfileForm({ data }: { data: ProfileData }) {
       return "Login expired, please login again";
     }
 
-    let imageUrl: string | null = data.pictureUrl ?? null;
+    let imageUrl: string | undefined = data.pictureUrl;
     if (file) {
       if (file === "remove") {
         await user.setProfileImage({ file: null });
         await removeProfilePicture({});
-        imageUrl = null;
+        imageUrl = undefined;
       } else {
         const imageResource = await user.setProfileImage({
           file,
         });
-        imageUrl = imageResource.publicUrl ?? null;
+        imageUrl = imageResource.publicUrl ?? undefined;
       }
     }
 
@@ -76,7 +76,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
         familyName:
           lastName && lastName !== data.lastName ? lastName : undefined,
         username: username && username !== data.username ? username : undefined,
-        pictureUrl: imageUrl ?? null,
+        pictureUrl: imageUrl,
       },
       updatedProfileInfo: {
         academicYear:
@@ -84,8 +84,8 @@ function EditProfileForm({ data }: { data: ProfileData }) {
             ? parseInt(academicYear)
             : undefined,
         major: major && major !== data.major ? major : undefined,
-        city: city ?? null,
-        bio: bio ?? null,
+        city,
+        bio,
         school: school && school !== data.school ? school : undefined,
       },
     }).catch(() => "Error updating profile");
@@ -100,7 +100,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-background ring-foreground/10 m-2 flex w-lg flex-col gap-3 rounded-lg p-5 text-sm shadow-md ring-1 transition hover:z-10 hover:shadow-lg"
+      className="bg-background ring-foreground/10 m-2 flex w-lg flex-col gap-3 rounded-lg p-5 shadow-md ring-1 transition hover:z-10 hover:shadow-lg"
     >
       <div className="flex items-center gap-2">
         <Dialog.Close asChild ref={closeButtonRef}>

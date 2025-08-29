@@ -418,15 +418,15 @@ export const updateProfile = mutation({
       givenName: v.optional(v.string()),
       familyName: v.optional(v.string()),
       username: v.optional(v.string()),
-      pictureUrl: v.union(v.string(), v.null()),
+      pictureUrl: v.optional(v.string()),
     }),
     updatedProfileInfo: v.object({
       major: v.optional(v.string()),
       school: v.optional(v.string()),
       academicYear: v.optional(v.number()),
       isPrivate: v.optional(v.boolean()),
-      bio: v.union(v.string(), v.null()),
-      city: v.union(v.string(), v.null()),
+      bio: v.optional(v.string()),
+      city: v.optional(v.string()),
     }),
   }),
   handler: async (ctx, args) => {
@@ -472,6 +472,75 @@ export const removeProfilePicture = mutation({
 
     await ctx.db.patch(authenticatedUser._id, {
       pictureUrl: undefined,
+    });
+  },
+});
+
+export const generateUploadUrl = mutation({
+  returns: v.string(),
+  handler: async (ctx, _args) => {
+    await authorize(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const setBannerPicture = mutation({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const { storageId } = args;
+
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    if (profile.bannerId) {
+      await ctx.storage.delete(profile.bannerId);
+    }
+
+    await ctx.db.patch(profile._id, {
+      bannerId: storageId,
+    });
+  },
+});
+
+export const removeBannerPicture = mutation({
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("User not found");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .unique()
+      .catch(() => null);
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    const bannerId = profile.bannerId;
+
+    if (bannerId) {
+      await ctx.storage.delete(bannerId);
+    }
+
+    await ctx.db.patch(profile._id, {
+      bannerId: undefined,
     });
   },
 });

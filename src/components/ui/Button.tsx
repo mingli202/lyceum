@@ -72,7 +72,7 @@ export function Button({
       {...props}
     >
       {isPending
-        ? (pendingElement ?? <LoaderCircle className="h-5 w-5 animate-spin" />)
+        ? (pendingElement ?? <LoaderCircle className="h-6 w-6 animate-spin" />)
         : children}
     </button>
   );
