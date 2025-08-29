@@ -12,7 +12,6 @@ import { useAuth } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
 import parseTimestamp from "@/utils/parseTimestamp";
-import Image from "next/image";
 import { BannerPicture } from "./BannerPicture";
 
 type ProfilePageProps = {
@@ -168,7 +167,7 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
               <div className="flex items-center gap-1">
                 <GraduationCap className="h-4 w-4" />
                 <span>
-                  {data.academicYear - 2024}st Year · {data.major}
+                  {formatAcademicYear(data.academicYear)} · {data.major}
                 </span>
               </div>
               {data.city && data.city.trim() !== "" && (
@@ -195,4 +194,25 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
       </div>
     </>
   );
+}
+
+function formatAcademicYear(academicYear: number) {
+  const year = new Date().getFullYear() - academicYear + 1;
+
+  if (year < 1) {
+    return `Incoming ${academicYear}`;
+  }
+
+  let modifier = "th";
+  if (year === 1) {
+    modifier = "st";
+  } else if (year === 2) {
+    modifier = "nd";
+  } else if (year === 3) {
+    modifier = "rd";
+  } else if (year > 5) {
+    modifier = "";
+  }
+
+  return `${year}${modifier} Year`;
 }
