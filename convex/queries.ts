@@ -351,7 +351,9 @@ export const getUserPosts = query({
       }),
     );
 
-    return postsInfo.filter((postInfo) => postInfo !== null);
+    return postsInfo
+      .filter((postInfo) => postInfo !== null)
+      .sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
