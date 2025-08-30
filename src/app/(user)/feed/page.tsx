@@ -33,9 +33,6 @@ export default function FeedPage() {
 }
 
 function Feed({ posts }: { posts: UserOrClubPost[] }) {
-  useEffect(() => {
-    console.log(posts);
-  }, [posts]);
   return posts.length > 0 ? <FeedList posts={posts} /> : null;
 }
 
