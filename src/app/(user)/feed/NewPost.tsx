@@ -11,10 +11,11 @@ import useFormState from "@/hooks/useFormState";
 import getImageDimensions from "@/utils/getImageDimensions";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
+import { UserOrClubPost } from "@convex/types";
 import { useMutation, useQuery } from "convex/react";
 import { ImagePlus } from "lucide-react";
 import NextImage from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 export default function NewPost() {
   const user = useQuery(api.queries.getUser, {});
