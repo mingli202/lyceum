@@ -121,7 +121,10 @@ export const getCanViewUserInfo = query({
         .unique()
         .catch(() => null);
 
-      if (!requestedUserFollowingInfo) {
+      if (
+        !requestedUserFollowingInfo ||
+        requestedUserFollowingInfo.status === "unfollowed"
+      ) {
         const requestedUserProfile = await ctx.db
           .query("profiles")
           .withIndex("by_userId", (q) => q.eq("userId", requestedUserId))
@@ -248,14 +251,13 @@ export const getFollowerCount = query({
   handler: async (ctx, args): Promise<number> => {
     const { userId } = args;
 
-    const nFollowers = (
-      await ctx.db
-        .query("followingsInfo")
-        .withIndex("by_followingId", (q) => q.eq("followingId", userId))
-        .collect()
-    ).filter((following) => following.status === "accepted").length;
+    const nFollowers = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_followingId", (q) => q.eq("followingId", userId))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
+      .collect();
 
-    return nFollowers;
+    return nFollowers.length;
   },
 });
 
@@ -265,14 +267,13 @@ export const getFollowingCount = query({
   handler: async (ctx, args): Promise<number> => {
     const { userId } = args;
 
-    const nFollowing = (
-      await ctx.db
-        .query("followingsInfo")
-        .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .collect()
-    ).filter((following) => following.status === "accepted").length;
+    const nFollowing = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
+      .collect();
 
-    return nFollowing;
+    return nFollowing.length;
   },
 });
 
@@ -620,14 +621,19 @@ export const getFeedData = query({
       return [];
     }
 
-    const recentPosts = await ctx.db
-      .query("posts")
-      .withIndex("by_creation_time")
-      .order("asc")
-      .take(10);
+    const viewablePosts = await ctx.db
+      .query("viewablePosts")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .collect();
 
     const postsInfo = await Promise.all(
-      recentPosts.map(async (post) => {
+      viewablePosts.map(async (viewablePost) => {
+        const post = await ctx.db.get(viewablePost.postId);
+
+        if (!post) {
+          return null;
+        }
+
         const userPost = await ctx.db
           .query("userPosts")
           .withIndex("by_postId", (q) => q.eq("postId", post._id))
@@ -635,8 +641,20 @@ export const getFeedData = query({
 
         if (userPost) {
           const author = await ctx.db.get(userPost.userId);
-
           if (!author) {
+            return null;
+          }
+          const followingInfo = await ctx.db
+            .query("followingsInfo")
+            .withIndex("by_userId_followingId", (q) =>
+              q
+                .eq("userId", authenticatedUser._id)
+                .eq("followingId", author._id),
+            )
+            .unique()
+            .catch(() => null);
+
+          if (!followingInfo || followingInfo.status !== "accepted") {
             return null;
           }
 

@@ -340,6 +340,50 @@ export const editTargetGrade = mutation({
   },
 });
 
+export const _setUserViewablePosts = internalMutation({
+  args: { userId: v.id("users"), followedUserId: v.id("users") },
+  handler: async (ctx, args) => {
+    const { userId, followedUserId } = args;
+
+    for await (const post of ctx.db
+      .query("userPosts")
+      .withIndex("by_userId", (q) => q.eq("userId", followedUserId))) {
+      await ctx.db.insert("viewablePosts", {
+        userId,
+        postId: post.postId,
+        authorId: followedUserId,
+      });
+    }
+  },
+});
+
+export const _cleanupFollowing = internalMutation({
+  args: { userId: v.id("users"), unFollowedUserId: v.id("users") },
+  handler: async (ctx, args) => {
+    const { userId, unFollowedUserId } = args;
+
+    const followingInfo = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_userId_followingId", (q) =>
+        q.eq("userId", userId).eq("followingId", unFollowedUserId),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (followingInfo) {
+      for await (const viewablePost of ctx.db
+        .query("viewablePosts")
+        .withIndex("by_userId_authorId", (q) =>
+          q.eq("userId", userId).eq("authorId", unFollowedUserId),
+        )) {
+        await ctx.db.delete(viewablePost._id);
+      }
+
+      await ctx.db.delete(followingInfo._id);
+    }
+  },
+});
+
 export const followUser = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -362,27 +406,64 @@ export const followUser = mutation({
       .unique()
       .catch(() => null);
 
+    const otherUserProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique()
+      .catch(() => null);
+
+    if (!otherUserProfile) {
+      throw new Error("User not found");
+    }
+
+    const status = otherUserProfile.isPrivate ? "requested" : "accepted";
+
     if (userFollowingInfo) {
       if (userFollowingInfo.status === "blocked") {
         throw new Error("Blocked");
+      } else if (userFollowingInfo.status === "unfollowed") {
+        if (userFollowingInfo.cleanupId) {
+          await ctx.scheduler.cancel(userFollowingInfo.cleanupId);
+          await ctx.db.patch(userFollowingInfo._id, { cleanupId: undefined });
+        } else if (status === "accepted") {
+          await ctx.runMutation(internal.mutations._setUserViewablePosts, {
+            userId: authenticatedUser._id,
+            followedUserId: args.userId,
+          });
+        }
+
+        await ctx.db.patch(userFollowingInfo._id, {
+          status,
+        });
       } else {
-        await ctx.db.delete(userFollowingInfo._id);
-      }
-    } else {
-      const otherUserProfile = await ctx.db
-        .query("profiles")
-        .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .unique()
-        .catch(() => null);
+        // dont delete the followingInfo, just mark it as unfollowed
+        await ctx.db.patch(userFollowingInfo._id, { status: "unfollowed" });
 
-      if (!otherUserProfile) {
-        throw new Error("User not found");
+        // schedule cleanup the followingInfo instead
+        const cleanupId = await ctx.scheduler.runAfter(
+          5000,
+          internal.mutations._cleanupFollowing,
+          {
+            userId: authenticatedUser._id,
+            unFollowedUserId: userFollowingInfo.followingId,
+          },
+        );
+        await ctx.db.patch(userFollowingInfo._id, { cleanupId });
       }
 
-      await ctx.db.insert("followingsInfo", {
+      return;
+    }
+
+    await ctx.db.insert("followingsInfo", {
+      userId: authenticatedUser._id,
+      followingId: args.userId,
+      status,
+    });
+
+    if (status === "accepted") {
+      await ctx.runMutation(internal.mutations._setUserViewablePosts, {
         userId: authenticatedUser._id,
-        followingId: args.userId,
-        status: otherUserProfile.isPrivate ? "requested" : "accepted",
+        followedUserId: args.userId,
       });
     }
   },
@@ -587,6 +668,29 @@ export const newUserPost = mutation({
       userId: authenticatedUser._id,
       postId,
     });
+
+    const followers = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_followingId", (q) =>
+        q.eq("followingId", authenticatedUser._id),
+      )
+      .collect();
+
+    for (const follower of followers) {
+      if (follower.status === "accepted") {
+        await ctx.db.insert("viewablePosts", {
+          userId: follower.userId,
+          postId,
+          authorId: authenticatedUser._id,
+        });
+      }
+    }
+
+    await ctx.db.insert("viewablePosts", {
+      userId: authenticatedUser._id,
+      postId,
+      authorId: authenticatedUser._id,
+    });
   },
 });
 
@@ -639,7 +743,16 @@ export const deletePost = mutation({
     }
 
     if (post) {
+      for await (const viewablePost of ctx.db
+        .query("viewablePosts")
+        .withIndex("by_postId", (q) => q.eq("postId", post._id))) {
+        await ctx.db.delete(viewablePost._id);
+      }
+
       await ctx.db.delete(post._id);
+      if (post.imageId) {
+        await ctx.storage.delete(post.imageId);
+      }
     }
   },
 });
