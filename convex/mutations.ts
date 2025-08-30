@@ -706,6 +706,10 @@ export const deletePost = mutation({
 
     const post = await ctx.db.get(postId);
 
+    if (!post) {
+      return;
+    }
+
     const userPost = await ctx.db
       .query("userPosts")
       .withIndex("by_postId", (q) => q.eq("postId", postId))
@@ -742,17 +746,15 @@ export const deletePost = mutation({
       }
     }
 
-    if (post) {
-      for await (const viewablePost of ctx.db
-        .query("viewablePosts")
-        .withIndex("by_postId", (q) => q.eq("postId", post._id))) {
-        await ctx.db.delete(viewablePost._id);
-      }
+    for await (const viewablePost of ctx.db
+      .query("viewablePosts")
+      .withIndex("by_postId", (q) => q.eq("postId", post._id))) {
+      await ctx.db.delete(viewablePost._id);
+    }
 
-      await ctx.db.delete(post._id);
-      if (post.imageId) {
-        await ctx.storage.delete(post.imageId);
-      }
+    await ctx.db.delete(post._id);
+    if (post.imageId) {
+      await ctx.storage.delete(post.imageId);
     }
   },
 });
