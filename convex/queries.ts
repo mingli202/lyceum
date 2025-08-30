@@ -629,7 +629,10 @@ export const getFeedData = query({
           .unique()
           .catch(() => null);
 
-        if (!followingInfo || followingInfo.status !== "accepted") {
+        if (
+          viewablePost.authorId !== viewablePost.userId &&
+          (!followingInfo || followingInfo.status !== "accepted")
+        ) {
           continue;
         }
 
