@@ -23,6 +23,7 @@ export default function NewPost() {
 
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null!);
   const file = useRef<File | undefined>(undefined);
 
   const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export default function NewPost() {
 
     file.current = undefined;
     aspectRatio.current = 16 / 9;
+    textAreaRef.current.style.height = "auto";
     setLocalFileUrl(null);
   });
 
@@ -106,6 +108,7 @@ export default function NewPost() {
           rows={1}
           required
           disabled={isPending}
+          ref={textAreaRef}
           onChange={(e) => {
             // expand the textarea to fit the content
             const textArea = e.target as HTMLTextAreaElement;

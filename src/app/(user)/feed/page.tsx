@@ -7,8 +7,8 @@ import { PostCard } from "@/components";
 
 export default function FeedPage() {
   return (
-    <section className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto p-6">
-      <div className="flex h-fit w-full max-w-2xl flex-col gap-4">
+    <section className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
+      <div className="flex h-fit w-full max-w-2xl flex-col gap-4 py-6">
         <NewPost />
         <Feed />
       </div>
