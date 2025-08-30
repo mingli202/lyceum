@@ -31,7 +31,6 @@ export default function NewPost({ refreshFeed }: { refreshFeed: () => void }) {
   const aspectRatio = useRef<number>(16 / 9);
 
   const [msg, handleSubmit, isPending] = useFormState(async (e) => {
-    refreshFeed();
     const form = e.target as HTMLFormElement;
     const formdata = new FormData(form);
     const description = formdata.get("description")!.toString();
@@ -62,6 +61,8 @@ export default function NewPost({ refreshFeed }: { refreshFeed: () => void }) {
     aspectRatio.current = 16 / 9;
     textAreaRef.current.style.height = "auto";
     setLocalFileUrl(null);
+
+    refreshFeed();
   });
 
   async function handleFileUpload(uploadedFile?: File) {

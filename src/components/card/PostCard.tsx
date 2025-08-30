@@ -6,7 +6,7 @@ import { ProfilePicture } from "../profile";
 import Link from "next/link";
 import parseTimestamp from "@/utils/parseTimestamp";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import getImageDimensions from "@/utils/getImageDimensions";
 import { useRouter } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
@@ -17,9 +17,19 @@ import { api } from "@convex/_generated/api";
 
 type PostCardProps = {
   post: UserOrClubPost;
+  index: number;
+  dataLength: number;
+  loadmore: () => void;
   isFeed?: boolean;
 };
-export function PostCard({ post: p, isFeed }: PostCardProps) {
+export function PostCard({
+  post: p,
+  isFeed,
+  index,
+  dataLength,
+  loadmore,
+}: PostCardProps) {
+  const cardRef = useRef<HTMLAnchorElement>(null!);
   const { type, post } = p;
   const isOwner = type === "user" && post.isOwner;
 
@@ -38,10 +48,25 @@ export function PostCard({ post: p, isFeed }: PostCardProps) {
     }
   }, []);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && index === dataLength - 3) {
+          loadmore();
+        }
+      },
+      {
+        threshold: 0.5,
+      },
+    );
+    observer.observe(cardRef.current);
+  }, [index, dataLength, loadmore]);
+
   return (
     <Link
       href={`/post?id=${post.postId}`}
       className="ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-3 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
+      ref={cardRef}
     >
       {type === "user" ? (
         <ProfilePicture
