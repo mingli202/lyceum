@@ -18,6 +18,7 @@ import {
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
 import { Id } from "./_generated/dataModel";
+import { paginationOptsValidator, PaginationResult } from "convex/server";
 
 export const _getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
@@ -591,20 +592,24 @@ export const getUserLastSeenAt = query({
 });
 
 export const getFeedData = query({
-  returns: v.array(UserOrClubPost),
-  handler: async (ctx, args): Promise<UserOrClubPost[]> => {
+  args: { paginationOpts: paginationOptsValidator, now: v.number() },
+  handler: async (ctx, args): Promise<PaginationResult<UserOrClubPost>> => {
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
     if (!authenticatedUser) {
-      return [];
+      return { page: [], continueCursor: "", isDone: true };
     }
 
     const postsInfo: UserOrClubPost[] = [];
 
-    for await (const viewablePost of ctx.db
+    const viewablePosts = await ctx.db
       .query("viewablePosts")
       .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
-      .order("desc")) {
+      .filter((q) => q.lte(q.field("_creationTime"), args.now))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    for (const viewablePost of viewablePosts.page) {
       const post = await ctx.db.get(viewablePost.postId);
 
       if (!post) {
@@ -722,6 +727,9 @@ export const getFeedData = query({
       }
     }
 
-    return postsInfo;
+    return {
+      ...viewablePosts,
+      page: postsInfo,
+    };
   },
 });

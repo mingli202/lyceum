@@ -9,7 +9,7 @@ export function Card({ children, clickable, className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "bg-background ring-foreground/10 z-0 flex flex-col gap-2 rounded-lg p-3 text-sm shadow-md ring-1",
+        "bg-background ring-foreground/10 z-0 flex flex-col gap-2 rounded-lg p-3 shadow-md ring-1",
         clickable &&
           "transition hover:z-10 hover:cursor-pointer hover:shadow-lg",
         className,

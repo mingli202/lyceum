@@ -1,47 +1,56 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import NewPost from "./NewPost";
 import { api } from "@convex/_generated/api";
 import { PostCard } from "@/components";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { UserOrClubPost } from "@convex/types";
+import { useCallback, useRef, useState } from "react";
 
 export default function FeedPage() {
-  const posts = useQuery(api.queries.getFeedData, {});
-  const [currentPosts, setCurrentPosts] = useState(posts);
+  const [now, setNow] = useState(Date.now());
+  const [topIndex, setTopIndex] = useState(0);
 
-  const didChange = useRef(true);
+  const sectionRef = useRef<HTMLDivElement>(null!);
 
-  const refreshFeed = useCallback(() => (didChange.current = true), []);
+  const {
+    results: posts,
+    status,
+    loadMore,
+  } = usePaginatedQuery(
+    api.queries.getFeedData,
+    { now },
+    { initialNumItems: 5 },
+  );
 
-  useEffect(() => {
-    if (didChange.current || !currentPosts) {
-      setCurrentPosts(posts);
-      didChange.current = false;
+  const refreshFeed = useCallback(() => setNow(Date.now()), []);
+  const loadMoreCb = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(5);
     }
-  }, [posts]);
+  }, [loadMore, status]);
 
   return (
-    <section className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
+    <section
+      className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto"
+      ref={sectionRef}
+    >
       <div className="flex h-fit w-full max-w-2xl flex-col gap-4 py-6">
         <NewPost refreshFeed={refreshFeed} />
-        {currentPosts && <Feed posts={currentPosts} />}
+        {posts.length > 0 && (
+          <div className="flex w-full flex-col gap-2">
+            {posts.map((post, i) => (
+              <PostCard
+                post={post}
+                key={post.post.postId}
+                isFeed
+                index={i}
+                loadmore={loadMoreCb}
+                dataLength={posts.length}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
-  );
-}
-
-function Feed({ posts }: { posts: UserOrClubPost[] }) {
-  return posts.length > 0 ? <FeedList posts={posts} /> : null;
-}
-
-function FeedList({ posts }: { posts: UserOrClubPost[] }) {
-  return (
-    <div className="flex w-full flex-col gap-2">
-      {posts.map((post) => (
-        <PostCard post={post} key={post.post.postId} isFeed />
-      ))}
-    </div>
   );
 }
