@@ -11,13 +11,12 @@ import useFormState from "@/hooks/useFormState";
 import getImageDimensions from "@/utils/getImageDimensions";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
-import { UserOrClubPost } from "@convex/types";
 import { useMutation, useQuery } from "convex/react";
 import { ImagePlus } from "lucide-react";
 import NextImage from "next/image";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function NewPost() {
+export default function NewPost({ refreshFeed }: { refreshFeed: () => void }) {
   const user = useQuery(api.queries.getUser, {});
   const newUserPost = useMutation(api.mutations.newUserPost);
   const generateUploadUrl = useMutation(api.mutations.generateUploadUrl);
@@ -32,6 +31,7 @@ export default function NewPost() {
   const aspectRatio = useRef<number>(16 / 9);
 
   const [msg, handleSubmit, isPending] = useFormState(async (e) => {
+    refreshFeed();
     const form = e.target as HTMLFormElement;
     const formdata = new FormData(form);
     const description = formdata.get("description")!.toString();

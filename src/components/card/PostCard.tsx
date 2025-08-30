@@ -17,8 +17,9 @@ import { api } from "@convex/_generated/api";
 
 type PostCardProps = {
   post: UserOrClubPost;
+  isFeed?: boolean;
 };
-export function PostCard({ post: p }: PostCardProps) {
+export function PostCard({ post: p, isFeed }: PostCardProps) {
   const { type, post } = p;
   const isOwner = type === "user" && post.isOwner;
 
@@ -82,7 +83,7 @@ export function PostCard({ post: p }: PostCardProps) {
               {parseTimestamp(post.createdAt)})
             </p>
           </div>
-          {isOwner && <PostDropDownMenu postId={post.postId} />}
+          {isOwner && !isFeed && <PostDropDownMenu postId={post.postId} />}
         </div>
         <div className="whitespace-pre-wrap">{post.description}</div>
         {post.imageUrl && aspectRatio && (
