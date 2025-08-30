@@ -4,6 +4,8 @@ import { useQuery } from "convex/react";
 import NewPost from "./NewPost";
 import { api } from "@convex/_generated/api";
 import { PostCard } from "@/components";
+import { useRef } from "react";
+import { UserOrClubPost } from "@convex/types";
 
 export default function FeedPage() {
   return (
@@ -19,11 +21,18 @@ export default function FeedPage() {
 function Feed() {
   const posts = useQuery(api.queries.getFeedData, {});
 
-  return posts && posts.length > 0 ? (
+  return posts && posts.length > 0 ? <FeedList posts={posts} /> : null;
+}
+
+function FeedList({ posts }: { posts: UserOrClubPost[] }) {
+  // don't update feed if new data comes in
+  const postsRef = useRef<UserOrClubPost[]>(posts);
+
+  return (
     <div className="flex w-full flex-col gap-2">
-      {posts.map((post) => (
+      {postsRef.current.map((post) => (
         <PostCard post={post} key={post.post.postId} />
       ))}
     </div>
-  ) : null;
+  );
 }
