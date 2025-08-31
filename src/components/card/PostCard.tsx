@@ -6,7 +6,7 @@ import { ProfilePicture } from "../profile";
 import Link from "next/link";
 import parseTimestamp from "@/utils/parseTimestamp";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { HTMLAttributes, useEffect, useState } from "react";
 import getImageDimensions from "@/utils/getImageDimensions";
 import { useRouter } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
@@ -14,22 +14,18 @@ import { DropdownMenu } from "radix-ui";
 import { Button, ButtonVariant } from "../ui";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
+import { cn } from "@/utils/cn";
 
 type PostCardProps = {
   post: UserOrClubPost;
-  index: number;
-  dataLength: number;
-  loadmore: () => void;
   isFeed?: boolean;
-};
+} & HTMLAttributes<HTMLDivElement>;
 export function PostCard({
   post: p,
   isFeed,
-  index,
-  dataLength,
-  loadmore,
+  className,
+  ...props
 }: PostCardProps) {
-  const cardRef = useRef<HTMLAnchorElement>(null!);
   const { type, post } = p;
   const isOwner = type === "user" && post.isOwner;
 
@@ -48,96 +44,83 @@ export function PostCard({
     }
   }, []);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && index === dataLength - 3) {
-          loadmore();
-        }
-      },
-      {
-        threshold: 0.5,
-      },
-    );
-    observer.observe(cardRef.current);
-  }, [index, dataLength, loadmore]);
-
   return (
-    <Link
-      href={`/post?id=${post.postId}`}
-      className="ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-3 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
-      ref={cardRef}
-    >
-      {type === "user" ? (
-        <ProfilePicture
-          src={post.author.pictureUrl}
-          displayName={post.author.firstName}
-          onClick={(e) => {
-            e.preventDefault();
-            router.push(`/user?id=${post.author.authorId}`);
-          }}
-        />
-      ) : (
-        <ProfilePicture
-          src={post.club.pictureUrl}
-          displayName={post.club.name}
-          onClick={(e) => {
-            e.preventDefault();
-            router.push(`/club?id=${post.club.clubId}`);
-          }}
-        />
-      )}
-      <div className="w-full space-y-1">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex gap-1">
-            <p
-              className="font-bold hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                if (type === "user") {
-                  router.push(`/user?id=${post.author.authorId}`);
-                } else {
-                  router.push(`/club?id=${post.club.clubId}`);
-                }
+    <div className={cn("flex w-full justify-center", className)} {...props}>
+      <Link
+        href={`/post?id=${post.postId}`}
+        className="ring-foreground/10 bg-background mt-2 flex w-full max-w-2xl gap-2 rounded-lg p-3 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
+      >
+        {type === "user" ? (
+          <ProfilePicture
+            src={post.author.pictureUrl}
+            displayName={post.author.firstName}
+            onClick={(e) => {
+              e.preventDefault();
+              router.push(`/user?id=${post.author.authorId}`);
+            }}
+          />
+        ) : (
+          <ProfilePicture
+            src={post.club.pictureUrl}
+            displayName={post.club.name}
+            onClick={(e) => {
+              e.preventDefault();
+              router.push(`/club?id=${post.club.clubId}`);
+            }}
+          />
+        )}
+        <div className="w-full space-y-1">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex gap-1">
+              <p
+                className="font-bold hover:underline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (type === "user") {
+                    router.push(`/user?id=${post.author.authorId}`);
+                  } else {
+                    router.push(`/club?id=${post.club.clubId}`);
+                  }
+                }}
+              >
+                {type === "user" ? post.author.firstName : post.club.name}
+              </p>
+              <p className="text-muted-foreground">
+                {type === "user" && `@${post.author.username} `}(
+                {parseTimestamp(post.createdAt)})
+              </p>
+            </div>
+            {isOwner && !isFeed && <PostDropDownMenu postId={post.postId} />}
+          </div>
+          <div className="whitespace-pre-wrap">{post.description}</div>
+          {post.imageUrl && aspectRatio && (
+            <div
+              className="bg-foreground/10 relative w-full overflow-hidden rounded-md"
+              style={{
+                aspectRatio,
               }}
             >
-              {type === "user" ? post.author.firstName : post.club.name}
-            </p>
-            <p className="text-muted-foreground">
-              {type === "user" && `@${post.author.username} `}(
-              {parseTimestamp(post.createdAt)})
-            </p>
-          </div>
-          {isOwner && !isFeed && <PostDropDownMenu postId={post.postId} />}
-        </div>
-        <div className="whitespace-pre-wrap">{post.description}</div>
-        {post.imageUrl && aspectRatio && (
-          <div
-            className="bg-foreground/10 relative w-full overflow-hidden rounded-md"
-            style={{
-              aspectRatio,
-            }}
-          >
-            <Image
-              src={post.imageUrl}
-              alt={post.description}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
-        <div className="text-muted-foreground flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Heart className="h-4 w-4" />
-            <p>{post.nLikes}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" />
-            <p>{post.nComments + post.nReplies}</p>
+              <Image
+                src={post.imageUrl}
+                alt={post.description}
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+          <div className="text-muted-foreground flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              <p>{post.nLikes}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              <p>{post.nComments + post.nReplies}</p>
+            </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
 
