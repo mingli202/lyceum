@@ -35,6 +35,8 @@ export function PostCard({
   const deletePost = useMutation(api.mutations.deletePost);
   const likePost = useMutation(api.mutations.likePost);
 
+  const [hasLiked, setHasLiked] = useState(post.hasLiked);
+
   useEffect(() => {
     if (p.post.imageUrl) {
       getImageDimensions(p.post.imageUrl).then(({ width, height }) => {
@@ -122,9 +124,12 @@ export function PostCard({
               <Heart
                 className={cn(
                   "h-4 w-4 hover:cursor-pointer",
-                  post.hasLiked ? "fill-red-500 text-red-500" : "fill-none",
+                  hasLiked ? "fill-red-500 text-red-500" : "fill-none",
                 )}
-                onClick={() => likePost({ postId: post.postId })}
+                onClick={() => {
+                  setHasLiked((h) => !h);
+                  likePost({ postId: post.postId });
+                }}
               />
               <p>{post.nLikes}</p>
             </div>
