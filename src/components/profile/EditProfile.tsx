@@ -68,6 +68,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
     const academicYear = formData.get("academic-year")?.toString();
     const city = formData.get("city")?.toString();
     const bio = formData.get("bio")?.toString();
+    const isPrivate = formData.get("is-private")?.toString() === "on";
 
     const res = await updateProfile({
       updatedUserInfo: {
@@ -87,6 +88,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
         city,
         bio,
         school: school && school !== data.school ? school : undefined,
+        isPrivate,
       },
     }).catch(() => "Error updating profile");
 
@@ -212,6 +214,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
           defaultValue={data.city}
         />
       </label>
+
       <label htmlFor="bio" className="w-full">
         <p>Short bio</p>
         <input
@@ -235,6 +238,17 @@ function EditProfileForm({ data }: { data: ProfileData }) {
           required
           value={data.email}
         />
+      </label>
+
+      <label htmlFor="is-private" className="flex w-full items-center gap-2">
+        <input
+          id="is-private"
+          name="is-private"
+          type="checkbox"
+          className="rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
+          defaultChecked={data.isPrivate}
+        />
+        <p>Private Account</p>
       </label>
 
       {msg && <p className="text-red-500">{msg}</p>}

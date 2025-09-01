@@ -1,7 +1,7 @@
 export default function parseTimestamp(timestamp: number): string {
   const nowMs = Date.now();
 
-  const diffS = (nowMs - timestamp) / 1000;
+  const diffS = Math.max(nowMs - timestamp, 0) / 1000;
 
   // less than a minute ago
   if (diffS < 60) {

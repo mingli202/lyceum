@@ -82,12 +82,21 @@ export default defineSchema({
   }).index("by_userId", ["userId"]),
 
   posts: defineTable({
-    comments: v.id("comments"),
     likes: v.array(v.id("users")),
 
     description: v.string(),
-    imageUrl: v.string(),
+    imageId: v.optional(v.id("_storage")),
   }),
+
+  viewablePosts: defineTable({
+    userId: v.id("users"),
+    postId: v.id("posts"),
+    authorId: v.id("users"),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_postId", ["postId"])
+    .index("by_userId_authorId", ["userId", "authorId"])
+    .index("by_authorId", ["authorId"]),
 
   clubPosts: defineTable({
     clubId: v.id("clubs"),
@@ -189,7 +198,9 @@ export default defineSchema({
       v.literal("requested"),
       v.literal("accepted"),
       v.literal("blocked"),
+      v.literal("unfollowed"), // to prevent constantly deleting
     ),
+    cleanupId: v.optional(v.id("_scheduled_functions")),
   })
     .index("by_userId", ["userId"])
     .index("by_followingId", ["followingId"])

@@ -7,15 +7,18 @@ import {
   ClassPageData,
   ClubPreviewInfo,
   DashboardData,
-  PostPreviewInfo,
+  UserPostPreviewInfo,
   ProfileData,
   User,
   UserCardInfo,
   UserTask,
+  ClubPostPreviewInfo,
+  UserOrClubPost,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
 import { Id } from "./_generated/dataModel";
+import { paginationOptsValidator, PaginationResult } from "convex/server";
 
 export const _getUserFromClerkId = internalQuery({
   args: { signature: v.optional(v.string()) },
@@ -119,7 +122,10 @@ export const getCanViewUserInfo = query({
         .unique()
         .catch(() => null);
 
-      if (!requestedUserFollowingInfo) {
+      if (
+        !requestedUserFollowingInfo ||
+        requestedUserFollowingInfo.status === "unfollowed"
+      ) {
         const requestedUserProfile = await ctx.db
           .query("profiles")
           .withIndex("by_userId", (q) => q.eq("userId", requestedUserId))
@@ -246,14 +252,13 @@ export const getFollowerCount = query({
   handler: async (ctx, args): Promise<number> => {
     const { userId } = args;
 
-    const nFollowers = (
-      await ctx.db
-        .query("followingsInfo")
-        .withIndex("by_followingId", (q) => q.eq("followingId", userId))
-        .collect()
-    ).filter((following) => following.status === "accepted").length;
+    const nFollowers = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_followingId", (q) => q.eq("followingId", userId))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
+      .collect();
 
-    return nFollowers;
+    return nFollowers.length;
   },
 });
 
@@ -263,21 +268,20 @@ export const getFollowingCount = query({
   handler: async (ctx, args): Promise<number> => {
     const { userId } = args;
 
-    const nFollowing = (
-      await ctx.db
-        .query("followingsInfo")
-        .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .collect()
-    ).filter((following) => following.status === "accepted").length;
+    const nFollowing = await ctx.db
+      .query("followingsInfo")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
+      .collect();
 
-    return nFollowing;
+    return nFollowing.length;
   },
 });
 
 export const getUserPosts = query({
   args: { requestedUserId: v.optional(v.id("users")), canView: v.boolean() },
-  returns: v.array(PostPreviewInfo),
-  handler: async (ctx, args): Promise<PostPreviewInfo[]> => {
+  returns: v.array(UserPostPreviewInfo),
+  handler: async (ctx, args): Promise<UserPostPreviewInfo[]> => {
     const { requestedUserId, canView } = args;
 
     if (!canView) {
@@ -292,57 +296,60 @@ export const getUserPosts = query({
 
     const userId = requestedUserId ?? authenticatedUser._id;
 
-    const userPosts = await ctx.db
+    const toReturn: UserPostPreviewInfo[] = [];
+    for await (const userPost of ctx.db
       .query("userPosts")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect();
+      .order("desc")) {
+      const author = await ctx.db.get(userId);
 
-    const postsInfo = await Promise.all(
-      userPosts.map(async (userPost) => {
-        const author = await ctx.db.get(userId);
+      if (!author) {
+        continue;
+      }
 
-        if (!author) {
-          return null;
-        }
+      const post = await ctx.db.get(userPost.postId);
 
-        const post = await ctx.db.get(userPost.postId);
+      if (!post) {
+        continue;
+      }
 
-        if (!post) {
-          return null;
-        }
+      let imageUrl;
 
-        const postPreviewInfo: PostPreviewInfo = {
-          postId: userPost.postId,
-          author: {
-            authorId: userId,
-            pictureUrl: author.pictureUrl,
-            firstName: author.givenName,
-            lastName: author.familyName,
-            username: author.username,
-          },
-          nComments: (
-            await ctx.db
-              .query("comments")
-              .withIndex("by_postId", (q) => q.eq("postId", post._id))
-              .collect()
-          ).length,
-          nReplies: (
-            await ctx.db
-              .query("replies")
-              .withIndex("by_postId", (q) => q.eq("postId", post._id))
-              .collect()
-          ).length,
-          nLikes: post.likes.length,
-          createdAt: post._creationTime,
-          description: post.description,
-          imageUrl: post.imageUrl,
-        };
+      if (post.imageId) {
+        imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+      }
 
-        return postPreviewInfo;
-      }),
-    );
+      const postPreviewInfo: UserPostPreviewInfo = {
+        postId: userPost.postId,
+        isOwner: authenticatedUser._id === author._id,
+        author: {
+          authorId: userId,
+          pictureUrl: author.pictureUrl,
+          firstName: author.givenName,
+          lastName: author.familyName,
+          username: author.username,
+        },
+        nComments: (
+          await ctx.db
+            .query("comments")
+            .withIndex("by_postId", (q) => q.eq("postId", post._id))
+            .collect()
+        ).length,
+        nReplies: (
+          await ctx.db
+            .query("replies")
+            .withIndex("by_postId", (q) => q.eq("postId", post._id))
+            .collect()
+        ).length,
+        nLikes: post.likes.length,
+        createdAt: post._creationTime,
+        description: post.description,
+        imageUrl,
+      };
+      toReturn.push(postPreviewInfo);
+    }
 
-    return postsInfo.filter((postInfo) => postInfo !== null);
+    return toReturn;
   },
 });
 
@@ -364,36 +371,33 @@ export const getUserClasses = query({
 
     const userId = requestedUserId ?? authenticatedUser._id;
 
-    const userClassesInfo = await ctx.db
+    const toReturn: ClassInfo[] = [];
+
+    for await (const userClassInfo of ctx.db
       .query("userClassInfo")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect();
+      .withIndex("by_userId", (q) => q.eq("userId", userId))) {
+      const classId = userClassInfo.classId;
+      const classInfo = await ctx.db.get(classId);
 
-    return (
-      await Promise.all(
-        userClassesInfo.map(async (userClassInfo) => {
-          const classId = userClassInfo.classId;
-          const classInfo = await ctx.db.get(classId);
+      if (!classInfo) {
+        continue;
+      }
 
-          if (!classInfo) {
-            return null;
-          }
-
-          return {
-            code: classInfo.code,
-            title: classInfo.title,
-            professor: classInfo.professor,
+      toReturn.push({
+        code: classInfo.code,
+        title: classInfo.title,
+        professor: classInfo.professor,
+        classId: classInfo._id,
+        grade: (
+          await ctx.runQuery(internal.queries._getUserClassAverageGrade, {
             classId: classInfo._id,
-            grade: (
-              await ctx.runQuery(internal.queries._getUserClassAverageGrade, {
-                classId: classInfo._id,
-                userId,
-              })
-            ).currentGrade,
-          };
-        }),
-      )
-    ).filter((classInfo) => classInfo !== null);
+            userId,
+          })
+        ).currentGrade,
+      });
+    }
+
+    return toReturn;
   },
 });
 
@@ -415,45 +419,35 @@ export const getUserClubs = query({
 
     const userId = requestedUserId ?? authenticatedUser._id;
 
-    const userClubsInfo = await ctx.db
+    const clubsPreviewInfo: ClubPreviewInfo[] = [];
+
+    for await (const userClubInfo of ctx.db
       .query("userClubsInfo")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect()
-      .catch(() => null);
+      .withIndex("by_userId", (q) => q.eq("userId", userId))) {
+      const club = await ctx.db.get(userClubInfo.clubId);
 
-    if (!userClubsInfo) {
-      return [];
+      if (!club) {
+        continue;
+      }
+
+      const members = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_clubId")
+        .collect();
+
+      const clubPreviewInfo: ClubPreviewInfo = {
+        category: club.category,
+        clubId: club._id,
+        description: club.description,
+        pictureUrl: club.pictureUrl,
+        name: club.name,
+        isPrivate: club.isPrivate,
+        nMembers: members.length,
+        status: userClubInfo.status,
+      };
+
+      clubsPreviewInfo.push(clubPreviewInfo);
     }
-
-    const clubsPreviewInfo: ClubPreviewInfo[] = (
-      await Promise.all(
-        userClubsInfo.map(async (userClubInfo) => {
-          const club = await ctx.db.get(userClubInfo.clubId);
-
-          if (!club) {
-            return null;
-          }
-
-          const members = await ctx.db
-            .query("userClubsInfo")
-            .withIndex("by_clubId")
-            .collect();
-
-          const clubPreviewInfo: ClubPreviewInfo = {
-            category: club.category,
-            clubId: club._id,
-            description: club.description,
-            pictureUrl: club.pictureUrl,
-            name: club.name,
-            isPrivate: club.isPrivate,
-            nMembers: members.length,
-            status: userClubInfo.status,
-          };
-
-          return clubPreviewInfo;
-        }),
-      )
-    ).filter((club) => club !== null);
 
     return clubsPreviewInfo;
   },
@@ -550,31 +544,28 @@ export const getClassStudents = query({
   args: { classId: v.id("classes"), signature: v.optional(v.string()) },
   returns: v.array(UserCardInfo),
   handler: async (ctx, args): Promise<UserCardInfo[]> => {
-    const students = await ctx.db
+    const userCardsInfo: UserCardInfo[] = [];
+
+    for await (const student of ctx.db
       .query("userClassInfo")
-      .withIndex("by_classId", (q) => q.eq("classId", args.classId))
-      .collect();
+      .withIndex("by_classId", (q) => q.eq("classId", args.classId))) {
+      const user = await ctx.db.get(student.userId);
 
-    const userCardsInfo = await Promise.all(
-      students.map(async (student) => {
-        const user = await ctx.db.get(student.userId);
+      if (!user) {
+        continue;
+      }
 
-        if (!user) {
-          return null;
-        }
+      const userCardInfo: UserCardInfo = {
+        userId: student.userId,
+        pictureUrl: user.pictureUrl,
+        firstName: user.givenName,
+        username: user.username,
+      };
 
-        const userCardInfo: UserCardInfo = {
-          userId: student.userId,
-          pictureUrl: user.pictureUrl,
-          firstName: user.givenName,
-          username: user.username,
-        };
+      userCardsInfo.push(userCardInfo);
+    }
 
-        return userCardInfo;
-      }),
-    );
-
-    return userCardsInfo.filter((userCardInfo) => userCardInfo !== null);
+    return userCardsInfo;
   },
 });
 
@@ -597,5 +588,148 @@ export const getUserLastSeenAt = query({
     }
 
     return profile.lastSeenAt ?? 0;
+  },
+});
+
+export const getFeedData = query({
+  args: { paginationOpts: paginationOptsValidator, now: v.number() },
+  handler: async (ctx, args): Promise<PaginationResult<UserOrClubPost>> => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      return { page: [], continueCursor: "", isDone: true };
+    }
+
+    const postsInfo: UserOrClubPost[] = [];
+
+    const viewablePosts = await ctx.db
+      .query("viewablePosts")
+      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+      .filter((q) => q.lte(q.field("_creationTime"), args.now))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    for (const viewablePost of viewablePosts.page) {
+      const post = await ctx.db.get(viewablePost.postId);
+
+      if (!post) {
+        continue;
+      }
+
+      const userPost = await ctx.db
+        .query("userPosts")
+        .withIndex("by_postId", (q) => q.eq("postId", post._id))
+        .unique();
+
+      if (userPost) {
+        const author = await ctx.db.get(userPost.userId);
+        if (!author) {
+          continue;
+        }
+        const followingInfo = await ctx.db
+          .query("followingsInfo")
+          .withIndex("by_userId_followingId", (q) =>
+            q.eq("userId", authenticatedUser._id).eq("followingId", author._id),
+          )
+          .unique()
+          .catch(() => null);
+
+        if (
+          viewablePost.authorId !== viewablePost.userId &&
+          (!followingInfo || followingInfo.status !== "accepted")
+        ) {
+          continue;
+        }
+
+        let imageUrl;
+
+        if (post.imageId) {
+          imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+        }
+
+        const userPostPreviewInfo: UserPostPreviewInfo = {
+          postId: post._id,
+          isOwner: authenticatedUser._id === author._id,
+          author: {
+            authorId: author._id,
+            pictureUrl: author.pictureUrl,
+            firstName: author.givenName,
+            lastName: author.familyName,
+            username: author.username,
+          },
+          nComments: (
+            await ctx.db
+              .query("comments")
+              .withIndex("by_postId", (q) => q.eq("postId", post._id))
+              .collect()
+          ).length,
+          nReplies: (
+            await ctx.db
+              .query("replies")
+              .withIndex("by_postId", (q) => q.eq("postId", post._id))
+              .collect()
+          ).length,
+          nLikes: post.likes.length,
+          createdAt: post._creationTime,
+          description: post.description,
+          imageUrl,
+        };
+        postsInfo.push({ type: "user", post: userPostPreviewInfo } as const);
+      } else {
+        const clubPost = await ctx.db
+          .query("clubPosts")
+          .withIndex("by_postId", (q) => q.eq("postId", post._id))
+          .unique();
+
+        if (!clubPost) {
+          continue;
+        }
+
+        const club = await ctx.db.get(clubPost.clubId);
+
+        if (!club) {
+          continue;
+        }
+
+        let imageUrl;
+
+        if (post.imageId) {
+          imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+        }
+
+        const clubPostPreviewInfo: ClubPostPreviewInfo = {
+          postId: post._id,
+          club: {
+            clubId: club._id,
+            pictureUrl: club.pictureUrl,
+            name: club.name,
+          },
+          nComments: (
+            await ctx.db
+              .query("comments")
+              .withIndex("by_postId", (q) => q.eq("postId", post._id))
+              .collect()
+          ).length,
+          nReplies: (
+            await ctx.db
+              .query("replies")
+              .withIndex("by_postId", (q) => q.eq("postId", post._id))
+              .collect()
+          ).length,
+          nLikes: post.likes.length,
+          createdAt: post._creationTime,
+          description: post.description,
+          imageUrl,
+          isMembersOnly: clubPost.isMembersOnly,
+        };
+
+        postsInfo.push({ type: "club", post: clubPostPreviewInfo } as const);
+      }
+    }
+
+    return {
+      ...viewablePosts,
+      page: postsInfo,
+    };
   },
 });

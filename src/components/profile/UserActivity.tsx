@@ -10,7 +10,7 @@ import {
   CanView,
   ClassInfo,
   ClubPreviewInfo,
-  PostPreviewInfo,
+  UserPostPreviewInfo,
 } from "@convex/types";
 import { useQuery } from "convex/react";
 import { BookOpen, Grid2x2, Grid3x3, UserIcon, Volleyball } from "lucide-react";
@@ -34,7 +34,7 @@ export default function UserActivity({
   canView,
   requestedUserId,
 }: UserActivityProps) {
-  const posts: PostPreviewInfo[] | undefined = useQuery(
+  const posts: UserPostPreviewInfo[] | undefined = useQuery(
     api.queries.getUserPosts,
     {
       requestedUserId,
@@ -85,7 +85,7 @@ export default function UserActivity({
             (posts && posts.length > 0 ? (
               <div className="flex w-full flex-col gap-2">
                 {posts.map((post) => (
-                  <PostCard post={post} key={post.postId} />
+                  <PostCard post={{ type: "user", post }} key={post.postId} />
                 ))}
               </div>
             ) : (
