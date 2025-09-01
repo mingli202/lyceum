@@ -15,7 +15,7 @@ import { useMutation, useQuery } from "convex/react";
 import { ImagePlus } from "lucide-react";
 import NextImage from "next/image";
 import { use, useEffect, useRef, useState } from "react";
-import { PostCardContext } from "./page";
+import { PostCardContext } from "./PostCardContext";
 
 export default function NewPost() {
   const { refreshFeed } = use(PostCardContext);
@@ -95,7 +95,7 @@ export default function NewPost() {
         URL.revokeObjectURL(localFileUrl);
       }
     };
-  }, []);
+  }, [localFileUrl]);
 
   return (
     <div className="mt-4 flex w-full justify-center">
@@ -134,14 +134,12 @@ export default function NewPost() {
                 aspectRatio: aspectRatio.current,
               }}
             >
-              {!isScrolling && (
-                <NextImage
-                  src={localFileUrl}
-                  alt="uploaded file"
-                  className="object-cover"
-                  fill
-                />
-              )}
+              <NextImage
+                src={localFileUrl}
+                alt="uploaded file"
+                className="object-cover"
+                fill
+              />
             </div>
           )}
           <div className="flex items-center justify-end gap-4">

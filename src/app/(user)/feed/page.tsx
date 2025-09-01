@@ -4,14 +4,9 @@ import { usePaginatedQuery } from "convex/react";
 import NewPost from "./NewPost";
 import { api } from "@convex/_generated/api";
 import { Button, ButtonVariant, PostCard } from "@/components";
-import { createContext, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
-
-export const PostCardContext = createContext<{
-  refreshFeed: () => void;
-}>({
-  refreshFeed: () => {},
-});
+import { PostCardContext } from "./PostCardContext";
 
 function Footer({
   context: { status, loadMore },
