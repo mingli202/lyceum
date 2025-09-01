@@ -814,6 +814,12 @@ export const getPostCommentsAndReplies = query({
     postId: v.id("posts"),
   },
   async handler(ctx, args): Promise<PaginationResult<PostComment>> {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Can't find user");
+    }
+
     const { postId } = args;
 
     const comments = await ctx.db
@@ -845,6 +851,7 @@ export const getPostCommentsAndReplies = query({
         nLikes: Object.keys(comment.likes).length,
         postId,
         text: comment.text,
+        isAuthor: authenticatedUser._id === author._id,
       } satisfies PostComment);
     }
 

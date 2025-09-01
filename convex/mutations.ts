@@ -808,3 +808,20 @@ export const newComment = mutation({
     });
   },
 });
+
+export const deleteComment = mutation({
+  args: { commentId: v.id("comments") },
+  async handler(ctx, args) {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("can't find user");
+    }
+
+    const comment = await ctx.db.get(args.commentId);
+
+    if (comment && comment.authorId === authenticatedUser._id) {
+      await ctx.db.delete(comment._id);
+    }
+  },
+});

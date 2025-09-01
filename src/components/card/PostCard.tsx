@@ -155,6 +155,7 @@ function CommentSection({ postId }: { postId: Id<"posts"> }) {
 
   const user = useQuery(api.queries.getUser, {});
   const newComment = useMutation(api.mutations.newComment);
+  const deleteComment = useMutation(api.mutations.deleteComment);
 
   const {
     results: comments,
@@ -170,7 +171,7 @@ function CommentSection({ postId }: { postId: Id<"posts"> }) {
     { initialNumItems: 5 },
   );
 
-  const [msg, handleSubmit, isPending] = useFormState(async (e) => {
+  const [_, handleSubmit, isPending] = useFormState(async (e) => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
@@ -220,20 +221,35 @@ function CommentSection({ postId }: { postId: Id<"posts"> }) {
               className="h-8 w-8 hover:cursor-pointer"
             />
             <div className="bg-muted-foreground/10 flex w-full flex-col gap-1 rounded-lg p-2">
-              <div className="flex gap-1">
-                <p
-                  className="font-bold hover:cursor-pointer hover:underline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push(`/user?id=${comment.author.authorId}`);
-                  }}
-                >
-                  {comment.author.firstName}
-                </p>
-                <p className="text-muted-foreground">
-                  {`@${comment.author.username} `}(
-                  {parseTimestamp(comment.createdAt)})
-                </p>
+              <div className="flex justify-between gap-4">
+                <div className="flex gap-1">
+                  <p
+                    className="font-bold hover:cursor-pointer hover:underline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push(`/user?id=${comment.author.authorId}`);
+                    }}
+                  >
+                    {comment.author.firstName}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {`@${comment.author.username} `}(
+                    {parseTimestamp(comment.createdAt)})
+                  </p>
+                </div>
+                {comment.isAuthor && (
+                  <Button
+                    variant={ButtonVariant.Muted}
+                    className="p-0 ring-0"
+                    onClick={async () => {
+                      await deleteComment({ commentId: comment.commentId });
+                      setNow(Date.now());
+                    }}
+                    type="button"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
               {comment.text}
             </div>

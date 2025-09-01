@@ -230,6 +230,7 @@ export const PostComment = v.object({
     lastName: v.optional(v.string()),
     username: v.string(),
   }),
+  isAuthor: v.boolean(),
 });
 
 export type ClassInfo = typeof ClassInfo.type;
