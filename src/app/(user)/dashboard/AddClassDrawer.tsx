@@ -60,10 +60,10 @@ export default function AddClassDrawer() {
         title,
         professor,
         semester: semester as AddClassArgs["semester"],
-        year: parseInt(year),
-        credits: parseInt(credits),
+        year: Number(year),
+        credits: Number(credits),
         classTimes,
-        targetGrade: parseInt(targetGrade),
+        targetGrade: Number(targetGrade),
         tasks: [],
       };
     } else {

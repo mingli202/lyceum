@@ -18,10 +18,10 @@ export default function checkForOverlap(classTimes: ClassTime[]) {
         const [start2, end2] = times[k];
 
         // formats are like "09:00" and "10:00"
-        const nStart1 = parseInt(start1.replace(":", ""));
-        const nStart2 = parseInt(start2.replace(":", ""));
-        const nEnd1 = parseInt(end1.replace(":", ""));
-        const nEnd2 = parseInt(end2.replace(":", ""));
+        const nStart1 = Number(start1.replace(":", ""));
+        const nStart2 = Number(start2.replace(":", ""));
+        const nEnd1 = Number(end1.replace(":", ""));
+        const nEnd2 = Number(end2.replace(":", ""));
 
         if (nStart1 >= nEnd1 || nStart2 >= nEnd2) {
           throw new Error("Class ends in the past???");

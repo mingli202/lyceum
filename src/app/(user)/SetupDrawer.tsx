@@ -54,7 +54,7 @@ export default function SetupDrawer({ open }: SetupDrawerProps) {
       firstName,
       lastName,
       username,
-      academicYear: parseInt(academicYear),
+      academicYear: Number(academicYear),
       city,
       email,
       pictureUrl,
