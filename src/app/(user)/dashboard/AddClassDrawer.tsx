@@ -324,12 +324,13 @@ export default function AddClassDrawer() {
                 pendingElement={
                   isManual ? undefined : <p>{timeS.toFixed(1)} s</p>
                 }
+                className="w-full text-center"
               >
                 Submit
               </Button>
               {error && <p className="text-red-500">{error}</p>}
               <Button
-                className="p-0"
+                className="w-full p-0 text-center"
                 onClick={() => {
                   setIsManual(!isManual);
                 }}
