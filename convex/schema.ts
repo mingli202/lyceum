@@ -109,18 +109,18 @@ export default defineSchema({
   comments: defineTable({
     authorId: v.id("users"),
     postId: v.union(v.id("posts"), v.null()),
+    likes: v.array(v.id("users")),
 
-    content: v.string(),
-    timestamp: v.string(),
+    text: v.string(),
   }).index("by_postId", ["postId"]),
 
   replies: defineTable({
     authorId: v.id("users"),
     commentId: v.id("comments"),
     postId: v.id("posts"),
+    likes: v.array(v.id("users")),
 
     text: v.string(),
-    timestamp: v.string(),
   })
     .index("by_commentId", ["commentId"])
     .index("by_postId", ["postId"]),

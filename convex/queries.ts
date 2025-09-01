@@ -14,6 +14,9 @@ import {
   UserTask,
   ClubPostPreviewInfo,
   UserOrClubPost,
+  Reply,
+  Comment,
+  PostComment,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -760,9 +763,10 @@ export const getFeedData = query({
 
 export const getPostData = query({
   args: { postId: v.optional(v.string()) },
-  returns: { postData: UserOrClubPost },
+  returns: v.union(UserOrClubPost, v.string()),
   handler: async (ctx, args): Promise<UserOrClubPost | string> => {
     const { postId } = args;
+
     const post = await ctx.db.get(postId as Id<"posts">).catch(() => null);
 
     if (!post) {
@@ -774,5 +778,53 @@ export const getPostData = query({
     if (!user) {
       throw new Error("Not authenticated");
     }
+
+    const viewablePost = await ctx.db
+      .query("viewablePosts")
+      .withIndex("by_postId", (q) => q.eq("postId", post._id))
+      .unique()
+      .catch(() => null);
+
+    if (!viewablePost) {
+      return "Follower the user to view this post.";
+    }
+
+    const postData = await ctx.runQuery(internal.queries._getPostData, {
+      viewablePost,
+      authenticatedUserId: user._id,
+    });
+
+    if (!postData) {
+      return "Coudn't find post data";
+    }
+
+    return postData;
+  },
+});
+
+export const getPostCommentsAndReplies = query({
+  args: { postId: v.id("posts") },
+  async handler(ctx, args): Promise<PostComment[]> {
+    const { postId } = args;
+
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_postId", (q) => q.eq("postId", postId))
+      .collect();
+
+    const commentsWithReplies: PostComment[] = await Promise.all(
+      comments.map(
+        async (comment) =>
+          ({
+            comment,
+            replies: await ctx.db
+              .query("replies")
+              .withIndex("by_commentId", (q) => q.eq("commentId", comment._id))
+              .collect(),
+          }) satisfies PostComment,
+      ),
+    );
+
+    return commentsWithReplies;
   },
 });

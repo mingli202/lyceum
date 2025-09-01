@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { Infer, v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 import schema from "./schema";
 
@@ -214,6 +214,21 @@ export const UserOrClubPost = v.union(
   }),
 );
 
+export const PostComment = v.object({
+  comment: v.object({
+    ...schema.tables.comments.validator.fields,
+    _id: v.id("comments"),
+    _creationTime: v.number(),
+  }),
+  replies: v.array(
+    v.object({
+      _id: v.id("replies"),
+      _creationTime: v.number(),
+      ...schema.tables.replies.validator.fields,
+    }),
+  ),
+});
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
@@ -229,3 +244,8 @@ export type UserCardInfo = typeof UserCardInfo.type;
 export type CanView = typeof CanView.type;
 export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;
 export type UserOrClubPost = typeof UserOrClubPost.type;
+
+export type PostComment = {
+  comment: Comment;
+  replies: Reply[];
+};
