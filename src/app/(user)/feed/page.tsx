@@ -71,7 +71,9 @@ export default function FeedPage() {
         increaseViewportBy={200}
         context={{ status, loadMore: loadMoreCb }}
         className="h-full w-full overflow-x-hidden overflow-y-auto"
-        itemContent={(_, post) => <PostCard post={post} isFeed />}
+        itemContent={(_, post) => (
+          <PostCard post={post} isFeed className="mt-2" />
+        )}
         components={{ Header: NewPost, Footer }}
       />
     </PostCardContext.Provider>
