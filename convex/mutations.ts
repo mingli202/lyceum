@@ -789,3 +789,22 @@ export const likePost = mutation({
     });
   },
 });
+
+export const newComment = mutation({
+  args: { postId: v.id("posts"), text: v.string() },
+  async handler(ctx, args) {
+    const { postId, text } = args;
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("Authenticated user not found");
+    }
+
+    await ctx.db.insert("comments", {
+      authorId: user._id,
+      postId,
+      text,
+      likes: {},
+    });
+  },
+});

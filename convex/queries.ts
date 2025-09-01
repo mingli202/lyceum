@@ -14,7 +14,7 @@ import {
   UserTask,
   ClubPostPreviewInfo,
   UserOrClubPost,
-  Comment,
+  PostComment,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -342,7 +342,8 @@ export const getUserPosts = query({
             .withIndex("by_postId", (q) => q.eq("postId", post._id))
             .collect()
         ).length,
-        nLikes: post.likes.length,
+        nLikes: Object.keys(post.likes).length,
+        hasLiked: post.likes[authenticatedUser._id] ? true : false,
         createdAt: post._creationTime,
         description: post.description,
         imageUrl,
@@ -813,7 +814,7 @@ export const getPostCommentsAndReplies = query({
     now: v.number(),
     postId: v.id("posts"),
   },
-  async handler(ctx, args): Promise<PaginationResult<Comment>> {
+  async handler(ctx, args): Promise<PaginationResult<PostComment>> {
     const { postId } = args;
 
     const comments = await ctx.db
@@ -823,6 +824,34 @@ export const getPostCommentsAndReplies = query({
       .order("desc")
       .paginate(args.paginationOpts);
 
-    return comments;
+    const postComments: PostComment[] = [];
+
+    for (const comment of comments.page) {
+      const author = await ctx.db.get(comment.authorId);
+
+      if (!author) {
+        continue;
+      }
+
+      postComments.push({
+        author: {
+          authorId: author._id,
+          firstName: author.givenName,
+          username: author.username,
+          lastName: author.familyName,
+          pictureUrl: author.pictureUrl,
+        },
+        commentId: comment._id,
+        createdAt: comment._creationTime,
+        nLikes: Object.keys(comment.likes).length,
+        postId,
+        text: comment.text,
+      } satisfies PostComment);
+    }
+
+    return {
+      ...comments,
+      page: postComments,
+    };
   },
 });

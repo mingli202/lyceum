@@ -217,18 +217,19 @@ export const UserOrClubPost = v.union(
 );
 
 export const PostComment = v.object({
-  comment: v.object({
-    ...schema.tables.comments.validator.fields,
-    _id: v.id("comments"),
-    _creationTime: v.number(),
+  nLikes: v.number(),
+  postId: v.id("posts"),
+  commentId: v.id("comments"),
+  text: v.string(),
+  createdAt: v.number(),
+
+  author: v.object({
+    authorId: v.id("users"),
+    pictureUrl: v.optional(v.string()),
+    firstName: v.string(),
+    lastName: v.optional(v.string()),
+    username: v.string(),
   }),
-  replies: v.array(
-    v.object({
-      _id: v.id("replies"),
-      _creationTime: v.number(),
-      ...schema.tables.replies.validator.fields,
-    }),
-  ),
 });
 
 export type ClassInfo = typeof ClassInfo.type;
@@ -246,8 +247,4 @@ export type UserCardInfo = typeof UserCardInfo.type;
 export type CanView = typeof CanView.type;
 export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;
 export type UserOrClubPost = typeof UserOrClubPost.type;
-
-export type PostComment = {
-  comment: Comment;
-  replies: Reply[];
-};
+export type PostComment = Infer<typeof PostComment>;

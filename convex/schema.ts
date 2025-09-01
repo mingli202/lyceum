@@ -110,7 +110,7 @@ export default defineSchema({
   comments: defineTable({
     authorId: v.id("users"),
     postId: v.union(v.id("posts"), v.null()),
-    likes: v.array(v.id("users")),
+    likes: v.record(v.id("users"), v.boolean()),
 
     text: v.string(),
   }).index("by_postId", ["postId"]),
