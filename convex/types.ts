@@ -179,6 +179,7 @@ export const ClubPreviewInfo = v.object({
 
 export const ClassPageData = v.object({
   classId: v.id("classes"),
+  chatId: v.id("chats"),
   code: v.string(),
   nClassmates: v.number(),
   grade: v.number(),
@@ -233,6 +234,19 @@ export const PostComment = v.object({
   isAuthor: v.boolean(),
 });
 
+export const MessageInfo = v.object({
+  sender: v.object({
+    senderId: v.id("users"),
+    pictureUrl: v.optional(v.string()),
+    firstName: v.string(),
+  }),
+  isSender: v.boolean(),
+  content: v.string(),
+  createdAt: v.number(),
+  makeNewBubble: v.boolean(),
+  isLastMessageOfSender: v.boolean(),
+});
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
@@ -249,3 +263,4 @@ export type CanView = typeof CanView.type;
 export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;
 export type UserOrClubPost = typeof UserOrClubPost.type;
 export type PostComment = Infer<typeof PostComment>;
+export type MessageInfo = Infer<typeof MessageInfo>;

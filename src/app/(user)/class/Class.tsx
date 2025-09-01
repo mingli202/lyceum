@@ -116,7 +116,7 @@ export default function Class({ classData }: ClassProps) {
                 </Card>
               </button>
             </div>
-            <ClassTabs classId={classData.classId} />
+            <ClassTabs classId={classData.classId} chatId={classData.chatId} />
           </div>
         </div>
       </section>

@@ -15,6 +15,8 @@ import {
   ClubPostPreviewInfo,
   UserOrClubPost,
   PostComment,
+  Message,
+  MessageInfo,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -495,6 +497,7 @@ export const getClassPageData = query({
 
     const classPageData: ClassPageData = {
       classId: classInfo._id,
+      chatId: classInfo.chat,
       title: classInfo.title,
       professor: classInfo.professor,
       code: classInfo.code,
@@ -858,6 +861,66 @@ export const getPostCommentsAndReplies = query({
     return {
       ...comments,
       page: postComments,
+    };
+  },
+});
+
+export const getChatMessages = query({
+  args: { chatId: v.id("chats"), paginationOpts: paginationOptsValidator },
+  async handler(ctx, args): Promise<PaginationResult<MessageInfo>> {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Can't find user");
+    }
+
+    const { chatId } = args;
+
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_chatId", (q) => q.eq("chatId", chatId))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    const messagesInfo: MessageInfo[] = [];
+
+    let lastMessageSenderId: Id<"users"> | null = null;
+
+    const now = Date.now();
+
+    for (let i = messages.page.length - 1; i >= 0; i--) {
+      const message = messages.page[i];
+
+      const sender = await ctx.db.get(message.senderId);
+
+      if (!sender) {
+        continue;
+      }
+
+      const makeNewBubble =
+        now - message._creationTime > 1000 * 60 * 60 * 24 ||
+        message.senderId !== lastMessageSenderId;
+
+      messagesInfo.push({
+        sender: {
+          senderId: sender._id,
+          pictureUrl: sender.pictureUrl,
+          firstName: sender.givenName,
+        },
+        isSender: message.senderId === authenticatedUser._id,
+        content: message.content,
+        createdAt: message._creationTime,
+        makeNewBubble,
+        isLastMessageOfSender:
+          i - 1 < 0 ? true : messages.page[i - 1].senderId !== message.senderId,
+      });
+
+      lastMessageSenderId = message.senderId;
+    }
+
+    return {
+      ...messages,
+      page: messagesInfo,
     };
   },
 });
