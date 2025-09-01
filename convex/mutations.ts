@@ -661,7 +661,7 @@ export const newUserPost = mutation({
     const postId = await ctx.db.insert("posts", {
       description,
       imageId,
-      likes: [],
+      likes: {},
     });
 
     await ctx.db.insert("userPosts", {
@@ -756,5 +756,36 @@ export const deletePost = mutation({
     if (post.imageId) {
       await ctx.storage.delete(post.imageId);
     }
+  },
+});
+
+export const likePost = mutation({
+  args: { postId: v.id("posts") },
+  async handler(ctx, args) {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("not authenticated");
+    }
+
+    const { postId } = args;
+
+    const post = await ctx.db.get(postId);
+
+    if (!post) {
+      throw new Error("post not found");
+    }
+
+    const likes = post.likes;
+
+    if (likes[authenticatedUser._id]) {
+      delete likes[authenticatedUser._id];
+    } else {
+      likes[authenticatedUser._id] = true;
+    }
+
+    await ctx.db.patch(post._id, {
+      likes,
+    });
   },
 });

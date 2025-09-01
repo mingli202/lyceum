@@ -14,9 +14,7 @@ import {
   UserTask,
   ClubPostPreviewInfo,
   UserOrClubPost,
-  Reply,
   Comment,
-  PostComment,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -660,13 +658,15 @@ export const _getPostData = internalQuery({
             .withIndex("by_postId", (q) => q.eq("postId", post._id))
             .collect()
         ).length,
-        nReplies: (
-          await ctx.db
-            .query("replies")
-            .withIndex("by_postId", (q) => q.eq("postId", post._id))
-            .collect()
-        ).length,
-        nLikes: post.likes.length,
+        // nReplies: (
+        //   await ctx.db
+        //     .query("replies")
+        //     .withIndex("by_postId", (q) => q.eq("postId", post._id))
+        //     .collect()
+        // ).length,
+        nReplies: 0,
+        hasLiked: post.likes[authenticatedUserId] ? true : false,
+        nLikes: Object.keys(post.likes).length,
         createdAt: post._creationTime,
         description: post.description,
         imageUrl,
@@ -707,13 +707,15 @@ export const _getPostData = internalQuery({
             .withIndex("by_postId", (q) => q.eq("postId", post._id))
             .collect()
         ).length,
-        nReplies: (
-          await ctx.db
-            .query("replies")
-            .withIndex("by_postId", (q) => q.eq("postId", post._id))
-            .collect()
-        ).length,
-        nLikes: post.likes.length,
+        // nReplies: (
+        //   await ctx.db
+        //     .query("replies")
+        //     .withIndex("by_postId", (q) => q.eq("postId", post._id))
+        //     .collect()
+        // ).length,
+        nReplies: 0,
+        nLikes: Object.keys(post.likes).length,
+        hasLiked: post.likes[authenticatedUserId] ? true : false,
         createdAt: post._creationTime,
         description: post.description,
         imageUrl,
@@ -781,7 +783,9 @@ export const getPostData = query({
 
     const viewablePost = await ctx.db
       .query("viewablePosts")
-      .withIndex("by_postId", (q) => q.eq("postId", post._id))
+      .withIndex("by_userId_postId", (q) =>
+        q.eq("userId", user._id).eq("postId", post._id),
+      )
       .unique()
       .catch(() => null);
 
@@ -795,36 +799,30 @@ export const getPostData = query({
     });
 
     if (!postData) {
-      return "Coudn't find post data";
+      return "Couldn't find post data";
     }
 
     return postData;
   },
 });
 
+// no replies for now
 export const getPostCommentsAndReplies = query({
-  args: { postId: v.id("posts") },
-  async handler(ctx, args): Promise<PostComment[]> {
+  args: {
+    paginationOpts: paginationOptsValidator,
+    now: v.number(),
+    postId: v.id("posts"),
+  },
+  async handler(ctx, args): Promise<PaginationResult<Comment>> {
     const { postId } = args;
 
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_postId", (q) => q.eq("postId", postId))
-      .collect();
+      .filter((q) => q.lte(q.field("_creationTime"), args.now))
+      .order("desc")
+      .paginate(args.paginationOpts);
 
-    const commentsWithReplies: PostComment[] = await Promise.all(
-      comments.map(
-        async (comment) =>
-          ({
-            comment,
-            replies: await ctx.db
-              .query("replies")
-              .withIndex("by_commentId", (q) => q.eq("commentId", comment._id))
-              .collect(),
-          }) satisfies PostComment,
-      ),
-    );
-
-    return commentsWithReplies;
+    return comments;
   },
 });

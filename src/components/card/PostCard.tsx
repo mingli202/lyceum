@@ -11,7 +11,7 @@ import getImageDimensions from "@/utils/getImageDimensions";
 import { useRouter } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
 import { DropdownMenu } from "radix-ui";
-import { Button, ButtonVariant } from "../ui";
+import { Button, ButtonVariant, Card } from "../ui";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { cn } from "@/utils/cn";
@@ -32,6 +32,9 @@ export function PostCard({
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const router = useRouter();
 
+  const deletePost = useMutation(api.mutations.deletePost);
+  const likePost = useMutation(api.mutations.likePost);
+
   useEffect(() => {
     if (p.post.imageUrl) {
       getImageDimensions(p.post.imageUrl).then(({ width, height }) => {
@@ -46,10 +49,7 @@ export function PostCard({
 
   return (
     <div className={cn("flex w-full justify-center", className)} {...props}>
-      <Link
-        href={`/post?id=${post.postId}`}
-        className="ring-foreground/10 bg-background flex w-full max-w-2xl gap-2 rounded-lg p-3 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
-      >
+      <Card className="w-full max-w-2xl flex-row">
         {type === "user" ? (
           <ProfilePicture
             src={post.author.pictureUrl}
@@ -90,7 +90,16 @@ export function PostCard({
                 {parseTimestamp(post.createdAt)})
               </p>
             </div>
-            {isOwner && !isFeed && <PostDropDownMenu postId={post.postId} />}
+            {isOwner && !isFeed && (
+              <Button
+                className="p-0 text-red-500"
+                onClick={async () => {
+                  await deletePost({ postId: post.postId });
+                }}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            )}
           </div>
           <div className="whitespace-pre-wrap">{post.description}</div>
           {post.imageUrl && aspectRatio && (
@@ -110,7 +119,13 @@ export function PostCard({
           )}
           <div className="text-muted-foreground flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <Heart className="h-4 w-4" />
+              <Heart
+                className={cn(
+                  "h-4 w-4 hover:cursor-pointer",
+                  post.hasLiked ? "fill-red-500 text-red-500" : "fill-none",
+                )}
+                onClick={() => likePost({ postId: post.postId })}
+              />
               <p>{post.nLikes}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -119,42 +134,7 @@ export function PostCard({
             </div>
           </div>
         </div>
-      </Link>
+      </Card>
     </div>
-  );
-}
-
-function PostDropDownMenu({ postId }: { postId: Id<"posts"> }) {
-  const deletePost = useMutation(api.mutations.deletePost);
-
-  return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button
-          variant={ButtonVariant.Muted}
-          className="p-0 ring-0"
-          onClick={(e) => e.preventDefault()}
-        >
-          <Ellipsis />
-        </Button>
-      </DropdownMenu.Trigger>
-
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          className="bg-background ring-foreground/10 rounded-[calc(0.25rem+0.25rem)] p-1 shadow-md ring-1"
-          onClick={(e) => e.preventDefault()}
-        >
-          <DropdownMenu.Item
-            className="flex w-full items-center justify-between gap-2 rounded p-1 text-red-500 transition outline-none hover:cursor-pointer hover:bg-red-500/10 hover:text-red-500"
-            onClick={async (e) => {
-              e.preventDefault();
-              await deletePost({ postId });
-            }}
-          >
-            <Trash className="h-4 w-4" /> Delete
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
   );
 }
