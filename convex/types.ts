@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { Infer, v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 import schema from "./schema";
 
@@ -128,6 +128,7 @@ export const UserPostPreviewInfo = v.object({
   nComments: v.number(),
   nReplies: v.number(),
   nLikes: v.number(),
+  hasLiked: v.boolean(),
   createdAt: v.number(),
   description: v.string(),
   imageUrl: v.optional(v.string()),
@@ -144,6 +145,7 @@ export const ClubPostPreviewInfo = v.object({
   nComments: v.number(),
   nReplies: v.number(),
   nLikes: v.number(),
+  hasLiked: v.boolean(),
   createdAt: v.number(),
   description: v.string(),
   imageUrl: v.optional(v.string()),
@@ -214,6 +216,23 @@ export const UserOrClubPost = v.union(
   }),
 );
 
+export const PostComment = v.object({
+  nLikes: v.number(),
+  postId: v.id("posts"),
+  commentId: v.id("comments"),
+  text: v.string(),
+  createdAt: v.number(),
+
+  author: v.object({
+    authorId: v.id("users"),
+    pictureUrl: v.optional(v.string()),
+    firstName: v.string(),
+    lastName: v.optional(v.string()),
+    username: v.string(),
+  }),
+  isAuthor: v.boolean(),
+});
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
@@ -229,3 +248,4 @@ export type UserCardInfo = typeof UserCardInfo.type;
 export type CanView = typeof CanView.type;
 export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;
 export type UserOrClubPost = typeof UserOrClubPost.type;
+export type PostComment = Infer<typeof PostComment>;

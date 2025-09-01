@@ -661,7 +661,7 @@ export const newUserPost = mutation({
     const postId = await ctx.db.insert("posts", {
       description,
       imageId,
-      likes: [],
+      likes: {},
     });
 
     await ctx.db.insert("userPosts", {
@@ -755,6 +755,73 @@ export const deletePost = mutation({
     await ctx.db.delete(post._id);
     if (post.imageId) {
       await ctx.storage.delete(post.imageId);
+    }
+  },
+});
+
+export const likePost = mutation({
+  args: { postId: v.id("posts") },
+  async handler(ctx, args) {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("not authenticated");
+    }
+
+    const { postId } = args;
+
+    const post = await ctx.db.get(postId);
+
+    if (!post) {
+      throw new Error("post not found");
+    }
+
+    const likes = post.likes;
+
+    if (likes[authenticatedUser._id]) {
+      delete likes[authenticatedUser._id];
+    } else {
+      likes[authenticatedUser._id] = true;
+    }
+
+    await ctx.db.patch(post._id, {
+      likes,
+    });
+  },
+});
+
+export const newComment = mutation({
+  args: { postId: v.id("posts"), text: v.string() },
+  async handler(ctx, args) {
+    const { postId, text } = args;
+    const user = await getUserFromClerkId(ctx, args);
+
+    if (!user) {
+      throw new Error("Authenticated user not found");
+    }
+
+    await ctx.db.insert("comments", {
+      authorId: user._id,
+      postId,
+      text,
+      likes: {},
+    });
+  },
+});
+
+export const deleteComment = mutation({
+  args: { commentId: v.id("comments") },
+  async handler(ctx, args) {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("can't find user");
+    }
+
+    const comment = await ctx.db.get(args.commentId);
+
+    if (comment && comment.authorId === authenticatedUser._id) {
+      await ctx.db.delete(comment._id);
     }
   },
 });

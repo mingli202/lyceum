@@ -82,7 +82,7 @@ export default defineSchema({
   }).index("by_userId", ["userId"]),
 
   posts: defineTable({
-    likes: v.array(v.id("users")),
+    likes: v.record(v.id("users"), v.boolean()),
 
     description: v.string(),
     imageId: v.optional(v.id("_storage")),
@@ -95,8 +95,9 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_postId", ["postId"])
+    .index("by_authorId", ["authorId"])
     .index("by_userId_authorId", ["userId", "authorId"])
-    .index("by_authorId", ["authorId"]),
+    .index("by_userId_postId", ["userId", "postId"]),
 
   clubPosts: defineTable({
     clubId: v.id("clubs"),
@@ -109,18 +110,18 @@ export default defineSchema({
   comments: defineTable({
     authorId: v.id("users"),
     postId: v.union(v.id("posts"), v.null()),
+    likes: v.record(v.id("users"), v.boolean()),
 
-    content: v.string(),
-    timestamp: v.string(),
+    text: v.string(),
   }).index("by_postId", ["postId"]),
 
   replies: defineTable({
     authorId: v.id("users"),
     commentId: v.id("comments"),
     postId: v.id("posts"),
+    likes: v.array(v.id("users")),
 
     text: v.string(),
-    timestamp: v.string(),
   })
     .index("by_commentId", ["commentId"])
     .index("by_postId", ["postId"]),
