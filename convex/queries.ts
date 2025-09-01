@@ -595,18 +595,15 @@ export const getUserLastSeenAt = query({
 
 export const _getPostData = internalQuery({
   args: {
-    viewablePost: v.object({
-      ...schema.tables.viewablePosts.validator.fields,
-      _id: v.id("viewablePosts"),
-      _creationTime: v.number(),
-    }),
+    postId: v.id("posts"),
+    isAuthor: v.boolean(),
     authenticatedUserId: v.id("users"),
   },
   returns: v.union(UserOrClubPost, v.null()),
   handler: async (ctx, args): Promise<UserOrClubPost | null> => {
-    const { viewablePost, authenticatedUserId } = args;
+    const { postId, isAuthor, authenticatedUserId } = args;
 
-    const post = await ctx.db.get(viewablePost.postId);
+    const post = await ctx.db.get(postId);
 
     if (!post) {
       return null;
@@ -631,7 +628,7 @@ export const _getPostData = internalQuery({
         .catch(() => null);
 
       if (
-        viewablePost.authorId !== viewablePost.userId &&
+        !isAuthor &&
         (!followingInfo || followingInfo.status !== "accepted")
       ) {
         return null;
@@ -748,7 +745,8 @@ export const getFeedData = query({
 
     for (const viewablePost of viewablePosts.page) {
       const postInfo = await ctx.runQuery(internal.queries._getPostData, {
-        viewablePost,
+        isAuthor: authenticatedUser._id === viewablePost.authorId,
+        postId: viewablePost.postId,
         authenticatedUserId: authenticatedUser._id,
       });
 
@@ -795,7 +793,8 @@ export const getPostData = query({
     }
 
     const postData = await ctx.runQuery(internal.queries._getPostData, {
-      viewablePost,
+      isAuthor: user._id === viewablePost.authorId,
+      postId: post._id,
       authenticatedUserId: user._id,
     });
 

@@ -69,13 +69,14 @@ export function PostCard({
               e.preventDefault();
               router.push(`/club?id=${post.club.clubId}`);
             }}
+            className="hover:cursor-pointer"
           />
         )}
         <div className="w-full space-y-1">
           <div className="flex items-center justify-between gap-4">
             <div className="flex gap-1">
               <p
-                className="font-bold hover:underline"
+                className="font-bold hover:cursor-pointer hover:underline"
                 onClick={(e) => {
                   e.preventDefault();
                   if (type === "user") {
@@ -216,12 +217,12 @@ function CommentSection({ postId }: { postId: Id<"posts"> }) {
             <ProfilePicture
               src={comment.author.pictureUrl}
               displayName={comment.author.firstName}
-              className="h-8 w-8"
+              className="h-8 w-8 hover:cursor-pointer"
             />
             <div className="bg-muted-foreground/10 flex w-full flex-col gap-1 rounded-lg p-2">
               <div className="flex gap-1">
                 <p
-                  className="font-bold hover:underline"
+                  className="font-bold hover:cursor-pointer hover:underline"
                   onClick={(e) => {
                     e.preventDefault();
                     router.push(`/user?id=${comment.author.authorId}`);
