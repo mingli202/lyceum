@@ -235,6 +235,7 @@ export const PostComment = v.object({
 });
 
 export const MessageInfo = v.object({
+  messageId: v.id("messages"),
   sender: v.object({
     senderId: v.id("users"),
     pictureUrl: v.optional(v.string()),

@@ -6,13 +6,13 @@ import {
 } from "@/components";
 import useFormState from "@/hooks/useFormState";
 import { cn } from "@/utils/cn";
-import parseTimestamp from "@/utils/parseTimestamp";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { MessageInfo } from "@convex/types";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { SendHorizonal, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useRef } from "react";
 import { Virtuoso } from "react-virtuoso";
 
 type ChatProps = {
@@ -22,11 +22,14 @@ type ChatProps = {
 export default function Chat({ chatId }: ChatProps) {
   const newMessage = useMutation(api.mutations.newChatMessage);
 
+  const containerRef = useRef<HTMLDivElement>(null!);
+  const isAtBottom = useRef(true);
+
   const {
     results: messages,
-    isLoading,
     status,
     loadMore,
+    isLoading,
   } = usePaginatedQuery(
     api.queries.getChatMessages,
     { chatId: chatId },
@@ -49,13 +52,32 @@ export default function Chat({ chatId }: ChatProps) {
     form.reset();
   });
 
+  const loadMoreCb = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(5);
+    }
+  }, [loadMore, status]);
+
+  const orderedMessages = messages.toReversed();
+
   return (
     <div className="bg-background ring-foreground/10 flex h-full w-full flex-col rounded-lg ring-1">
-      <Virtuoso
-        data={messages}
-        itemContent={(_, message) => <MessageBubble message={message} />}
+      <div
         className="w-full basis-full overflow-x-hidden overflow-y-auto"
-      />
+        ref={containerRef}
+      >
+        <Virtuoso
+          data={orderedMessages}
+          itemContent={(_, message) => <MessageBubble message={message} />}
+          customScrollParent={containerRef.current}
+          computeItemKey={(_, message) => message.messageId}
+          followOutput={isAtBottom.current}
+          className="h-full"
+          atBottomStateChange={(isBot) => (isAtBottom.current = isBot)}
+          context={{ loadMore: loadMoreCb, isLoading }}
+          components={{ Header: LoadMoreButton }}
+        />
+      </div>
       <form
         className="flex w-full shrink-0 items-center gap-3 p-4"
         onSubmit={handleSubmit}
@@ -80,15 +102,33 @@ export default function Chat({ chatId }: ChatProps) {
   );
 }
 
+function LoadMoreButton({
+  context: { loadMore, isLoading },
+}: {
+  context: { loadMore: () => void; isLoading: boolean };
+}) {
+  return (
+    <Button
+      onClick={loadMore}
+      variant={ButtonVariant.Muted}
+      className="w-full p-2 text-center ring-0"
+      type="button"
+      isPending={isLoading}
+    >
+      Load more
+    </Button>
+  );
+}
+
 function MessageBubble({ message }: { message: MessageInfo }) {
   const router = useRouter();
 
   return (
     <div
       className={cn(
-        "mt-1 flex w-full flex-col px-4",
+        "flex w-full flex-col px-4 pt-1",
         message.isSender && "items-end",
-        message.makeNewBubble && "mt-4",
+        message.makeNewBubble && "pt-4",
       )}
     >
       {message.makeNewBubble && (

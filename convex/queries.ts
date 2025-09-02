@@ -888,7 +888,7 @@ export const getChatMessages = query({
 
     const now = Date.now();
 
-    for (let i = messages.page.length - 1; i >= 0; i--) {
+    for (let i = 0; i < messages.page.length; i++) {
       const message = messages.page[i];
 
       const sender = await ctx.db.get(message.senderId);
@@ -899,9 +899,11 @@ export const getChatMessages = query({
 
       const makeNewBubble =
         now - message._creationTime > 1000 * 60 * 60 * 24 ||
-        message.senderId !== lastMessageSenderId;
+        i + 1 >= messages.page.length ||
+        messages.page[i + 1].senderId !== message.senderId;
 
       messagesInfo.push({
+        messageId: message._id,
         sender: {
           senderId: sender._id,
           pictureUrl: sender.pictureUrl,
@@ -911,8 +913,7 @@ export const getChatMessages = query({
         content: message.content,
         createdAt: message._creationTime,
         makeNewBubble,
-        isLastMessageOfSender:
-          i - 1 < 0 ? true : messages.page[i - 1].senderId !== message.senderId,
+        isLastMessageOfSender: message.senderId !== lastMessageSenderId,
       });
 
       lastMessageSenderId = message.senderId;
