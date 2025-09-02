@@ -147,6 +147,7 @@ function MessageBubble({
   nextMessage?: MessageInfo;
 }) {
   const router = useRouter();
+  const deleteMessage = useMutation(api.mutations.deleteChatMessage);
 
   const makeNewBubble: boolean =
     previousMessage?.sender.senderId !== message.sender.senderId ||
@@ -206,6 +207,9 @@ function MessageBubble({
             variant={ButtonVariant.Muted}
             className="p-0 opacity-0 ring-0 group-hover:opacity-100"
             type="button"
+            onClick={() => {
+              deleteMessage({ messageId: message.messageId });
+            }}
           >
             <Trash className="h-4 w-4" />
           </Button>

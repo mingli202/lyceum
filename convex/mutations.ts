@@ -843,3 +843,26 @@ export const newChatMessage = mutation({
     });
   },
 });
+
+export const deleteChatMessage = mutation({
+  args: { messageId: v.id("messages") },
+  async handler(ctx, args) {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    const message = await ctx.db.get(args.messageId);
+
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    if (message.senderId !== authenticatedUser._id) {
+      throw new Error("Not your message");
+    }
+
+    await ctx.db.delete(message._id);
+  },
+});
