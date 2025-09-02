@@ -164,6 +164,7 @@ export default defineSchema({
 
   clubs: defineTable({
     name: v.string(),
+    chatId: v.id("chats"),
     description: v.string(),
     pictureUrl: v.optional(v.string()),
     allowMemberPost: v.boolean(),

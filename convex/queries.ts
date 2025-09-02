@@ -16,6 +16,7 @@ import {
   UserOrClubPost,
   PostComment,
   MessageInfo,
+  ClubPageData,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -909,5 +910,57 @@ export const getChatMessages = query({
       ...messages,
       page: messagesInfo,
     };
+  },
+});
+
+export const getClubPage = query({
+  args: { clubId: v.optional(v.string()) },
+  returns: v.union(ClubPageData, v.string()),
+  async handler(ctx, args): Promise<ClubPageData | string> {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Unauthenticated");
+    }
+
+    const { clubId } = args;
+
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q
+          .eq("userId", authenticatedUser._id)
+          .eq("clubId", clubId as Id<"clubs">),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (!userClubInfo) {
+      return "Not part of club!";
+    }
+
+    const clubInfo = await ctx.db.get(userClubInfo.clubId);
+
+    if (!clubInfo) {
+      return "Club not found";
+    }
+
+    const members = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId")
+      .filter((q) => q.eq(q.field("status"), "member"))
+      .collect();
+
+    return {
+      clubId: clubInfo._id,
+      chatId: clubInfo.chatId,
+      name: clubInfo.name,
+      category: clubInfo.category,
+      nMembers: members.length,
+      userStatus: userClubInfo.status,
+      description: clubInfo.description,
+      isPrivate: clubInfo.isPrivate,
+      pictureUrl: clubInfo.pictureUrl,
+    } satisfies ClubPageData;
   },
 });

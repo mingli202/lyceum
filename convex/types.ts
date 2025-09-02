@@ -246,6 +246,18 @@ export const MessageInfo = v.object({
   createdAt: v.number(),
 });
 
+export const ClubPageData = v.object({
+  clubId: v.id("clubs"),
+  chatId: v.id("chats"),
+  name: v.string(),
+  category: ClubCategory,
+  nMembers: v.number(),
+  userStatus: ClubUserStatus,
+  description: v.string(),
+  isPrivate: v.boolean(),
+  pictureUrl: v.optional(v.string()),
+});
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
@@ -263,3 +275,4 @@ export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;
 export type UserOrClubPost = typeof UserOrClubPost.type;
 export type PostComment = Infer<typeof PostComment>;
 export type MessageInfo = Infer<typeof MessageInfo>;
+export type ClubPageData = typeof ClubPageData.type;
