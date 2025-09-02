@@ -35,12 +35,13 @@ export function Button({
   variant,
   isPending,
   pendingElement,
+  disabled,
   paddingSize = PaddingSize.base,
   ...props
 }: ButtonProps) {
   return (
     <button
-      disabled={isPending}
+      disabled={isPending && disabled}
       className={cn(
         "relative h-fit w-fit transform cursor-pointer rounded transition-all",
         {
@@ -51,7 +52,7 @@ export function Button({
           "ring-muted-foreground/50 text-muted-foreground ring-1":
             variant === "muted",
         },
-        !props.disabled && {
+        !disabled && {
           "hover:from-blue-600 hover:to-indigo-600": variant === "special",
           "hover:from-amber-600 hover:to-red-600": variant === "destructive",
           "hover:text-foreground hover:ring-muted-foreground/80":
@@ -66,7 +67,7 @@ export function Button({
         },
         isPending &&
           "flex cursor-wait items-center justify-center hover:cursor-wait",
-        props.disabled && "cursor-not-allowed",
+        disabled && "cursor-not-allowed",
         className,
       )}
       {...props}
