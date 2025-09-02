@@ -22,7 +22,7 @@ export function ClubCard({ club }: ClubCardProps) {
 
   return (
     <Link
-      href={`/club/${club.clubId}`}
+      href={`/club?id=${club.clubId}`}
       className="ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
     >
       <ProfilePicture src={club.pictureUrl} displayName={club.name} />
