@@ -195,6 +195,11 @@ function CommentSection({ postId }: { postId: Id<"posts"> }) {
           src={user !== "N/A" && user ? user.pictureUrl : undefined}
           displayName={user !== "N/A" && user ? user.givenName : "User"}
           className="h-8 w-8"
+          onClick={() => {
+            if (user && user !== "N/A") {
+              router.push(`/user?id=${user._id}`);
+            }
+          }}
         />
         <input
           placeholder="Add new comment"
@@ -219,6 +224,9 @@ function CommentSection({ postId }: { postId: Id<"posts"> }) {
               src={comment.author.pictureUrl}
               displayName={comment.author.firstName}
               className="h-8 w-8 hover:cursor-pointer"
+              onClick={() => {
+                router.push(`/user?id=${comment.author.authorId}`);
+              }}
             />
             <div className="bg-muted-foreground/10 flex w-full flex-col gap-1 rounded-lg p-2">
               <div className="flex justify-between gap-4">

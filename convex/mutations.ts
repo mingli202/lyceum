@@ -825,3 +825,21 @@ export const deleteComment = mutation({
     }
   },
 });
+
+export const newChatMessage = mutation({
+  args: { chatId: v.id("chats"), content: v.string() },
+  async handler(ctx, args) {
+    const { chatId, content } = args;
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    await ctx.db.insert("messages", {
+      chatId,
+      senderId: authenticatedUser._id,
+      content,
+    });
+  },
+});

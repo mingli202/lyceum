@@ -15,6 +15,7 @@ import {
   ClubPostPreviewInfo,
   UserOrClubPost,
   PostComment,
+  MessageInfo,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
@@ -495,6 +496,7 @@ export const getClassPageData = query({
 
     const classPageData: ClassPageData = {
       classId: classInfo._id,
+      chatId: classInfo.chat,
       title: classInfo.title,
       professor: classInfo.professor,
       code: classInfo.code,
@@ -858,6 +860,54 @@ export const getPostCommentsAndReplies = query({
     return {
       ...comments,
       page: postComments,
+    };
+  },
+});
+
+export const getChatMessages = query({
+  args: { chatId: v.id("chats"), paginationOpts: paginationOptsValidator },
+  async handler(ctx, args): Promise<PaginationResult<MessageInfo>> {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Can't find user");
+    }
+
+    const { chatId } = args;
+
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_chatId", (q) => q.eq("chatId", chatId))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    const messagesInfo: MessageInfo[] = [];
+
+    for (let i = 0; i < messages.page.length; i++) {
+      const message = messages.page[i];
+
+      const sender = await ctx.db.get(message.senderId);
+
+      if (!sender) {
+        continue;
+      }
+
+      messagesInfo.push({
+        messageId: message._id,
+        sender: {
+          senderId: sender._id,
+          pictureUrl: sender.pictureUrl,
+          firstName: sender.givenName,
+        },
+        isSender: message.senderId === authenticatedUser._id,
+        content: message.content,
+        createdAt: message._creationTime,
+      });
+    }
+
+    return {
+      ...messages,
+      page: messagesInfo,
     };
   },
 });

@@ -190,7 +190,10 @@ export default defineSchema({
     senderId: v.id("users"),
 
     content: v.string(),
-  }).index("by_chatId_senderId", ["chatId", "senderId"]),
+  })
+    .index("by_chatId", ["chatId"])
+    .index("by_senderId", ["senderId"])
+    .index("by_chatId_senderId", ["chatId", "senderId"]),
 
   followingsInfo: defineTable({
     userId: v.id("users"),
