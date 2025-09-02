@@ -74,7 +74,7 @@ export default function Chat({ chatId }: ChatProps) {
           followOutput={isAtBottom.current}
           className="h-full"
           atBottomStateChange={(isBot) => (isAtBottom.current = isBot)}
-          context={{ loadMore: loadMoreCb, isLoading }}
+          context={{ loadMore: loadMoreCb, isLoading, status }}
           components={{ Header: LoadMoreButton }}
         />
       </div>
@@ -103,9 +103,13 @@ export default function Chat({ chatId }: ChatProps) {
 }
 
 function LoadMoreButton({
-  context: { loadMore, isLoading },
+  context: { loadMore, isLoading, status },
 }: {
-  context: { loadMore: () => void; isLoading: boolean };
+  context: {
+    loadMore: () => void;
+    isLoading: boolean;
+    status: "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted";
+  };
 }) {
   return (
     <Button
@@ -115,7 +119,10 @@ function LoadMoreButton({
       type="button"
       isPending={isLoading}
     >
-      Load more
+      {status === "CanLoadMore" && "Load more"}
+      {status === "LoadingMore" && "Loading more..."}
+      {status === "Exhausted" && "No more messages"}
+      {status === "LoadingFirstPage" && "Loading first page..."}
     </Button>
   );
 }
