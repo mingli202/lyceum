@@ -60,10 +60,10 @@ export default function AddClassDrawer() {
         title,
         professor,
         semester: semester as AddClassArgs["semester"],
-        year: parseInt(year),
-        credits: parseInt(credits),
+        year: Number(year),
+        credits: Number(credits),
         classTimes,
-        targetGrade: parseInt(targetGrade),
+        targetGrade: Number(targetGrade),
         tasks: [],
       };
     } else {
@@ -324,12 +324,13 @@ export default function AddClassDrawer() {
                 pendingElement={
                   isManual ? undefined : <p>{timeS.toFixed(1)} s</p>
                 }
+                className="w-full text-center"
               >
                 Submit
               </Button>
               {error && <p className="text-red-500">{error}</p>}
               <Button
-                className="p-0"
+                className="w-full p-0 text-center"
                 onClick={() => {
                   setIsManual(!isManual);
                 }}

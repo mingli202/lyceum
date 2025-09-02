@@ -116,7 +116,7 @@ export default function Class({ classData }: ClassProps) {
                 </Card>
               </button>
             </div>
-            <ClassTabs classId={classData.classId} />
+            <ClassTabs classId={classData.classId} chatId={classData.chatId} />
           </div>
         </div>
       </section>
@@ -133,7 +133,7 @@ export default function Class({ classData }: ClassProps) {
               onSubmit={async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
-                const targetGrade = parseInt(
+                const targetGrade = Number(
                   formData.get("targetGrade")?.toString() ??
                     classData.targetGrade.toString(),
                 );

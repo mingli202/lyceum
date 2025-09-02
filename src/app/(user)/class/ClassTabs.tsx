@@ -7,6 +7,7 @@ import { ClipboardList, MessageCircle, Users } from "lucide-react";
 import { useState } from "react";
 import Tasks from "./Tasks";
 import { Grid } from "@/components/ui/Grid";
+import Chat from "./Chat";
 
 const Tab = {
   Tasks: "Tasks",
@@ -16,7 +17,13 @@ const Tab = {
 
 type Tab = RecordValues<typeof Tab>;
 
-export default function ClassTabs({ classId }: { classId: string }) {
+export default function ClassTabs({
+  classId,
+  chatId,
+}: {
+  classId: Id<"classes">;
+  chatId: Id<"chats">;
+}) {
   const [selectedTab, setSelectedTab] = useState<Tab>(Tab.Tasks);
 
   const tasks = useQuery(api.queries.getUserClassTasks, {
@@ -76,7 +83,7 @@ export default function ClassTabs({ classId }: { classId: string }) {
         style={{ scrollbarWidth: "thin" }}
       >
         {selectedTab === Tab.Tasks && <Tasks tasks={tasks} classId={classId} />}
-        {selectedTab === Tab.Chat && <p>Chat</p>}
+        {selectedTab === Tab.Chat && <Chat chatId={chatId} />}
         {selectedTab === Tab.Students && (
           <Grid childrenSize="md">
             {students?.map((student) => (

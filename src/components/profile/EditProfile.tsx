@@ -81,8 +81,8 @@ function EditProfileForm({ data }: { data: ProfileData }) {
       },
       updatedProfileInfo: {
         academicYear:
-          academicYear && parseInt(academicYear) !== data.academicYear
-            ? parseInt(academicYear)
+          academicYear && Number(academicYear) !== data.academicYear
+            ? Number(academicYear)
             : undefined,
         major: major && major !== data.major ? major : undefined,
         city,

@@ -69,9 +69,9 @@ export default function EditTask({
         name,
         description,
         dueDate,
-        weight: parseInt(weight),
-        scoreObtained: parseInt(scoreObtained),
-        scoreTotal: parseInt(scoreTotal),
+        weight: Number(weight),
+        scoreObtained: Number(scoreObtained),
+        scoreTotal: Number(scoreTotal),
         type: type as UserTask["type"],
       }).catch(() => "Error");
     } else {
@@ -84,20 +84,18 @@ export default function EditTask({
             : undefined,
         dueDate: dueDate && dueDate !== task.dueDate ? dueDate : undefined,
         weight:
-          weight && parseInt(weight) !== task.weight
-            ? parseInt(weight)
-            : undefined,
+          weight && Number(weight) !== task.weight ? Number(weight) : undefined,
         status:
           status && status !== task.status
             ? (status as UserTask["status"])
             : undefined,
         scoreObtained:
-          scoreObtained && parseInt(scoreObtained) !== task.scoreObtained
-            ? parseInt(scoreObtained)
+          scoreObtained && Number(scoreObtained) !== task.scoreObtained
+            ? Number(scoreObtained)
             : undefined,
         scoreTotal:
-          scoreTotal && parseInt(scoreTotal) !== task.scoreTotal
-            ? parseInt(scoreTotal)
+          scoreTotal && Number(scoreTotal) !== task.scoreTotal
+            ? Number(scoreTotal)
             : undefined,
         type: type === task.type ? undefined : (type as UserTask["type"]),
       }).catch(() => "Error");
@@ -167,6 +165,7 @@ export default function EditTask({
               className="mt-1 w-full rounded p-1 ring-2 ring-indigo-200 outline-none hover:border-indigo-500 focus:ring-indigo-400"
               placeholder="e.g. 30"
               ref={weightRef}
+              step="any"
               required
             />
           </label>
