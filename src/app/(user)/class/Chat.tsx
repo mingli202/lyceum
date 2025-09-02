@@ -68,7 +68,13 @@ export default function Chat({ chatId }: ChatProps) {
       >
         <Virtuoso
           data={orderedMessages}
-          itemContent={(_, message) => <MessageBubble message={message} />}
+          itemContent={(i, message) => (
+            <MessageBubble
+              message={message}
+              previousMessage={orderedMessages[i - 1]}
+              nextMessage={orderedMessages[i + 1]}
+            />
+          )}
           customScrollParent={containerRef.current}
           computeItemKey={(_, message) => message.messageId}
           followOutput={isAtBottom.current}
@@ -118,6 +124,7 @@ function LoadMoreButton({
       className="w-full p-2 text-center ring-0"
       type="button"
       isPending={isLoading}
+      disabled={status !== "CanLoadMore"}
     >
       {status === "CanLoadMore" && "Load more"}
       {status === "LoadingMore" && "Loading more..."}
@@ -127,18 +134,36 @@ function LoadMoreButton({
   );
 }
 
-function MessageBubble({ message }: { message: MessageInfo }) {
+// 10 minutes
+const TIME_THRESHOLD = 1000 * 60 * 10;
+
+function MessageBubble({
+  message,
+  previousMessage,
+  nextMessage,
+}: {
+  message: MessageInfo;
+  previousMessage?: MessageInfo;
+  nextMessage?: MessageInfo;
+}) {
   const router = useRouter();
 
+  const makeNewBubble: boolean =
+    previousMessage?.sender.senderId !== message.sender.senderId ||
+    previousMessage.createdAt - message.createdAt > TIME_THRESHOLD;
+
+  const isLastMessageOfSender: boolean =
+    nextMessage?.sender.senderId !== message.sender.senderId ||
+    nextMessage.createdAt - message.createdAt > TIME_THRESHOLD;
   return (
     <div
       className={cn(
         "flex w-full flex-col px-4 pt-1",
         message.isSender && "items-end",
-        message.makeNewBubble && "pt-4",
+        makeNewBubble && "pt-4",
       )}
     >
-      {message.makeNewBubble && (
+      {makeNewBubble && (
         <div
           className={cn(
             "flex items-center gap-2",
@@ -187,7 +212,7 @@ function MessageBubble({ message }: { message: MessageInfo }) {
         )}
       </div>
 
-      {message.isLastMessageOfSender && (
+      {isLastMessageOfSender && (
         <p className="text-muted-foreground text-sm">
           ({formatMessageTime(message.createdAt)})
         </p>

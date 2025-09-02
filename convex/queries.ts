@@ -15,7 +15,6 @@ import {
   ClubPostPreviewInfo,
   UserOrClubPost,
   PostComment,
-  Message,
   MessageInfo,
 } from "./types";
 import schema from "./schema";
@@ -884,10 +883,6 @@ export const getChatMessages = query({
 
     const messagesInfo: MessageInfo[] = [];
 
-    let lastMessageSenderId: Id<"users"> | null = null;
-
-    const now = Date.now();
-
     for (let i = 0; i < messages.page.length; i++) {
       const message = messages.page[i];
 
@@ -896,11 +891,6 @@ export const getChatMessages = query({
       if (!sender) {
         continue;
       }
-
-      const makeNewBubble =
-        now - message._creationTime > 1000 * 60 * 60 * 24 ||
-        i + 1 >= messages.page.length ||
-        messages.page[i + 1].senderId !== message.senderId;
 
       messagesInfo.push({
         messageId: message._id,
@@ -912,11 +902,7 @@ export const getChatMessages = query({
         isSender: message.senderId === authenticatedUser._id,
         content: message.content,
         createdAt: message._creationTime,
-        makeNewBubble,
-        isLastMessageOfSender: message.senderId !== lastMessageSenderId,
       });
-
-      lastMessageSenderId = message.senderId;
     }
 
     return {

@@ -244,8 +244,6 @@ export const MessageInfo = v.object({
   isSender: v.boolean(),
   content: v.string(),
   createdAt: v.number(),
-  makeNewBubble: v.boolean(),
-  isLastMessageOfSender: v.boolean(),
 });
 
 export type ClassInfo = typeof ClassInfo.type;
