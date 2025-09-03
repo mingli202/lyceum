@@ -16,7 +16,6 @@ export const _createNewClass = internalMutation({
   handler: async (ctx, args): Promise<Id<"classes">> => {
     const chatId = await ctx.db.insert("chats", {
       title: `${args.title}'s Chat`,
-      members: [args.userId],
     });
 
     const classId = await ctx.db.insert("classes", {
@@ -864,5 +863,53 @@ export const deleteChatMessage = mutation({
     }
 
     await ctx.db.delete(message._id);
+  },
+});
+
+export const createClub = mutation({
+  args: {
+    name: v.string(),
+    description: v.string(),
+    pictureUrl: v.optional(v.string()),
+    allowMemberPost: v.boolean(),
+    isPrivate: v.boolean(),
+    category: v.union(
+      v.literal("Academic"),
+      v.literal("Social"),
+      v.literal("Sports"),
+      v.literal("Cultural"),
+      v.literal("Recreational"),
+      v.literal("Arts"),
+      v.literal("Volunteer"),
+      v.literal("Other"),
+    ),
+  },
+  async handler(ctx, args) {
+    const { name, description, allowMemberPost, isPrivate, category } = args;
+
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    const chatId = await ctx.db.insert("chats", {
+      title: `${name}'s Chat`,
+    });
+
+    const clubId = await ctx.db.insert("clubs", {
+      name,
+      chatId,
+      description,
+      allowMemberPost,
+      isPrivate,
+      category,
+    });
+
+    await ctx.db.insert("userClubsInfo", {
+      userId: authenticatedUser._id,
+      clubId,
+      status: "admin",
+    });
   },
 });

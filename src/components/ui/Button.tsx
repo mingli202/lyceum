@@ -1,25 +1,9 @@
 "use client";
 
-import { RecordValues } from "@/types";
 import { cn } from "@/utils/cn";
 import { LoaderCircle } from "lucide-react";
 import { ButtonHTMLAttributes, HTMLProps } from "react";
-
-export const ButtonVariant = {
-  Special: "special",
-  Destructive: "destructive",
-  Muted: "muted",
-};
-export type ButtonVariant = RecordValues<typeof ButtonVariant>;
-
-export const PaddingSize = {
-  none: "none",
-  sm: "sm",
-  base: "base",
-  md: "md",
-  lg: "lg",
-};
-export type PaddingSize = RecordValues<typeof PaddingSize>;
+import { ButtonVariant, PaddingSize } from ".";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
   HTMLProps<HTMLButtonElement> & {
@@ -77,8 +61,4 @@ export function Button({
         : children}
     </button>
   );
-}
-
-export function TimeTrackingButton(props: ButtonProps) {
-  return <Button {...props} />;
 }

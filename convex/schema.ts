@@ -183,7 +183,6 @@ export default defineSchema({
 
   chats: defineTable({
     title: v.string(),
-    members: v.array(v.id("users")),
   }),
 
   messages: defineTable({
