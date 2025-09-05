@@ -1,3 +1,5 @@
+"use client";
+
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { ProfilePicture } from "./ProfilePicture";
 import { LoadingSpinner } from "../LoadingSpinner";
