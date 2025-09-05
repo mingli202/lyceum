@@ -1,6 +1,6 @@
 "use client";
 
-import { ClubCard } from "@/components";
+import { ClubCard, Grid } from "@/components";
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Volleyball } from "lucide-react";
@@ -24,11 +24,11 @@ export default function ClubsPage() {
       <div className="flex h-full w-full flex-col gap-2">
         <div className="flex h-full w-full flex-col gap-2">
           <h2 className="text-xl font-bold">My clubs</h2>
-          <div className="flex w-full gap-2">
+          <Grid>
             {userClubs?.map((club) => (
               <ClubCard club={club} key={club.clubId} />
             ))}
-          </div>
+          </Grid>
         </div>
       </div>
     </section>

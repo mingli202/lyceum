@@ -3,12 +3,13 @@ import Link from "next/link";
 import { ProfilePicture } from "../profile";
 import { User } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { HTMLAttributes } from "react";
 
 type ClubCardProps = {
   club: ClubPreviewInfo;
-};
+} & HTMLAttributes<HTMLAnchorElement>;
 
-export function ClubCard({ club }: ClubCardProps) {
+export function ClubCard({ club, className, ...props }: ClubCardProps) {
   const CategoryColorMap: Record<ClubCategory, string> = {
     Sports: "bg-red-200 text-red-700 ring-red-400",
     Social: "bg-orange-200 text-orange-700 ring-orange-400",
@@ -23,10 +24,14 @@ export function ClubCard({ club }: ClubCardProps) {
   return (
     <Link
       href={`/club?id=${club.clubId}`}
-      className="ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg"
+      className={cn(
+        "ring-foreground/10 bg-background flex w-full gap-2 rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:cursor-pointer hover:shadow-lg",
+        className,
+      )}
+      {...props}
     >
       <ProfilePicture src={club.pictureUrl} displayName={club.name} />
-      <div className="space-y-1">
+      <div className="flex flex-col">
         <div className="flex gap-2">
           <p className="font-bold">{club.name} </p>
           <span className="text-muted-foreground flex items-center">
@@ -34,7 +39,7 @@ export function ClubCard({ club }: ClubCardProps) {
           </span>
         </div>
         <p className="text-muted-foreground line-clamp-2">{club.description}</p>
-        <div className="flex gap-2 text-xs">
+        <div className="mt-2 flex gap-2 text-xs">
           <p
             className={cn(
               CategoryColorMap[club.category],

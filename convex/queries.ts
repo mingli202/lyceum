@@ -436,7 +436,13 @@ export const getUserClubs = query({
 
       const members = await ctx.db
         .query("userClubsInfo")
-        .withIndex("by_clubId")
+        .withIndex("by_clubId", (q) => q.eq("clubId", club._id))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("status"), "member"),
+            q.eq(q.field("status"), "admin"),
+          ),
+        )
         .collect();
 
       const clubPreviewInfo: ClubPreviewInfo = {
@@ -947,8 +953,13 @@ export const getClubPage = query({
 
     const members = await ctx.db
       .query("userClubsInfo")
-      .withIndex("by_clubId")
-      .filter((q) => q.eq(q.field("status"), "member"))
+      .withIndex("by_clubId", (q) => q.eq("clubId", userClubInfo.clubId))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("status"), "member"),
+          q.eq(q.field("status"), "admin"),
+        ),
+      )
       .collect();
 
     return {
