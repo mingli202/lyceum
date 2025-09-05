@@ -126,7 +126,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
 
       <div className="flex w-full items-center gap-3">
         <label htmlFor="first-name" className="w-full">
-          <p>First Name</p>
+          <p>First Name*</p>
           <input
             id="first-name"
             name="first-name"
@@ -163,7 +163,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
         />
       </label>
       <label htmlFor="major" className="w-full">
-        <p>Major</p>
+        <p>Major*</p>
         <input
           id="major"
           name="major"
@@ -177,7 +177,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
 
       <div className="flex w-full items-center gap-3">
         <label htmlFor="username" className="w-full">
-          <p>Username</p>
+          <p>Username*</p>
           <input
             id="username"
             name="username"
@@ -190,7 +190,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
         </label>
 
         <label htmlFor="academic-year" className="w-full">
-          <p>Academic Year</p>
+          <p>Academic Year*</p>
           <input
             id="academic-year"
             name="academic-year"
@@ -228,7 +228,7 @@ function EditProfileForm({ data }: { data: ProfileData }) {
       </label>
 
       <label htmlFor="email" className="w-full">
-        <p>Email</p>
+        <p>Email*</p>
         <input
           id="email"
           name="email"
