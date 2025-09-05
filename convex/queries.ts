@@ -942,6 +942,12 @@ export const getClubPage = query({
 
     const { clubId } = args;
 
+    const clubInfo = await ctx.db.get(clubId as Id<"clubs">).catch(() => null);
+
+    if (!clubInfo) {
+      return "Club do not exist!";
+    }
+
     const userClubInfo = await ctx.db
       .query("userClubsInfo")
       .withIndex("by_userId_clubId", (q) =>
@@ -952,25 +958,21 @@ export const getClubPage = query({
       .unique()
       .catch(() => null);
 
-    if (!userClubInfo) {
-      return "Not part of club!";
-    }
-
-    const clubInfo = await ctx.db.get(userClubInfo.clubId);
-
-    if (!clubInfo) {
-      return "Club not found";
-    }
-
     const members = await ctx.db
       .query("userClubsInfo")
-      .withIndex("by_clubId", (q) => q.eq("clubId", userClubInfo.clubId))
+      .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
       .filter((q) =>
         q.or(
           q.eq(q.field("status"), "member"),
           q.eq(q.field("status"), "admin"),
         ),
       )
+      .collect();
+
+    const followers = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
+      .filter((q) => q.eq(q.field("status"), "following"))
       .collect();
 
     let pictureUrl;
@@ -986,15 +988,21 @@ export const getClubPage = query({
 
     return {
       clubId: clubInfo._id,
-      chatId: clubInfo.chatId,
       name: clubInfo.name,
       category: clubInfo.category,
       nMembers: members.length,
-      userStatus: userClubInfo.status,
+      nFollowers: followers.length,
       description: clubInfo.description,
       isPrivate: clubInfo.isPrivate,
+      allowMemberPost: clubInfo.allowMemberPost,
       pictureUrl,
       bannerUrl,
+      memberInfo: userClubInfo
+        ? {
+            userStatus: userClubInfo.status,
+            chatId: clubInfo.chatId,
+          }
+        : null,
     } satisfies ClubPageData;
   },
 });

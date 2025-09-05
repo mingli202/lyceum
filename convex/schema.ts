@@ -1,6 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { ClubCategory } from "./types";
 
 export default defineSchema({
   appState: defineTable({
@@ -92,7 +91,7 @@ export default defineSchema({
   viewablePosts: defineTable({
     userId: v.id("users"),
     postId: v.id("posts"),
-    authorId: v.id("users"),
+    authorId: v.union(v.id("users"), v.id("clubs")),
   })
     .index("by_userId", ["userId"])
     .index("by_postId", ["postId"])
@@ -171,7 +170,16 @@ export default defineSchema({
     pictureId: v.optional(v.id("_storage")),
     allowMemberPost: v.boolean(),
     isPrivate: v.boolean(),
-    category: ClubCategory,
+    category: v.union(
+      v.literal("Academic"),
+      v.literal("Social"),
+      v.literal("Sports"),
+      v.literal("Cultural"),
+      v.literal("Recreational"),
+      v.literal("Arts"),
+      v.literal("Volunteer"),
+      v.literal("Other"),
+    ),
   }),
 
   chats: defineTable({

@@ -248,15 +248,23 @@ export const MessageInfo = v.object({
 
 export const ClubPageData = v.object({
   clubId: v.id("clubs"),
-  chatId: v.id("chats"),
   name: v.string(),
   category: ClubCategory,
   nMembers: v.number(),
-  userStatus: ClubUserStatus,
-  description: v.string(),
-  isPrivate: v.boolean(),
+  nFollowers: v.number(),
   pictureUrl: v.optional(v.string()),
   bannerUrl: v.optional(v.string()),
+  description: v.string(),
+  isPrivate: v.boolean(),
+  allowMemberPost: v.boolean(),
+
+  memberInfo: v.union(
+    v.object({
+      chatId: v.id("chats"),
+      userStatus: ClubUserStatus,
+    }),
+    v.null(),
+  ),
 });
 
 export type ClassInfo = typeof ClassInfo.type;
