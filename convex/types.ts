@@ -256,6 +256,7 @@ export const ClubPageData = v.object({
   description: v.string(),
   isPrivate: v.boolean(),
   pictureUrl: v.optional(v.string()),
+  bannerUrl: v.optional(v.string()),
 });
 
 export type ClassInfo = typeof ClassInfo.type;

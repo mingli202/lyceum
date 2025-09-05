@@ -445,11 +445,17 @@ export const getUserClubs = query({
         )
         .collect();
 
+      let pictureUrl;
+
+      if (club.pictureId) {
+        pictureUrl = (await ctx.storage.getUrl(club.pictureId)) ?? undefined;
+      }
+
       const clubPreviewInfo: ClubPreviewInfo = {
         category: club.category,
         clubId: club._id,
         description: club.description,
-        pictureUrl: club.pictureUrl,
+        pictureUrl,
         name: club.name,
         isPrivate: club.isPrivate,
         nMembers: members.length,
@@ -696,16 +702,21 @@ export const _getPostData = internalQuery({
       }
 
       let imageUrl;
+      let pictureUrl;
 
       if (post.imageId) {
         imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+      }
+
+      if (club.pictureId) {
+        pictureUrl = (await ctx.storage.getUrl(club.pictureId)) ?? undefined;
       }
 
       const clubPostPreviewInfo: ClubPostPreviewInfo = {
         postId: post._id,
         club: {
           clubId: club._id,
-          pictureUrl: club.pictureUrl,
+          pictureUrl,
           name: club.name,
         },
         nComments: (
@@ -962,6 +973,17 @@ export const getClubPage = query({
       )
       .collect();
 
+    let pictureUrl;
+    let bannerUrl;
+
+    if (clubInfo.pictureId) {
+      pictureUrl = (await ctx.storage.getUrl(clubInfo.pictureId)) ?? undefined;
+    }
+
+    if (clubInfo.bannerId) {
+      bannerUrl = (await ctx.storage.getUrl(clubInfo.bannerId)) ?? undefined;
+    }
+
     return {
       clubId: clubInfo._id,
       chatId: clubInfo.chatId,
@@ -971,7 +993,8 @@ export const getClubPage = query({
       userStatus: userClubInfo.status,
       description: clubInfo.description,
       isPrivate: clubInfo.isPrivate,
-      pictureUrl: clubInfo.pictureUrl,
+      pictureUrl,
+      bannerUrl,
     } satisfies ClubPageData;
   },
 });

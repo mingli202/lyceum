@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { ClubCategory } from "./types";
 
 export default defineSchema({
   appState: defineTable({
@@ -166,19 +167,11 @@ export default defineSchema({
     name: v.string(),
     chatId: v.id("chats"),
     description: v.string(),
-    pictureUrl: v.optional(v.string()),
+    bannerId: v.optional(v.id("_storage")),
+    pictureId: v.optional(v.id("_storage")),
     allowMemberPost: v.boolean(),
     isPrivate: v.boolean(),
-    category: v.union(
-      v.literal("Academic"),
-      v.literal("Social"),
-      v.literal("Sports"),
-      v.literal("Cultural"),
-      v.literal("Recreational"),
-      v.literal("Arts"),
-      v.literal("Volunteer"),
-      v.literal("Other"),
-    ),
+    category: ClubCategory,
   }),
 
   chats: defineTable({
