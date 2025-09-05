@@ -6,32 +6,41 @@ import { LoadingSpinner } from "../LoadingSpinner";
 import useFormState from "@/hooks/useFormState";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
+import { Id } from "@convex/_generated/dataModel";
 
 type BannerPictureProps = {
   bannerUrl?: string;
+  clubId?: Id<"clubs">;
 };
 
-export function BannerPicture({ bannerUrl }: BannerPictureProps) {
+export function BannerPicture(props: BannerPictureProps) {
   return (
     <Dialog.Root>
       <Dialog.Trigger>
         <div className="bg-muted-foreground/10 relative h-50 w-full hover:cursor-pointer">
-          {bannerUrl ? (
-            <Image src={bannerUrl} alt="banner" fill className="object-cover" />
+          {props.bannerUrl ? (
+            <Image
+              src={props.bannerUrl}
+              alt="banner"
+              fill
+              className="object-cover"
+            />
           ) : null}
         </div>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
         <Dialog.Content className="animate-pop-in fixed top-1/2 left-1/2 z-10 h-fit -translate-1/2">
-          <UploadBannerPicture bannerUrl={bannerUrl} />
+          <UploadBannerPicture {...props} />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   );
 }
 
-function UploadBannerPicture({ bannerUrl }: BannerPictureProps) {
+function UploadBannerPicture(props: BannerPictureProps) {
+  const { bannerUrl, clubId } = props;
+
   const [file, setFile] = useState<File | undefined | "remove">();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -63,7 +72,7 @@ function UploadBannerPicture({ bannerUrl }: BannerPictureProps) {
       return "Please upload a banner picture or remove the current one";
     }
     if (file === "remove") {
-      await removeBannerPicture({});
+      await removeBannerPicture({ clubId });
     } else {
       const uploadUrl = await generateUploadUrl({});
 
@@ -74,7 +83,7 @@ function UploadBannerPicture({ bannerUrl }: BannerPictureProps) {
       });
       const { storageId } = await result.json();
 
-      const res = await setBannerPicture({ storageId });
+      const res = await setBannerPicture({ storageId, clubId });
 
       if (res) {
         return res;

@@ -569,9 +569,9 @@ export const generateUploadUrl = mutation({
 });
 
 export const setBannerPicture = mutation({
-  args: { storageId: v.id("_storage") },
+  args: { storageId: v.id("_storage"), clubId: v.optional(v.id("clubs")) },
   handler: async (ctx, args) => {
-    const { storageId } = args;
+    const { storageId, clubId } = args;
 
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
@@ -579,31 +579,60 @@ export const setBannerPicture = mutation({
       throw new Error("User not found");
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
-      .unique()
-      .catch(() => null);
+    if (clubId) {
+      const userClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", authenticatedUser._id).eq("clubId", clubId),
+        )
+        .unique()
+        .catch(() => null);
 
-    if (!profile) {
-      throw new Error("User profile not found");
+      if (!userClubInfo || userClubInfo.status !== "admin") {
+        throw new Error("Not allowed!");
+      }
+
+      const club = await ctx.db.get(userClubInfo.clubId);
+
+      if (!club) {
+        throw new Error("Club not found");
+      }
+
+      if (club.bannerId) {
+        await ctx.storage.delete(club.bannerId);
+      }
+
+      await ctx.db.patch(userClubInfo.clubId, {
+        bannerId: storageId,
+      });
+    } else {
+      const profile = await ctx.db
+        .query("profiles")
+        .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+        .unique()
+        .catch(() => null);
+
+      if (!profile) {
+        throw new Error("User profile not found");
+      }
+
+      if (profile.userId !== authenticatedUser._id) {
+        throw new Error("Not your profile");
+      }
+
+      if (profile.bannerId) {
+        await ctx.storage.delete(profile.bannerId);
+      }
+
+      await ctx.db.patch(profile._id, {
+        bannerId: storageId,
+      });
     }
-
-    if (profile.userId !== authenticatedUser._id) {
-      throw new Error("Not your profile");
-    }
-
-    if (profile.bannerId) {
-      await ctx.storage.delete(profile.bannerId);
-    }
-
-    await ctx.db.patch(profile._id, {
-      bannerId: storageId,
-    });
   },
 });
 
 export const removeBannerPicture = mutation({
+  args: { clubId: v.optional(v.id("clubs")) },
   handler: async (ctx, args) => {
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
@@ -611,29 +640,59 @@ export const removeBannerPicture = mutation({
       throw new Error("User not found");
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
-      .unique()
-      .catch(() => null);
+    const { clubId } = args;
 
-    if (!profile) {
-      throw new Error("User profile not found");
+    if (clubId) {
+      const userClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", authenticatedUser._id).eq("clubId", clubId),
+        )
+        .unique()
+        .catch(() => null);
+
+      if (!userClubInfo || userClubInfo.status !== "admin") {
+        throw new Error("Not allowed!");
+      }
+
+      const club = await ctx.db.get(userClubInfo.clubId);
+
+      if (!club) {
+        throw new Error("Club not found");
+      }
+
+      if (club.bannerId) {
+        await ctx.storage.delete(club.bannerId);
+      }
+
+      await ctx.db.patch(userClubInfo.clubId, {
+        bannerId: undefined,
+      });
+    } else {
+      const profile = await ctx.db
+        .query("profiles")
+        .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
+        .unique()
+        .catch(() => null);
+
+      if (!profile) {
+        throw new Error("User profile not found");
+      }
+
+      if (profile.userId !== authenticatedUser._id) {
+        throw new Error("Not your profile");
+      }
+
+      const bannerId = profile.bannerId;
+
+      if (bannerId) {
+        await ctx.storage.delete(bannerId);
+      }
+
+      await ctx.db.patch(profile._id, {
+        bannerId: undefined,
+      });
     }
-
-    if (profile.userId !== authenticatedUser._id) {
-      throw new Error("Not your profile");
-    }
-
-    const bannerId = profile.bannerId;
-
-    if (bannerId) {
-      await ctx.storage.delete(bannerId);
-    }
-
-    await ctx.db.patch(profile._id, {
-      bannerId: undefined,
-    });
   },
 });
 
