@@ -11,7 +11,7 @@ export default function EditClubSettingsTab({
   closeButtonRef,
 }: {
   data: ClubPageData;
-  closeButtonRef: RefObject<HTMLButtonElement>;
+  closeButtonRef: RefObject<HTMLButtonElement | null>;
 }) {
   const updateClubInfo = useMutation(api.mutations.updateClubInfo);
   const generateUploadUrl = useMutation(api.mutations.generateUploadUrl);

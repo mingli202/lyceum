@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, ButtonVariant, PaddingSize } from "@/components";
 import { RecordValues } from "@/types";
 import { ClubPageData } from "@convex/types";
@@ -5,6 +7,9 @@ import { Settings, Users, X } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { useRef, useState } from "react";
 import EditClubSettingsTab from "./EditClubSettingsTab";
+import EditClubMembersTab from "./EditClubMembersTab";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 const Tab = {
   Settings: "Settings",
@@ -17,14 +22,38 @@ export default function EditClubTabs({ data }: { data: ClubPageData }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [selectedTab, setSelectedTab] = useState<Tab>(Tab.Settings);
 
+  const members = useQuery(api.queries.getClubMembers, {
+    clubId: data.clubId,
+  });
+
   const iconMap: Record<Tab, React.ReactNode> = {
     [Tab.Settings]: <Settings className="h-4 w-4" />,
     [Tab.Members]: <Users className="h-4 w-4" />,
   };
 
+  const tabMap: Record<Tab, React.ReactNode> = {
+    [Tab.Settings]: (
+      <EditClubSettingsTab data={data} closeButtonRef={closeButtonRef} />
+    ),
+    [Tab.Members]: (
+      <EditClubMembersTab
+        clubId={data.clubId}
+        members={members}
+        currentUserMemberInfo={
+          data.memberInfo
+            ? {
+                userStatus: data.memberInfo.userStatus,
+                userId: data.memberInfo.userId,
+              }
+            : undefined
+        }
+      />
+    ),
+  };
+
   return (
-    <div className="bg-background ring-foreground/10 m-2 flex w-md flex-col rounded-lg p-2 shadow-md ring-1 transition hover:z-10 hover:shadow-lg">
-      <div className="flex items-center gap-2 p-1">
+    <div className="bg-background ring-foreground/10 m-2 flex w-md flex-col gap-2 rounded-lg p-2 shadow-md ring-1">
+      <div className="flex items-center gap-2 px-2 pt-2">
         <Dialog.Close asChild ref={closeButtonRef}>
           <Button
             variant={ButtonVariant.Muted}
@@ -36,6 +65,7 @@ export default function EditClubTabs({ data }: { data: ClubPageData }) {
         </Dialog.Close>
         <Dialog.Title className="font-bold">Manage Club</Dialog.Title>
       </div>
+
       <div className="bg-background flex gap-2 rounded-[calc(0.25rem+0.25rem)] p-1 shadow-sm">
         {Object.values(Tab).map((tab) => (
           <Button
@@ -49,10 +79,8 @@ export default function EditClubTabs({ data }: { data: ClubPageData }) {
           </Button>
         ))}
       </div>
-      {selectedTab === Tab.Settings && (
-        <EditClubSettingsTab data={data} closeButtonRef={closeButtonRef} />
-      )}
-      {/* {selectedTab === Tab.Members && <EditClubMembersTab data={data} />} */}
+
+      {tabMap[selectedTab]}
     </div>
   );
 }

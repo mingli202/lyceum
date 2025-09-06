@@ -1153,6 +1153,8 @@ export const leaveClub = mutation({
     if (userId) {
       if (userClubInfo.status !== "admin") {
         throw new Error("Not allowed to kick another user");
+      } else if (userId === authenticatedUser._id) {
+        throw new Error("Cannot kick yourself");
       }
 
       const otherUserClubInfo = await ctx.db
@@ -1167,6 +1169,36 @@ export const leaveClub = mutation({
         await ctx.db.delete(otherUserClubInfo._id);
       }
     } else {
+      const members = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("status"), "member"),
+            q.eq(q.field("status"), "admin"),
+          ),
+        )
+        .collect();
+
+      const { nMembers, nAdmins } = members.reduce(
+        (acc, member) => {
+          if (member.status === "member") {
+            acc.nMembers++;
+          } else if (member.status === "admin") {
+            acc.nAdmins++;
+          }
+
+          return acc;
+        },
+        { nMembers: 0, nAdmins: 0 },
+      );
+
+      if (nMembers > 0 && nAdmins === 1 && userClubInfo.status === "admin") {
+        throw new Error(
+          "Cannot leave: You are the only admin left in this club, pass the role to another member.",
+        );
+      }
+
       await ctx.db.delete(userClubInfo._id);
     }
   },

@@ -262,6 +262,7 @@ export const ClubPageData = v.object({
     v.object({
       chatId: v.id("chats"),
       userStatus: ClubUserStatus,
+      userId: v.id("users"),
     }),
     v.null(),
   ),

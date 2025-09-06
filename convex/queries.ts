@@ -20,7 +20,7 @@ import {
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
 
 export const _getUserFromClerkId = internalQuery({
@@ -1001,8 +1001,64 @@ export const getClubPage = query({
         ? {
             userStatus: userClubInfo.status,
             chatId: clubInfo.chatId,
+            userId: userClubInfo.userId,
           }
         : null,
     } satisfies ClubPageData;
+  },
+});
+
+export const getClubMembers = query({
+  args: { clubId: v.id("clubs") },
+  returns: v.array(
+    v.object({
+      userInfo: UserCardInfo,
+      status: schema.tables.userClubsInfo.validator.fields.status,
+    }),
+  ),
+  async handler(
+    ctx,
+    args,
+  ): Promise<
+    {
+      userInfo: UserCardInfo;
+      status: Doc<"userClubsInfo">["status"];
+    }[]
+  > {
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", args.clubId))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("status"), "member"),
+          q.eq(q.field("status"), "admin"),
+        ),
+      )
+      .collect();
+
+    const clubMembersInfo: {
+      userInfo: UserCardInfo;
+      status: Doc<"userClubsInfo">["status"];
+    }[] = [];
+
+    for (const userClub of userClubInfo) {
+      const user = await ctx.db.get(userClub.userId);
+
+      if (!user) {
+        continue;
+      }
+
+      clubMembersInfo.push({
+        userInfo: {
+          userId: user._id,
+          pictureUrl: user.pictureUrl,
+          firstName: user.givenName,
+          username: user.username,
+        },
+        status: userClub.status,
+      });
+    }
+
+    return clubMembersInfo;
   },
 });
