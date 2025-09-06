@@ -176,7 +176,7 @@ export default function EditClubSettingsTab({
                       type="button"
                       className="w-full"
                     >
-                      No, I don't want to disband the club.
+                      No, I don{"'"}t want to disband the club.
                     </Button>
                   </AlertDialog.Cancel>
                   <Button
