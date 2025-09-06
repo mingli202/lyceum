@@ -20,7 +20,7 @@ export const _createNewClass = internalMutation({
 
     const classId = await ctx.db.insert("classes", {
       code: args.code,
-      chat: chatId,
+      chatId,
 
       title: args.title,
       professor: args.professor,
@@ -32,6 +32,19 @@ export const _createNewClass = internalMutation({
     });
 
     return classId;
+  },
+});
+
+export const _deleteChat = internalMutation({
+  args: { chatId: v.id("chats") },
+  handler: async (ctx, args) => {
+    for await (const message of ctx.db
+      .query("messages")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))) {
+      await ctx.db.delete(message._id);
+    }
+
+    await ctx.db.delete(args.chatId);
   },
 });
 
@@ -302,7 +315,14 @@ export const deleteClass = mutation({
       .collect();
 
     if (nStudents.length === 0) {
-      await ctx.db.delete(args.classId);
+      const classInfo = await ctx.db.get(classId);
+
+      if (classInfo) {
+        await ctx.runMutation(internal.mutations._deleteChat, {
+          chatId: classInfo.chatId,
+        });
+        await ctx.db.delete(classInfo._id);
+      }
     }
   },
 });
@@ -1169,37 +1189,89 @@ export const leaveClub = mutation({
         await ctx.db.delete(otherUserClubInfo._id);
       }
     } else {
-      const members = await ctx.db
-        .query("userClubsInfo")
-        .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
-        .filter((q) =>
-          q.or(
-            q.eq(q.field("status"), "member"),
-            q.eq(q.field("status"), "admin"),
-          ),
-        )
-        .collect();
+      if (userClubInfo.status === "admin") {
+        const members = await ctx.db
+          .query("userClubsInfo")
+          .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
+          .filter((q) =>
+            q.or(
+              q.eq(q.field("status"), "member"),
+              q.eq(q.field("status"), "admin"),
+            ),
+          )
+          .collect();
 
-      const { nMembers, nAdmins } = members.reduce(
-        (acc, member) => {
-          if (member.status === "member") {
-            acc.nMembers++;
-          } else if (member.status === "admin") {
-            acc.nAdmins++;
-          }
+        const { nMembers, nAdmins } = members.reduce(
+          (acc, member) => {
+            if (member.status === "member") {
+              acc.nMembers++;
+            } else if (member.status === "admin") {
+              acc.nAdmins++;
+            }
 
-          return acc;
-        },
-        { nMembers: 0, nAdmins: 0 },
-      );
-
-      if (nMembers > 0 && nAdmins === 1 && userClubInfo.status === "admin") {
-        throw new Error(
-          "Cannot leave: You are the only admin left in this club, pass the role to another member.",
+            return acc;
+          },
+          { nMembers: 0, nAdmins: 0 },
         );
+
+        if (nMembers > 0 && nAdmins === 1) {
+          throw new Error(
+            "Cannot leave: You are the only admin left in this club, pass the role to another member.",
+          );
+        }
       }
 
       await ctx.db.delete(userClubInfo._id);
     }
+  },
+});
+
+export const disbandClub = mutation({
+  args: { clubId: v.id("clubs") },
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    const club = await ctx.db.get(args.clubId);
+
+    if (!club) {
+      throw new Error("Club not found");
+    }
+
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (!userClubInfo || userClubInfo.status !== "admin") {
+      throw new Error("Not allowed!");
+    }
+
+    for await (const member of ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", club._id))) {
+      await ctx.db.delete(member._id);
+    }
+
+    await ctx.db.delete(club.chatId);
+
+    if (club.pictureId) {
+      await ctx.storage.delete(club.pictureId);
+    }
+
+    if (club.bannerId) {
+      await ctx.storage.delete(club.bannerId);
+    }
+
+    // TODO: delete all posts
+    // TODO: delete all events
+
+    await ctx.db.delete(club._id);
   },
 });
