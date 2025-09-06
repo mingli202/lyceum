@@ -982,36 +982,34 @@ export const joinClub = mutation({
       throw new Error("Authenticated user not found");
     }
 
-    const club = await ctx.db.get(args.clubId);
+    const club = await ctx.db.get(args.clubId).catch(() => null);
 
     if (!club) {
       throw new Error("Club not found");
     }
 
-    if (club.isPrivate) {
-      const userClubInfo = await ctx.db
-        .query("userClubsInfo")
-        .withIndex("by_userId_clubId", (q) =>
-          q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
-        )
-        .unique()
-        .catch(() => null);
+    const status = club.isPrivate ? "requested" : "member";
 
-      if (userClubInfo) {
-        if (userClubInfo.status === "requested") {
-          await ctx.db.patch(userClubInfo._id, {
-            status: "member",
-          });
-        } else {
-          throw new Error("Already a member");
-        }
-      } else {
-        await ctx.db.insert("userClubsInfo", {
-          userId: authenticatedUser._id,
-          clubId: club._id,
-          status: "member",
-        });
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (userClubInfo) {
+      if (userClubInfo.status === "banned") {
+        throw new Error("Banned");
+      } else if (userClubInfo.status !== "admin") {
+        await ctx.db.delete(userClubInfo._id);
       }
+    } else {
+      await ctx.db.insert("userClubsInfo", {
+        userId: authenticatedUser._id,
+        clubId: club._id,
+        status,
+      });
     }
   },
 });
@@ -1114,5 +1112,97 @@ export const removeClubPicture = mutation({
     await ctx.db.patch(club._id, {
       pictureId: undefined,
     });
+  },
+});
+
+export const leaveClub = mutation({
+  args: { clubId: v.id("clubs"), userId: v.optional(v.id("users")) },
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    const { clubId, userId } = args;
+
+    const club = await ctx.db.get(clubId);
+
+    if (!club) {
+      throw new Error("Club not found");
+    }
+
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (!userClubInfo) {
+      return;
+    }
+
+    if (userId) {
+      if (userClubInfo.status !== "admin") {
+        throw new Error("Not allowed to kick another user");
+      }
+
+      const otherUserClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", userId).eq("clubId", club._id),
+        )
+        .unique()
+        .catch(() => null);
+
+      if (otherUserClubInfo) {
+        await ctx.db.delete(otherUserClubInfo._id);
+      }
+    } else {
+      await ctx.db.delete(userClubInfo._id);
+    }
+  },
+});
+
+export const followClub = mutation({
+  args: { clubId: v.id("clubs") },
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    const { clubId } = args;
+
+    const club = await ctx.db.get(clubId);
+
+    if (!club) {
+      throw new Error("Club not found");
+    }
+
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (userClubInfo) {
+      if (userClubInfo.status === "banned") {
+        throw new Error("Banned");
+      } else if (userClubInfo.status !== "admin") {
+        await ctx.db.delete(userClubInfo._id);
+      }
+    } else {
+      await ctx.db.insert("userClubsInfo", {
+        userId: authenticatedUser._id,
+        clubId,
+        status: "following",
+      });
+    }
   },
 });
