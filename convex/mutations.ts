@@ -1253,13 +1253,15 @@ export const disbandClub = mutation({
       throw new Error("Not allowed!");
     }
 
-    for await (const member of ctx.db
+    for await (const memberClubInfo of ctx.db
       .query("userClubsInfo")
       .withIndex("by_clubId", (q) => q.eq("clubId", club._id))) {
-      await ctx.db.delete(member._id);
+      await ctx.db.delete(memberClubInfo._id);
     }
 
-    await ctx.db.delete(club.chatId);
+    await ctx.runMutation(internal.mutations._deleteChat, {
+      chatId: club.chatId,
+    });
 
     if (club.pictureId) {
       await ctx.storage.delete(club.pictureId);

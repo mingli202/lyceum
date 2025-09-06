@@ -945,7 +945,7 @@ export const getClubPage = query({
     const clubInfo = await ctx.db.get(clubId as Id<"clubs">).catch(() => null);
 
     if (!clubInfo) {
-      return "Club do not exist!";
+      return "Club does not exist!";
     }
 
     const userClubInfo = await ctx.db

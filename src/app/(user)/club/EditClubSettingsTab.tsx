@@ -4,6 +4,7 @@ import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { ClubPageData, ClubCategory } from "@convex/types";
 import { useMutation } from "convex/react";
+import { AlertDialog, Dialog } from "radix-ui";
 import { RefObject, useRef, useState } from "react";
 
 export default function EditClubSettingsTab({
@@ -16,6 +17,7 @@ export default function EditClubSettingsTab({
   const updateClubInfo = useMutation(api.mutations.updateClubInfo);
   const generateUploadUrl = useMutation(api.mutations.generateUploadUrl);
   const removeClubPicture = useMutation(api.mutations.removeClubPicture);
+  const disbandClub = useMutation(api.mutations.disbandClub);
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null!);
   const [file, setFile] = useState<File | undefined | "remove">();
@@ -154,9 +156,47 @@ export default function EditClubSettingsTab({
         </label>
 
         <div className="flex w-full items-center justify-between gap-3">
-          <Button variant={ButtonVariant.Destructive} type="button">
-            Disband
-          </Button>
+          <AlertDialog.Root>
+            <AlertDialog.Trigger asChild>
+              <Button variant={ButtonVariant.Destructive} type="button">
+                Disband
+              </Button>
+            </AlertDialog.Trigger>
+
+            <AlertDialog.Portal>
+              <AlertDialog.Content className="fixed inset-0 z-100 flex h-full w-full items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="animate-pop-in bg-background flex w-md flex-col gap-3 rounded-lg p-6 shadow-2xl ring-2 ring-red-200">
+                  <AlertDialog.Title className="font-bold">
+                    Are you sure you want to disband this club?
+                  </AlertDialog.Title>
+                  <p>
+                    Disbanding a club will remove all members, posts, events and
+                    chat history of the club.
+                  </p>
+                  <AlertDialog.Cancel asChild>
+                    <Button
+                      variant={ButtonVariant.Special}
+                      type="button"
+                      className="w-full"
+                    >
+                      No, I don't want to disband the club.
+                    </Button>
+                  </AlertDialog.Cancel>
+                  <Button
+                    variant={ButtonVariant.Destructive}
+                    type="button"
+                    className="w-full"
+                    onClick={() => {
+                      disbandClub({ clubId: data.clubId });
+                    }}
+                  >
+                    Yes, I want to disband the club.
+                  </Button>
+                </div>
+              </AlertDialog.Content>
+            </AlertDialog.Portal>
+          </AlertDialog.Root>
+
           <Button
             variant={ButtonVariant.Special}
             type="submit"
