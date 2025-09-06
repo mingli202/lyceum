@@ -11,6 +11,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
     isPending?: boolean;
     pendingElement?: React.ReactNode;
     paddingSize?: PaddingSize;
+    dropdown?: boolean;
   };
 
 export function Button({
@@ -20,6 +21,7 @@ export function Button({
   isPending,
   pendingElement,
   disabled,
+  dropdown,
   paddingSize = PaddingSize.base,
   ...props
 }: ButtonProps) {
@@ -27,24 +29,28 @@ export function Button({
     <button
       disabled={isPending && disabled}
       className={cn(
-        "relative h-fit w-fit transform cursor-pointer rounded transition-all",
-        {
-          "text-background bg-gradient-to-r from-blue-500 to-indigo-500":
-            variant === "special",
-          "text-background bg-gradient-to-br from-amber-500 to-red-500":
-            variant === "destructive",
-          "ring-muted-foreground/50 text-muted-foreground ring-1":
-            variant === "muted",
-        },
+        "relative h-fit w-fit transform cursor-pointer rounded transition",
+        dropdown
+          ? "text-foreground bg-gradient-to-r"
+          : {
+              "text-background bg-gradient-to-r from-blue-500 to-indigo-500":
+                variant === "special",
+              "text-background bg-gradient-to-br from-amber-500 to-red-500":
+                variant === "destructive",
+              "ring-muted-foreground/50 text-muted-foreground ring-1":
+                variant === "muted",
+            },
         !disabled && {
-          "hover:from-blue-600 hover:to-indigo-600": variant === "special",
-          "hover:from-amber-600 hover:to-red-600": variant === "destructive",
+          "hover:text-background hover:from-blue-600 hover:to-indigo-600":
+            variant === ButtonVariant.Special,
+          "hover:text-background hover:from-amber-600 hover:to-red-600":
+            variant === ButtonVariant.Destructive,
           "hover:text-foreground hover:ring-muted-foreground/80":
-            variant === "muted",
+            variant === ButtonVariant.Muted,
         },
         {
           "px-0 py-0": paddingSize === PaddingSize.none,
-          "px-1 py-0.5": paddingSize === PaddingSize.sm,
+          "px-1 py-0.25": paddingSize === PaddingSize.sm,
           "px-2 py-1": paddingSize === PaddingSize.base,
           "px-3 py-1.5": paddingSize === PaddingSize.md,
           "px-4 py-2": paddingSize === PaddingSize.lg,
