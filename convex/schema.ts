@@ -31,7 +31,7 @@ export default defineSchema({
   classes: defineTable({
     code: v.string(),
 
-    chat: v.id("chats"),
+    chatId: v.id("chats"),
 
     title: v.string(),
     professor: v.string(),
@@ -163,11 +163,12 @@ export default defineSchema({
   }).index("by_clubId", ["clubId"]),
 
   clubs: defineTable({
-    name: v.string(),
     chatId: v.id("chats"),
-    description: v.string(),
     bannerId: v.optional(v.id("_storage")),
     pictureId: v.optional(v.id("_storage")),
+
+    name: v.string(),
+    description: v.string(),
     allowMemberPost: v.boolean(),
     isPrivate: v.boolean(),
     category: v.union(

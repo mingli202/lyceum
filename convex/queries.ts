@@ -509,7 +509,7 @@ export const getClassPageData = query({
 
     const classPageData: ClassPageData = {
       classId: classInfo._id,
-      chatId: classInfo.chat,
+      chatId: classInfo.chatId,
       title: classInfo.title,
       professor: classInfo.professor,
       code: classInfo.code,
