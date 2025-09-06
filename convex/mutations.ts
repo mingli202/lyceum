@@ -974,7 +974,7 @@ export const createClub = mutation({
 });
 
 export const joinClub = mutation({
-  args: { clubId: v.id("clubs") },
+  args: { clubId: v.id("clubs"), follow: v.optional(v.boolean()) },
   async handler(ctx, args) {
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
@@ -982,13 +982,19 @@ export const joinClub = mutation({
       throw new Error("Authenticated user not found");
     }
 
-    const club = await ctx.db.get(args.clubId).catch(() => null);
+    const { clubId, follow } = args;
+
+    const club = await ctx.db.get(clubId).catch(() => null);
 
     if (!club) {
       throw new Error("Club not found");
     }
 
-    const status = club.isPrivate ? "requested" : "member";
+    const status = follow
+      ? "following"
+      : club.isPrivate
+        ? "requested"
+        : "member";
 
     const userClubInfo = await ctx.db
       .query("userClubsInfo")
@@ -1162,47 +1168,6 @@ export const leaveClub = mutation({
       }
     } else {
       await ctx.db.delete(userClubInfo._id);
-    }
-  },
-});
-
-export const followClub = mutation({
-  args: { clubId: v.id("clubs") },
-  handler: async (ctx, args) => {
-    const authenticatedUser = await getUserFromClerkId(ctx, args);
-
-    if (!authenticatedUser) {
-      throw new Error("Authenticated user not found");
-    }
-
-    const { clubId } = args;
-
-    const club = await ctx.db.get(clubId);
-
-    if (!club) {
-      throw new Error("Club not found");
-    }
-
-    const userClubInfo = await ctx.db
-      .query("userClubsInfo")
-      .withIndex("by_userId_clubId", (q) =>
-        q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
-      )
-      .unique()
-      .catch(() => null);
-
-    if (userClubInfo) {
-      if (userClubInfo.status === "banned") {
-        throw new Error("Banned");
-      } else if (userClubInfo.status !== "admin") {
-        await ctx.db.delete(userClubInfo._id);
-      }
-    } else {
-      await ctx.db.insert("userClubsInfo", {
-        userId: authenticatedUser._id,
-        clubId,
-        status: "following",
-      });
     }
   },
 });

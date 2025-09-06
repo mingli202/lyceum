@@ -9,7 +9,7 @@ import {
 import { BannerPicture } from "@/components";
 import { api } from "@convex/_generated/api";
 import { ClubPageData } from "@convex/types";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import EditClub from "./EditClub";
@@ -42,6 +42,9 @@ function Club({ data }: ClubProps) {
   const memberInfo = data.memberInfo;
   const isCurrentUserAdmin = memberInfo?.userStatus === "admin";
 
+  const joinClub = useMutation(api.mutations.joinClub);
+  const leaveClub = useMutation(api.mutations.leaveClub);
+
   return (
     <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
       <section className="flex h-fit w-full max-w-2xl flex-col pb-6">
@@ -64,6 +67,7 @@ function Club({ data }: ClubProps) {
             src={data.pictureUrl}
             displayName={data.name}
             className="absolute top-0 left-1/2 h-24 w-24 -translate-1/2"
+            displayRing
           />
 
           <p className="text-center text-xl font-bold">{data.name}</p>
@@ -81,12 +85,49 @@ function Club({ data }: ClubProps) {
           </div>
           {isCurrentUserAdmin ? (
             <EditClub data={data} />
+          ) : data.memberInfo ? (
+            <>
+              {data.memberInfo.userStatus === "member" ? (
+                <Button
+                  variant={ButtonVariant.Destructive}
+                  onClick={async () => {
+                    await leaveClub({
+                      clubId: data.clubId,
+                    });
+                  }}
+                >
+                  Leave
+                </Button>
+              ) : (
+                <Button
+                  variant={ButtonVariant.Muted}
+                  onClick={() => {
+                    joinClub({ clubId: data.clubId });
+                  }}
+                >
+                  {data.memberInfo.userStatus[0].toUpperCase() +
+                    data.memberInfo.userStatus.slice(1)}
+                </Button>
+              )}
+            </>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant={ButtonVariant.Special}>
-                {data.isPrivate ? "Request" : "Join"}
+              <Button
+                variant={ButtonVariant.Special}
+                onClick={async () => {
+                  await joinClub({ clubId: data.clubId });
+                }}
+              >
+                Join
               </Button>
-              <Button variant={ButtonVariant.Muted}>Follow</Button>
+              <Button
+                variant={ButtonVariant.Muted}
+                onClick={async () => {
+                  await joinClub({ clubId: data.clubId, follow: true });
+                }}
+              >
+                Follow
+              </Button>
             </div>
           )}
         </div>
