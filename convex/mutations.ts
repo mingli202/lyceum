@@ -1092,6 +1092,10 @@ export const updateClubInfo = mutation({
       isPrivate: args.isPrivate,
     });
 
+    await ctx.db.patch(club.chatId, {
+      title: `${args.name}'s Chat`,
+    });
+
     if (args.pictureId) {
       if (club.pictureId) {
         await ctx.storage.delete(club.pictureId);
