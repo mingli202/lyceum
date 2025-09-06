@@ -1299,3 +1299,56 @@ export const disbandClub = mutation({
     await ctx.db.delete(club._id);
   },
 });
+
+export const acceptMemberRequest = mutation({
+  args: { clubId: v.id("clubs"), userId: v.id("users"), accept: v.boolean() },
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    const club = await ctx.db.get(args.clubId);
+
+    if (!club) {
+      throw new Error("Club not found");
+    }
+
+    const authenticatedUserClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (
+      !authenticatedUserClubInfo ||
+      authenticatedUserClubInfo.status !== "admin"
+    ) {
+      throw new Error("Not allowed!");
+    }
+
+    const requestedUserClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", args.userId).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (
+      !requestedUserClubInfo ||
+      requestedUserClubInfo.status !== "requested"
+    ) {
+      throw new Error("Not requesting!");
+    }
+
+    if (args.accept) {
+      await ctx.db.patch(requestedUserClubInfo._id, { status: "member" });
+    } else {
+      await ctx.db.delete(requestedUserClubInfo._id);
+    }
+  },
+});

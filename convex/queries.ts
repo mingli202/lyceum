@@ -1067,3 +1067,34 @@ export const getClubMembers = query({
     return clubMembersInfo;
   },
 });
+
+export const getClubRequests = query({
+  args: { clubId: v.id("clubs") },
+  returns: v.array(UserCardInfo),
+  async handler(ctx, args): Promise<UserCardInfo[]> {
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", args.clubId))
+      .filter((q) => q.eq(q.field("status"), "requested"))
+      .collect();
+
+    const clubMembersInfo: UserCardInfo[] = [];
+
+    for (const userClub of userClubInfo) {
+      const user = await ctx.db.get(userClub.userId);
+
+      if (!user) {
+        continue;
+      }
+
+      clubMembersInfo.push({
+        userId: user._id,
+        pictureUrl: user.pictureUrl,
+        firstName: user.givenName,
+        username: user.username,
+      });
+    }
+
+    return clubMembersInfo;
+  },
+});

@@ -52,7 +52,7 @@ export default function EditClubTabs({ data }: { data: ClubPageData }) {
   };
 
   return (
-    <div className="bg-background ring-foreground/10 m-2 flex w-md flex-col gap-2 rounded-lg p-2 shadow-md ring-1">
+    <div className="bg-background ring-foreground/10 flex w-md flex-col gap-2 rounded-lg p-2 shadow-md ring-1">
       <div className="flex items-center gap-2 px-2 pt-2">
         <Dialog.Close asChild ref={closeButtonRef}>
           <Button

@@ -13,6 +13,7 @@ import { useQuery, useMutation } from "convex/react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import EditClub from "./EditClub";
+import MemberRequestDialog from "./MemberRequestDialog";
 
 export default function ClubPage() {
   const searchParams = useSearchParams();
@@ -84,7 +85,10 @@ function Club({ data }: ClubProps) {
             </p>
           </div>
           {isCurrentUserAdmin ? (
-            <EditClub data={data} />
+            <div className="flex w-full items-center justify-center gap-2">
+              <MemberRequestDialog clubId={data.clubId} />
+              <EditClub data={data} />
+            </div>
           ) : data.memberInfo ? (
             <>
               {data.memberInfo.userStatus === "member" ? (

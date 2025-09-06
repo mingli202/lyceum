@@ -9,7 +9,7 @@ export default function EditClub(props: { data: ClubPageData }) {
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
-        <Button variant={ButtonVariant.Muted}>Manage</Button>
+        <Button variant={ButtonVariant.Muted}>Settings</Button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />

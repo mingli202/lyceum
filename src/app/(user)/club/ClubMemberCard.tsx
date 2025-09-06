@@ -14,10 +14,12 @@ import { UserCardInfo } from "@convex/types";
 import { useMutation } from "convex/react";
 import {
   Ban,
+  CheckCircle,
   EllipsisVertical,
   LogOut,
   MessageCircle,
   TriangleAlert,
+  XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
@@ -108,6 +110,7 @@ type MemberDropdownMenuProps = {
 };
 function MemberDropdownMenu(props: MemberDropdownMenuProps) {
   const leaveClub = useMutation(api.mutations.leaveClub);
+  const acceptMemberRequest = useMutation(api.mutations.acceptMemberRequest);
 
   const isTheMemberTheCurrentUser =
     props.currentUserMemberInfo?.userId === props.userInfo.userId;
@@ -124,70 +127,111 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content className="bg-background ring-foreground/10 animate-pop-in flex flex-col gap-1 rounded-lg p-1 shadow-md ring-1 transition hover:shadow-lg">
-        {isTheMemberTheCurrentUser ? (
-          <DropdownMenu.Item asChild>
-            <Button
-              variant={ButtonVariant.Destructive}
-              className="flex w-full items-center gap-2"
-              dropdown
-              onClick={async () => {}}
-            >
-              <TriangleAlert className="h-4 w-4" />
-              Transfer Ownership
-            </Button>
-          </DropdownMenu.Item>
-        ) : (
+        {props.status === "requested" ? (
           <>
             <DropdownMenu.Item asChild>
-              <Link
-                href={`/chat?userId=${props.userInfo.userId}`}
-                className="w-full"
+              <Button
+                variant={ButtonVariant.Destructive}
+                className="flex w-full items-center gap-2"
+                dropdown
+                onClick={async () => {
+                  await acceptMemberRequest({
+                    clubId: props.clubId,
+                    userId: props.userInfo.userId,
+                    accept: true,
+                  });
+                }}
               >
+                <CheckCircle className="h-4 w-4" />
+                Accept
+              </Button>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item asChild>
+              <Button
+                variant={ButtonVariant.Destructive}
+                className="flex w-full items-center gap-2"
+                dropdown
+                onClick={async () => {
+                  await acceptMemberRequest({
+                    clubId: props.clubId,
+                    userId: props.userInfo.userId,
+                    accept: false,
+                  });
+                }}
+              >
+                <XCircle className="h-4 w-4" />
+                Reject
+              </Button>
+            </DropdownMenu.Item>
+          </>
+        ) : (
+          <>
+            {isTheMemberTheCurrentUser ? (
+              <DropdownMenu.Item asChild>
                 <Button
-                  variant={ButtonVariant.Special}
+                  variant={ButtonVariant.Destructive}
                   className="flex w-full items-center gap-2"
                   dropdown
+                  onClick={async () => {}}
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  Message
+                  <TriangleAlert className="h-4 w-4" />
+                  Transfer Ownership
                 </Button>
-              </Link>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item asChild>
-              <Button
-                variant={ButtonVariant.Destructive}
-                className="flex w-full items-center gap-2"
-                dropdown
-                onClick={async () => {
-                  await leaveClub({
-                    clubId: props.clubId,
-                    userId: props.userInfo.userId,
-                  });
-                }}
-              >
-                <LogOut className="h-4 w-4" />
-                Kick
-              </Button>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item asChild>
-              <Button
-                variant={ButtonVariant.Destructive}
-                className="flex w-full items-center gap-2"
-                dropdown
-                onClick={async () => {
-                  console.log("hello world");
+              </DropdownMenu.Item>
+            ) : (
+              <>
+                <DropdownMenu.Item asChild>
+                  <Link
+                    href={`/chat?userId=${props.userInfo.userId}`}
+                    className="w-full"
+                  >
+                    <Button
+                      variant={ButtonVariant.Special}
+                      className="flex w-full items-center gap-2"
+                      dropdown
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Message
+                    </Button>
+                  </Link>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item asChild>
+                  <Button
+                    variant={ButtonVariant.Destructive}
+                    className="flex w-full items-center gap-2"
+                    dropdown
+                    onClick={async () => {
+                      await leaveClub({
+                        clubId: props.clubId,
+                        userId: props.userInfo.userId,
+                      });
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Kick
+                  </Button>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item asChild>
+                  <Button
+                    variant={ButtonVariant.Destructive}
+                    className="flex w-full items-center gap-2"
+                    dropdown
+                    onClick={async () => {
+                      console.log("hello world");
 
-                  await leaveClub({
-                    clubId: props.clubId,
-                    userId: props.userInfo.userId,
-                    isBanningUser: true,
-                  });
-                }}
-              >
-                <Ban className="h-4 w-4" />
-                {props.status === "banned" ? "Unban" : "Ban"}
-              </Button>
-            </DropdownMenu.Item>
+                      await leaveClub({
+                        clubId: props.clubId,
+                        userId: props.userInfo.userId,
+                        isBanningUser: true,
+                      });
+                    }}
+                  >
+                    <Ban className="h-4 w-4" />
+                    {props.status === "banned" ? "Unban" : "Ban"}
+                  </Button>
+                </DropdownMenu.Item>
+              </>
+            )}
           </>
         )}
       </DropdownMenu.Content>
