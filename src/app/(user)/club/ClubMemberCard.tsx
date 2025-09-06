@@ -15,13 +15,13 @@ import { useMutation } from "convex/react";
 import {
   Ban,
   EllipsisVertical,
-  Link,
   LogOut,
   MessageCircle,
   TriangleAlert,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
+import Link from "next/link";
 
 type ClubMemberCardProps = {
   member: {
@@ -36,14 +36,15 @@ type ClubMemberCardProps = {
 };
 
 export default function ClubMemberCard(props: ClubMemberCardProps) {
-  const { member, currentUserMemberInfo, clubId } = props;
+  const { member, currentUserMemberInfo } = props;
   const router = useRouter();
 
   return (
     <Card
       className={cn(
         "flex flex-row items-center justify-between",
-        currentUserMemberInfo?.userId === member.userInfo.userId && "-order-1",
+        member.status === "admin" && "-order-1",
+        currentUserMemberInfo?.userId === member.userInfo.userId && "-order-2",
       )}
     >
       <div className="flex items-center gap-2">
@@ -134,7 +135,7 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
                 onClick={async () => {}}
               >
                 <TriangleAlert className="h-4 w-4" />
-                Disband
+                Transfer Ownership
               </Button>
             </DropdownMenu.Item>
           ) : (

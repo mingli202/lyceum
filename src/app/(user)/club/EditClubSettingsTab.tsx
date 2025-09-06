@@ -36,9 +36,9 @@ export default function EditClubSettingsTab({
       formData.get("is-private")?.toString() === "on" ? true : data.isPrivate;
 
     let pictureId: Id<"_storage"> | undefined = undefined;
-    if (file === "remove" || !file) {
+    if (file === "remove") {
       await removeClubPicture({ clubId: data.clubId });
-    } else {
+    } else if (file) {
       const uploadUrl = await generateUploadUrl({});
 
       const result = await fetch(uploadUrl, {
@@ -155,7 +155,7 @@ export default function EditClubSettingsTab({
 
         <div className="flex w-full items-center justify-between gap-3">
           <Button variant={ButtonVariant.Destructive} type="button">
-            Delete
+            Disband
           </Button>
           <Button
             variant={ButtonVariant.Special}
