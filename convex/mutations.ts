@@ -1146,7 +1146,11 @@ export const removeClubPicture = mutation({
 });
 
 export const leaveClub = mutation({
-  args: { clubId: v.id("clubs"), userId: v.optional(v.id("users")) },
+  args: {
+    clubId: v.id("clubs"),
+    userId: v.optional(v.id("users")),
+    isBanningUser: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
@@ -1154,7 +1158,7 @@ export const leaveClub = mutation({
       throw new Error("Authenticated user not found");
     }
 
-    const { clubId, userId } = args;
+    const { clubId, userId, isBanningUser } = args;
 
     const club = await ctx.db.get(clubId);
 
@@ -1190,7 +1194,21 @@ export const leaveClub = mutation({
         .catch(() => null);
 
       if (otherUserClubInfo) {
-        await ctx.db.delete(otherUserClubInfo._id);
+        console.log("hello world");
+
+        if (isBanningUser) {
+          if (otherUserClubInfo.status === "banned") {
+            await ctx.db.patch(otherUserClubInfo._id, {
+              status: "member",
+            });
+          } else {
+            await ctx.db.patch(otherUserClubInfo._id, {
+              status: "banned",
+            });
+          }
+        } else {
+          await ctx.db.delete(otherUserClubInfo._id);
+        }
       }
     } else {
       if (userClubInfo.status === "admin") {

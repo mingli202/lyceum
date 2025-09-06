@@ -72,6 +72,8 @@ export default function ClubMemberCard(props: ClubMemberCardProps) {
                     member.status === "admin",
                   "from-green-200 to-teal-300 text-emerald-700 ring-emerald-400":
                     member.status === "following",
+                  "bg-slate-200 text-slate-700 ring-slate-400":
+                    member.status === "banned",
                 },
               )}
             >
@@ -110,9 +112,6 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
   const isTheMemberTheCurrentUser =
     props.currentUserMemberInfo?.userId === props.userInfo.userId;
 
-  const isTheCurrentUserAdmin =
-    props.currentUserMemberInfo?.userStatus === "admin";
-
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -126,35 +125,17 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
       </DropdownMenu.Trigger>
       <DropdownMenu.Content className="bg-background ring-foreground/10 animate-pop-in flex flex-col gap-1 rounded-lg p-1 shadow-md ring-1 transition hover:shadow-lg">
         {isTheMemberTheCurrentUser ? (
-          isTheCurrentUserAdmin ? (
-            <DropdownMenu.Item asChild>
-              <Button
-                variant={ButtonVariant.Destructive}
-                className="flex w-full items-center gap-2"
-                dropdown
-                onClick={async () => {}}
-              >
-                <TriangleAlert className="h-4 w-4" />
-                Transfer Ownership
-              </Button>
-            </DropdownMenu.Item>
-          ) : (
-            <DropdownMenu.Item asChild>
-              <Button
-                variant={ButtonVariant.Destructive}
-                className="flex w-full items-center gap-2"
-                dropdown
-                onClick={async () => {
-                  await leaveClub({
-                    clubId: props.clubId,
-                  });
-                }}
-              >
-                <LogOut className="h-4 w-4" />
-                Leave
-              </Button>
-            </DropdownMenu.Item>
-          )
+          <DropdownMenu.Item asChild>
+            <Button
+              variant={ButtonVariant.Destructive}
+              className="flex w-full items-center gap-2"
+              dropdown
+              onClick={async () => {}}
+            >
+              <TriangleAlert className="h-4 w-4" />
+              Transfer Ownership
+            </Button>
+          </DropdownMenu.Item>
         ) : (
           <>
             <DropdownMenu.Item asChild>
@@ -172,36 +153,41 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
                 </Button>
               </Link>
             </DropdownMenu.Item>
-            {isTheCurrentUserAdmin && (
-              <>
-                <DropdownMenu.Item asChild>
-                  <Button
-                    variant={ButtonVariant.Destructive}
-                    className="flex w-full items-center gap-2"
-                    dropdown
-                    onClick={async () => {
-                      await leaveClub({
-                        clubId: props.clubId,
-                        userId: props.userInfo.userId,
-                      });
-                    }}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Kick
-                  </Button>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item asChild>
-                  <Button
-                    variant={ButtonVariant.Destructive}
-                    className="flex w-full items-center gap-2"
-                    dropdown
-                  >
-                    <Ban className="h-4 w-4" />
-                    Ban
-                  </Button>
-                </DropdownMenu.Item>
-              </>
-            )}
+            <DropdownMenu.Item asChild>
+              <Button
+                variant={ButtonVariant.Destructive}
+                className="flex w-full items-center gap-2"
+                dropdown
+                onClick={async () => {
+                  await leaveClub({
+                    clubId: props.clubId,
+                    userId: props.userInfo.userId,
+                  });
+                }}
+              >
+                <LogOut className="h-4 w-4" />
+                Kick
+              </Button>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item asChild>
+              <Button
+                variant={ButtonVariant.Destructive}
+                className="flex w-full items-center gap-2"
+                dropdown
+                onClick={async () => {
+                  console.log("hello world");
+
+                  await leaveClub({
+                    clubId: props.clubId,
+                    userId: props.userInfo.userId,
+                    isBanningUser: true,
+                  });
+                }}
+              >
+                <Ban className="h-4 w-4" />
+                {props.status === "banned" ? "Unban" : "Ban"}
+              </Button>
+            </DropdownMenu.Item>
           </>
         )}
       </DropdownMenu.Content>

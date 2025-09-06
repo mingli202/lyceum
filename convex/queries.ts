@@ -958,6 +958,10 @@ export const getClubPage = query({
       .unique()
       .catch(() => null);
 
+    if (userClubInfo && userClubInfo.status === "banned") {
+      return "Banned";
+    }
+
     const members = await ctx.db
       .query("userClubsInfo")
       .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
@@ -1032,6 +1036,7 @@ export const getClubMembers = query({
         q.or(
           q.eq(q.field("status"), "member"),
           q.eq(q.field("status"), "admin"),
+          q.eq(q.field("status"), "banned"),
         ),
       )
       .collect();
