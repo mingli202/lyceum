@@ -4,7 +4,7 @@ import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { ClubPageData, ClubCategory } from "@convex/types";
 import { useMutation } from "convex/react";
-import { AlertDialog, Dialog } from "radix-ui";
+import { AlertDialog } from "radix-ui";
 import { RefObject, useRef, useState } from "react";
 
 export default function EditClubSettingsTab({
@@ -31,11 +31,8 @@ export default function EditClubSettingsTab({
       formData.get("club-description")?.toString() ?? data.description;
     const category = formData.get("club-category")?.toString() ?? data.category;
     const allowMemberPost =
-      formData.get("allow-members-post")?.toString() === "on"
-        ? true
-        : data.allowMemberPost;
-    const isPrivate =
-      formData.get("is-private")?.toString() === "on" ? true : data.isPrivate;
+      formData.get("allow-members-post")?.toString() === "on";
+    const isPrivate = formData.get("is-private")?.toString() === "on";
 
     let pictureId: Id<"_storage"> | undefined = undefined;
     if (file === "remove") {
