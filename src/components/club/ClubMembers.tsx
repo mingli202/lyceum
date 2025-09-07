@@ -4,7 +4,7 @@ import { Doc, Id } from "@convex/_generated/dataModel";
 import { UserCardInfo } from "@convex/types";
 import { ClubMemberCard, TransferOwnershipDialog } from "..";
 import { Virtuoso } from "react-virtuoso";
-import { useRef, useState } from "react";
+import { CSSProperties, useState } from "react";
 
 type ClubMembers = {
   members?: {
@@ -17,14 +17,24 @@ type ClubMembers = {
   };
   clubId: Id<"clubs">;
   editable?: boolean;
+  useWindowScroll?: boolean;
+  customScrollParent?: HTMLElement;
+  style?: CSSProperties | undefined;
 };
 
-export function ClubMembers(props: ClubMembers) {
-  const containerRef = useRef<HTMLDivElement>(null!);
+export function ClubMembers({
+  members: _members,
+  currentUserMemberInfo,
+  clubId,
+  editable,
+  useWindowScroll,
+  customScrollParent,
+  style,
+}: ClubMembers) {
   const [tranferOwnershipDialogOpen, setTranferOwnershipDialogOpen] =
     useState(false);
 
-  const members = props.members ?? [];
+  const members = _members ?? [];
 
   const _placeholders = Array.from({ length: 100 }).map((_, i) => ({
     userInfo: {
@@ -41,34 +51,37 @@ export function ClubMembers(props: ClubMembers) {
     <>
       <Virtuoso
         data={members}
+        style={{ height: "100%", ...style }}
         itemContent={(_, member) => (
           <div className="w-full p-1">
             <ClubMemberCard
               member={member}
-              editable={props.editable}
-              currentUserMemberInfo={props.currentUserMemberInfo}
-              clubId={props.clubId}
+              editable={editable}
+              currentUserMemberInfo={currentUserMemberInfo}
+              clubId={clubId}
               key={member.userInfo.userId}
               setTransferOwnershipDialogOpen={setTranferOwnershipDialogOpen}
             />
           </div>
         )}
-        customScrollParent={containerRef.current}
         computeItemKey={(_, member) => member.userInfo.userId}
-        className="h-screen"
+        useWindowScroll={useWindowScroll}
+        customScrollParent={customScrollParent}
       />
-      <TransferOwnershipDialog
-        members={members
-          .filter(
-            (member) =>
-              member.userInfo.userId !== props.currentUserMemberInfo?.userId &&
-              member.status === "member",
-          )
-          .map((member) => member.userInfo)}
-        clubId={props.clubId}
-        open={tranferOwnershipDialogOpen}
-        setOpen={setTranferOwnershipDialogOpen}
-      />
+      {editable && (
+        <TransferOwnershipDialog
+          members={members
+            .filter(
+              (member) =>
+                member.userInfo.userId !== currentUserMemberInfo?.userId &&
+                member.status === "member",
+            )
+            .map((member) => member.userInfo)}
+          clubId={clubId}
+          open={tranferOwnershipDialogOpen}
+          setOpen={setTranferOwnershipDialogOpen}
+        />
+      )}
     </>
   );
 }

@@ -15,6 +15,7 @@ import Image from "next/image";
 import EditClub from "./EditClub";
 import MemberRequestDialog from "./MemberRequestDialog";
 import ClubTabs from "./ClubTabs";
+import { useEffect, useRef, useState } from "react";
 
 export default function ClubPage() {
   const searchParams = useSearchParams();
@@ -47,8 +48,18 @@ function Club({ data }: ClubProps) {
   const joinClub = useMutation(api.mutations.joinClub);
   const leaveClub = useMutation(api.mutations.leaveClub);
 
+  const containerRef = useRef<HTMLDivElement>(null!);
+  const [container, setContainer] = useState<HTMLDivElement>();
+
+  useEffect(() => {
+    setContainer(containerRef.current);
+  }, []);
+
   return (
-    <div className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto">
+    <div
+      className="flex h-full w-full justify-center overflow-x-hidden overflow-y-auto"
+      ref={containerRef}
+    >
       <section className="flex h-fit w-full max-w-2xl flex-col pb-6">
         {isCurrentUserAdmin ? (
           <BannerPicture bannerUrl={data.bannerUrl} clubId={data.clubId} />
@@ -136,7 +147,7 @@ function Club({ data }: ClubProps) {
             </div>
           )}
         </div>
-        <ClubTabs />
+        <ClubTabs data={data} customScrollParent={container} />
       </section>
     </div>
   );

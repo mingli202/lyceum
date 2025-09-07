@@ -1,5 +1,10 @@
-import { Button } from "@/components";
+"use client";
+
+import { Button, ClubMembers } from "@/components";
 import { RecordValues } from "@/types";
+import { api } from "@convex/_generated/api";
+import { ClubPageData } from "@convex/types";
+import { useQuery } from "convex/react";
 import { useState } from "react";
 
 const Tab = {
@@ -10,12 +15,35 @@ const Tab = {
 };
 type Tab = RecordValues<typeof Tab>;
 
-type ClubTabsProps = {};
+type ClubTabsProps = {
+  data: ClubPageData;
+  customScrollParent?: HTMLElement;
+};
 
-export default function ClubTabs() {
+export default function ClubTabs({ data, customScrollParent }: ClubTabsProps) {
   const [selectedTab, setSelectedTab] = useState<Tab>(Tab.Posts);
 
-  const tabMap: Record<Tab, React.ReactNode> = {};
+  const members = useQuery(api.queries.getClubMembers, {
+    clubId: data.clubId,
+  });
+
+  const tabMap: Record<Tab, React.ReactNode> = {
+    [Tab.Members]: (
+      <ClubMembers
+        members={members}
+        clubId={data.clubId}
+        customScrollParent={customScrollParent}
+        currentUserMemberInfo={
+          data.memberInfo
+            ? {
+                userStatus: data.memberInfo.userStatus,
+                userId: data.memberInfo.userId,
+              }
+            : undefined
+        }
+      />
+    ),
+  };
   const iconMap: Record<Tab, React.ReactNode> = {};
 
   return (
