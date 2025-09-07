@@ -18,12 +18,12 @@ import {
   EllipsisVertical,
   LogOut,
   MessageCircle,
-  TriangleAlert,
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
 import Link from "next/link";
+import TransferOwnershipDialog from "./TransferOwnershipDialog";
 
 type ClubMemberCardProps = {
   member: {
@@ -35,6 +35,7 @@ type ClubMemberCardProps = {
     userId: Id<"users">;
   };
   clubId: Id<"clubs">;
+  members: UserCardInfo[];
 };
 
 export default function ClubMemberCard(props: ClubMemberCardProps) {
@@ -94,6 +95,7 @@ export default function ClubMemberCard(props: ClubMemberCardProps) {
         {...member}
         currentUserMemberInfo={props.currentUserMemberInfo}
         clubId={props.clubId}
+        members={props.members}
       />
     </Card>
   );
@@ -107,6 +109,7 @@ type MemberDropdownMenuProps = {
     userStatus: Doc<"userClubsInfo">["status"];
     userId: Id<"users">;
   };
+  members: UserCardInfo[];
 };
 function MemberDropdownMenu(props: MemberDropdownMenuProps) {
   const leaveClub = useMutation(api.mutations.leaveClub);
@@ -126,7 +129,7 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
           <EllipsisVertical className="h-4 w-4" />
         </Button>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content className="bg-background ring-foreground/10 animate-pop-in flex flex-col gap-1 rounded-lg p-1 shadow-md ring-1 transition hover:shadow-lg">
+      <DropdownMenu.Content className="bg-background ring-foreground/10 animate-pop-in z-10 flex flex-col gap-1 rounded-lg p-1 shadow-md ring-1 transition hover:shadow-lg">
         {props.status === "requested" ? (
           <>
             <DropdownMenu.Item asChild>
@@ -168,15 +171,10 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
           <>
             {isTheMemberTheCurrentUser ? (
               <DropdownMenu.Item asChild>
-                <Button
-                  variant={ButtonVariant.Destructive}
-                  className="flex w-full items-center gap-2"
-                  dropdown
-                  onClick={async () => {}}
-                >
-                  <TriangleAlert className="h-4 w-4" />
-                  Transfer Ownership
-                </Button>
+                <TransferOwnershipDialog
+                  members={props.members}
+                  clubId={props.clubId}
+                />
               </DropdownMenu.Item>
             ) : (
               <>

@@ -1352,3 +1352,50 @@ export const acceptMemberRequest = mutation({
     }
   },
 });
+
+export const transferClubOwnership = mutation({
+  args: { clubId: v.id("clubs"), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Authenticated user not found");
+    }
+
+    const club = await ctx.db.get(args.clubId);
+
+    if (!club) {
+      throw new Error("Club not found");
+    }
+
+    const authenticatedUserClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", authenticatedUser._id).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (
+      !authenticatedUserClubInfo ||
+      authenticatedUserClubInfo.status !== "admin"
+    ) {
+      throw new Error("Not allowed!");
+    }
+
+    const targetUserClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", args.userId).eq("clubId", club._id),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (!targetUserClubInfo || targetUserClubInfo.status !== "member") {
+      throw new Error("Can't transfer ownership");
+    }
+
+    await ctx.db.patch(targetUserClubInfo._id, { status: "admin" });
+    await ctx.db.patch(authenticatedUserClubInfo._id, { status: "member" });
+  },
+});

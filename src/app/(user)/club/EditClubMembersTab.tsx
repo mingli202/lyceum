@@ -29,6 +29,14 @@ export default function EditClubMembersTab(props: EditClubMembersTabProps) {
           currentUserMemberInfo={props.currentUserMemberInfo}
           clubId={props.clubId}
           key={member.userInfo.userId}
+          members={members
+            .filter(
+              (member) =>
+                member.userInfo.userId !==
+                  props.currentUserMemberInfo?.userId &&
+                member.status === "member",
+            )
+            .map((member) => member.userInfo)}
         />
       ))}
     </div>
