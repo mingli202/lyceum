@@ -39,6 +39,7 @@ export default function TransferOwnershipDialog(
 function TransferOwnershipDialogContent(props: TransferOwnershipDialogProps) {
   const [isPending, setIsPending] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null!);
+  const [error, setError] = useState<string>();
 
   const transferClubOwnership = useMutation(
     api.mutations.transferClubOwnership,
@@ -50,7 +51,7 @@ function TransferOwnershipDialogContent(props: TransferOwnershipDialogProps) {
 
   return (
     <AlertDialog.Content className="fixed inset-0 z-100 flex h-full w-full items-center justify-center overflow-hidden bg-black/50 p-6 backdrop-blur-sm">
-      <div className="animate-pop-in bg-background flex h-full max-h-full w-md flex-col gap-3 rounded-lg p-6 shadow-2xl ring-2 ring-red-200">
+      <div className="animate-pop-in bg-background flex h-[min(calc(28rem*1.4),calc(100%-4rem))] w-md flex-col gap-3 rounded-lg p-6 shadow-2xl ring-2 ring-red-200">
         <AlertDialog.Title className="font-bold">
           Are you sure you want to transfer ownership of this club?
         </AlertDialog.Title>
@@ -105,13 +106,17 @@ function TransferOwnershipDialogContent(props: TransferOwnershipDialogProps) {
           disabled={!selectedMember}
           isPending={isPending}
           onClick={() => {
-            setIsPending(true);
-            if (selectedMember) {
-              transferClubOwnership({
-                clubId: props.clubId,
-                userId: selectedMember.userId,
-              });
+            if (!selectedMember) {
+              return;
             }
+
+            setIsPending(true);
+            transferClubOwnership({
+              clubId: props.clubId,
+              userId: selectedMember.userId,
+            })
+              .catch(() => setError("Failed to transfer ownership"))
+              .then(() => setIsPending(false));
           }}
         >
           {selectedMember
@@ -119,6 +124,7 @@ function TransferOwnershipDialogContent(props: TransferOwnershipDialogProps) {
           ${selectedMember.username}).`
             : "Select a member to transfer ownership."}
         </Button>
+        {error && <div className="mt-2 text-sm text-red-500">{error}</div>}
       </div>
     </AlertDialog.Content>
   );
