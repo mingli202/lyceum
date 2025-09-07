@@ -1,10 +1,11 @@
+"use client";
+
 import { Button, ButtonVariant } from "@/components";
 import { cn } from "@/utils/cn";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { UserCardInfo } from "@convex/types";
 import { useMutation } from "convex/react";
-import { TriangleAlert } from "lucide-react";
 import { AlertDialog } from "radix-ui";
 import { useRef, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
@@ -12,23 +13,13 @@ import { Virtuoso } from "react-virtuoso";
 type TransferOwnershipDialogProps = {
   members: UserCardInfo[];
   clubId: Id<"clubs">;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function TransferOwnershipDialog(
-  props: TransferOwnershipDialogProps,
-) {
+export function TransferOwnershipDialog(props: TransferOwnershipDialogProps) {
   return (
-    <AlertDialog.Root>
-      <AlertDialog.Trigger asChild>
-        <Button
-          variant={ButtonVariant.Destructive}
-          className="flex w-full items-center gap-2"
-          dropdown
-        >
-          <TriangleAlert className="h-4 w-4" />
-          Transfer Ownership
-        </Button>
-      </AlertDialog.Trigger>
+    <AlertDialog.Root open={props.open} onOpenChange={props.setOpen}>
       <AlertDialog.Portal>
         <TransferOwnershipDialogContent {...props} />
       </AlertDialog.Portal>

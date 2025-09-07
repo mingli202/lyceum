@@ -1,13 +1,12 @@
 "use client";
 
-import { Button, ButtonVariant, PaddingSize } from "@/components";
+import { Button, ButtonVariant, ClubMembers, PaddingSize } from "@/components";
 import { RecordValues } from "@/types";
 import { ClubPageData } from "@convex/types";
 import { Settings, Users, X } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { useRef, useState } from "react";
 import EditClubSettingsTab from "./EditClubSettingsTab";
-import EditClubMembersTab from "./EditClubMembersTab";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 
@@ -36,9 +35,10 @@ export default function EditClubTabs({ data }: { data: ClubPageData }) {
       <EditClubSettingsTab data={data} closeButtonRef={closeButtonRef} />
     ),
     [Tab.Members]: (
-      <EditClubMembersTab
+      <ClubMembers
         clubId={data.clubId}
         members={members}
+        editable
         currentUserMemberInfo={
           data.memberInfo
             ? {

@@ -14,6 +14,7 @@ import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import EditClub from "./EditClub";
 import MemberRequestDialog from "./MemberRequestDialog";
+import ClubTabs from "./ClubTabs";
 
 export default function ClubPage() {
   const searchParams = useSearchParams();
@@ -135,6 +136,7 @@ function Club({ data }: ClubProps) {
             </div>
           )}
         </div>
+        <ClubTabs />
       </section>
     </div>
   );

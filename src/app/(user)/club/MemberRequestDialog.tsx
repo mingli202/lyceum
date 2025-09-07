@@ -7,7 +7,7 @@ import { useQuery } from "convex/react";
 import { X } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { useRef } from "react";
-import ClubMemberCard from "./ClubMemberCard";
+import { ClubMemberCard } from "@/components";
 
 type MemberRequestDialogProps = {
   clubId: Id<"clubs">;
@@ -56,6 +56,7 @@ export default function MemberRequestDialog(props: MemberRequestDialogProps) {
                     member={{ userInfo: member, status: "requested" }}
                     clubId={props.clubId}
                     key={member.userId}
+                    editable
                   />
                 ))}
               </div>

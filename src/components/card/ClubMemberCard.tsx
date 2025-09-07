@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Button,
   ButtonVariant,
@@ -18,11 +17,11 @@ import {
   EllipsisVertical,
   LogOut,
   MessageCircle,
+  TriangleAlert,
   XCircle,
 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import Link from "next/link";
-import TransferOwnershipDialog from "./TransferOwnershipDialog";
 
 type ClubMemberCardProps = {
   member: {
@@ -34,10 +33,14 @@ type ClubMemberCardProps = {
     userId: Id<"users">;
   };
   clubId: Id<"clubs">;
-  members: UserCardInfo[];
+  editable?: boolean;
+
+  setTransferOwnershipDialogOpen?: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
 };
 
-export default function ClubMemberCard(props: ClubMemberCardProps) {
+export function ClubMemberCard(props: ClubMemberCardProps) {
   const { member } = props;
 
   return (
@@ -90,12 +93,14 @@ export default function ClubMemberCard(props: ClubMemberCardProps) {
           </Link>
         </div>
       </div>
-      <MemberDropdownMenu
-        {...member}
-        currentUserMemberInfo={props.currentUserMemberInfo}
-        clubId={props.clubId}
-        members={props.members}
-      />
+      {props.editable && (
+        <MemberDropdownMenu
+          {...member}
+          currentUserMemberInfo={props.currentUserMemberInfo}
+          clubId={props.clubId}
+          setTransferOwnershipDialogOpen={props.setTransferOwnershipDialogOpen}
+        />
+      )}
     </Card>
   );
 }
@@ -108,7 +113,9 @@ type MemberDropdownMenuProps = {
     userStatus: Doc<"userClubsInfo">["status"];
     userId: Id<"users">;
   };
-  members: UserCardInfo[];
+  setTransferOwnershipDialogOpen?: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
 };
 function MemberDropdownMenu(props: MemberDropdownMenuProps) {
   const leaveClub = useMutation(api.mutations.leaveClub);
@@ -116,6 +123,8 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
 
   const isTheMemberTheCurrentUser =
     props.currentUserMemberInfo?.userId === props.userInfo.userId;
+
+  const setTransferOwnershipDialogOpen = props.setTransferOwnershipDialogOpen;
 
   return (
     <DropdownMenu.Root>
@@ -168,12 +177,17 @@ function MemberDropdownMenu(props: MemberDropdownMenuProps) {
           </>
         ) : (
           <>
-            {isTheMemberTheCurrentUser ? (
+            {isTheMemberTheCurrentUser && setTransferOwnershipDialogOpen ? (
               <DropdownMenu.Item asChild>
-                <TransferOwnershipDialog
-                  members={props.members}
-                  clubId={props.clubId}
-                />
+                <Button
+                  variant={ButtonVariant.Destructive}
+                  className="flex w-full items-center gap-2"
+                  dropdown
+                  onClick={() => setTransferOwnershipDialogOpen(true)}
+                >
+                  <TriangleAlert className="h-4 w-4" />
+                  Transfer Ownership
+                </Button>
               </DropdownMenu.Item>
             ) : (
               <>
