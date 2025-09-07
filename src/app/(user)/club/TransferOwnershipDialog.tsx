@@ -46,19 +46,11 @@ function TransferOwnershipDialogContent(props: TransferOwnershipDialogProps) {
 
   const [selectedMember, setSelectedMember] = useState<UserCardInfo>();
 
-  const _placeholders = Array(300)
-    .fill(0)
-    .map((_, i) => ({
-      userId: `placeholder-${i}` as Id<"users">,
-      firstName: `placeholder-${i}`,
-      username: `placeholder-${i}`,
-    }));
-
   const members = props.members;
 
   return (
     <AlertDialog.Content className="fixed inset-0 z-100 flex h-full w-full items-center justify-center overflow-hidden bg-black/50 p-6 backdrop-blur-sm">
-      <div className="animate-pop-in bg-background flex max-h-full w-md flex-col gap-3 rounded-lg p-6 shadow-2xl ring-2 ring-red-200">
+      <div className="animate-pop-in bg-background flex h-full max-h-full w-md flex-col gap-3 rounded-lg p-6 shadow-2xl ring-2 ring-red-200">
         <AlertDialog.Title className="font-bold">
           Are you sure you want to transfer ownership of this club?
         </AlertDialog.Title>

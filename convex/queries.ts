@@ -1029,6 +1029,12 @@ export const getClubMembers = query({
       status: Doc<"userClubsInfo">["status"];
     }[]
   > {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Unauthenticated");
+    }
+
     const userClubInfo = await ctx.db
       .query("userClubsInfo")
       .withIndex("by_clubId", (q) => q.eq("clubId", args.clubId))
@@ -1046,6 +1052,13 @@ export const getClubMembers = query({
       status: Doc<"userClubsInfo">["status"];
     }[] = [];
 
+    let authenticatedUserInfo:
+      | {
+          userInfo: UserCardInfo;
+          status: Doc<"userClubsInfo">["status"];
+        }
+      | undefined;
+
     for (const userClub of userClubInfo) {
       const user = await ctx.db.get(userClub.userId);
 
@@ -1053,7 +1066,7 @@ export const getClubMembers = query({
         continue;
       }
 
-      clubMembersInfo.push({
+      const info = {
         userInfo: {
           userId: user._id,
           pictureUrl: user.pictureUrl,
@@ -1061,7 +1074,22 @@ export const getClubMembers = query({
           username: user.username,
         },
         status: userClub.status,
-      });
+      };
+
+      if (user._id === authenticatedUser._id) {
+        authenticatedUserInfo = info;
+        continue;
+      }
+
+      clubMembersInfo.push(info);
+    }
+
+    clubMembersInfo.sort((a, b) =>
+      a.userInfo.firstName.localeCompare(b.userInfo.firstName),
+    );
+
+    if (authenticatedUserInfo) {
+      return [authenticatedUserInfo, ...clubMembersInfo];
     }
 
     return clubMembersInfo;

@@ -3,6 +3,8 @@
 import { Doc, Id } from "@convex/_generated/dataModel";
 import { UserCardInfo } from "@convex/types";
 import ClubMemberCard from "./ClubMemberCard";
+import { Virtuoso } from "react-virtuoso";
+import { useRef } from "react";
 
 type EditClubMembersTabProps = {
   members?: {
@@ -17,28 +19,45 @@ type EditClubMembersTabProps = {
 };
 
 export default function EditClubMembersTab(props: EditClubMembersTabProps) {
-  const members = props.members?.toSorted((a, b) =>
-    a.userInfo.firstName.localeCompare(b.userInfo.firstName),
-  );
+  const containerRef = useRef<HTMLDivElement>(null!);
 
-  return members && members.length > 0 ? (
-    <div className="flex flex-col gap-2 p-2">
-      {members.map((member) => (
-        <ClubMemberCard
-          member={member}
-          currentUserMemberInfo={props.currentUserMemberInfo}
-          clubId={props.clubId}
-          key={member.userInfo.userId}
-          members={members
-            .filter(
-              (member) =>
-                member.userInfo.userId !==
-                  props.currentUserMemberInfo?.userId &&
-                member.status === "member",
-            )
-            .map((member) => member.userInfo)}
-        />
-      ))}
-    </div>
-  ) : null;
+  const members = props.members ?? [];
+
+  const _placeholders = Array.from({ length: 100 }).map((_, i) => ({
+    userInfo: {
+      userId: `placeholder-${i}` as Id<"users">,
+      firstName: `placeholder-firstName-${i}`,
+      username: `placeholder-userName-${i}`,
+    },
+    status: "member" as Doc<"userClubsInfo">["status"],
+  }));
+
+  members.push(..._placeholders);
+
+  return (
+    <Virtuoso
+      data={members}
+      itemContent={(_, member) => (
+        <div className="w-full p-1">
+          <ClubMemberCard
+            member={member}
+            currentUserMemberInfo={props.currentUserMemberInfo}
+            clubId={props.clubId}
+            key={member.userInfo.userId}
+            members={members
+              .filter(
+                (member) =>
+                  member.userInfo.userId !==
+                    props.currentUserMemberInfo?.userId &&
+                  member.status === "member",
+              )
+              .map((member) => member.userInfo)}
+          />
+        </div>
+      )}
+      customScrollParent={containerRef.current}
+      computeItemKey={(_, member) => member.userInfo.userId}
+      className="h-screen"
+    />
+  );
 }

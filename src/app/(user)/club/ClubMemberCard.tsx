@@ -20,7 +20,6 @@ import {
   MessageCircle,
   XCircle,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
 import Link from "next/link";
 import TransferOwnershipDialog from "./TransferOwnershipDialog";
@@ -39,31 +38,30 @@ type ClubMemberCardProps = {
 };
 
 export default function ClubMemberCard(props: ClubMemberCardProps) {
-  const { member, currentUserMemberInfo } = props;
-  const router = useRouter();
+  const { member } = props;
 
   return (
-    <Card
-      className={cn(
-        "flex flex-row items-center justify-between",
-        member.status === "admin" && "-order-1",
-        currentUserMemberInfo?.userId === member.userInfo.userId && "-order-2",
-      )}
-    >
+    <Card className={cn("flex flex-row items-center justify-between")}>
       <div className="flex items-center gap-2">
-        <ProfilePicture
-          src={member.userInfo.pictureUrl}
-          displayName={member.userInfo.firstName}
-          onClick={() => router.push(`/user?id=${member.userInfo.userId}`)}
-        />
+        <Link
+          href={`/user?id=${member.userInfo.userId}`}
+          className="flex h-fit flex-col justify-center"
+          target="_blank"
+        >
+          <ProfilePicture
+            src={member.userInfo.pictureUrl}
+            displayName={member.userInfo.firstName}
+          />
+        </Link>
         <div className="flex h-fit flex-col justify-center">
           <div className="flex items-center gap-2">
-            <p
+            <Link
+              href={`/user?id=${member.userInfo.userId}`}
               className="truncate font-bold hover:cursor-pointer hover:underline"
-              onClick={() => router.push(`/user?id=${member.userInfo.userId}`)}
+              target="_blank"
             >
               {member.userInfo.firstName}
-            </p>
+            </Link>
 
             <p
               className={cn(
@@ -83,12 +81,13 @@ export default function ClubMemberCard(props: ClubMemberCardProps) {
               {member.status}
             </p>
           </div>
-          <p
+          <Link
+            href={`/user?id=${member.userInfo.userId}`}
             className="text-muted-foreground truncate text-sm hover:cursor-pointer hover:underline"
-            onClick={() => router.push(`/user?id=${member.userInfo.userId}`)}
+            target="_blank"
           >
             @{member.userInfo.username}
-          </p>
+          </Link>
         </div>
       </div>
       <MemberDropdownMenu
