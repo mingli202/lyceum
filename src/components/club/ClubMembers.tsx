@@ -45,7 +45,7 @@ export function ClubMembers({
     status: "member" as Doc<"userClubsInfo">["status"],
   }));
 
-  members.push(..._placeholders);
+  // members.push(..._placeholders);
 
   return (
     <>
