@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Chat, ClubMembers } from "@/components";
+import { Button, Chat, ClubMembers, Feed } from "@/components";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { ClubPageData } from "@convex/types";
@@ -46,6 +46,9 @@ export default function ClubTabs({ data, customScrollParent }: ClubTabsProps) {
     [Tab.Chat]: data.memberInfo ? (
       <Chat chatId={data.memberInfo.chatId} className="h-[calc(100vh-10rem)]" />
     ) : null,
+    [Tab.Posts]: (
+      <Feed clubId={data.clubId} customScrollParent={customScrollParent} />
+    ),
   };
   const iconMap: Record<Tab, React.ReactNode> = {};
 
