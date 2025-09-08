@@ -402,6 +402,39 @@ export const _cleanupFollowing = internalMutation({
   },
 });
 
+export const _cleanupClubLeaveOrUnfollow = internalMutation({
+  args: { clubId: v.id("clubs"), leavingUserId: v.id("users") },
+  async handler(ctx, args) {
+    const { clubId, leavingUserId } = args;
+
+    const club = await ctx.db.get(clubId);
+
+    if (!club) {
+      return;
+    }
+
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q.eq("userId", leavingUserId).eq("clubId", clubId),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (!userClubInfo) {
+      return;
+    }
+
+    for await (const viewablePost of ctx.db
+      .query("viewablePosts")
+      .withIndex("by_userId_authorId", (q) =>
+        q.eq("userId", leavingUserId).eq("authorId", clubId),
+      )) {
+      await ctx.db.delete(viewablePost._id);
+    }
+  },
+});
+
 export const followUser = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -794,7 +827,7 @@ export const newUserPost = mutation({
         await ctx.db.insert("viewablePosts", {
           userId: followerAndMember.userId,
           postId,
-          authorId: authenticatedUser._id,
+          authorId: clubId,
         });
       }
     } else {
