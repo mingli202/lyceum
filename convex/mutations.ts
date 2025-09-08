@@ -747,6 +747,30 @@ export const newUserPost = mutation({
     });
 
     if (clubId) {
+      const userClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", authenticatedUser._id).eq("clubId", clubId),
+        )
+        .unique()
+        .catch(() => null);
+
+      if (!userClubInfo) {
+        throw new Error("User not in club");
+      }
+
+      if (userClubInfo.status !== "admin") {
+        const club = await ctx.db.get(clubId);
+
+        if (!club) {
+          throw new Error("Club not found");
+        }
+
+        if (!club.allowMemberPost) {
+          throw new Error("Not allowed!");
+        }
+      }
+
       await ctx.db.insert("clubPosts", {
         authorId: authenticatedUser._id,
         clubId,
