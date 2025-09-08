@@ -17,9 +17,9 @@ import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 export function NewPost({
-  context: { refreshFeed },
+  context: { refreshFeed, clubId },
 }: {
-  context: { refreshFeed: () => void };
+  context: { refreshFeed: () => void; clubId?: Id<"clubs"> };
 }) {
   const user = useQuery(api.queries.getUser, {});
   const newUserPost = useMutation(api.mutations.newUserPost);
@@ -38,6 +38,7 @@ export function NewPost({
     const form = e.target as HTMLFormElement;
     const formdata = new FormData(form);
     const description = formdata.get("description")!.toString();
+    const isMembersOnly = formdata.get("isMembersOnly")?.toString() === "on";
 
     let imageId: Id<"_storage"> | undefined;
 
@@ -53,7 +54,12 @@ export function NewPost({
       imageId = storageId;
     }
 
-    const res = await newUserPost({ description, imageId }).catch(() => null);
+    const res = await newUserPost({
+      description,
+      imageId,
+      clubId,
+      isMembersOnly,
+    }).catch(() => null);
 
     if (res) {
       return "Something went wrong, try again.";
@@ -143,44 +149,61 @@ export function NewPost({
               />
             </div>
           )}
-          <div className="flex items-center justify-end gap-4">
-            <label
-              htmlFor="file"
-              className="w-fit hover:cursor-pointer"
-              onClick={() => {
-                if (isUploading) {
-                  return;
-                }
-                setIsUploading(true);
-
-                // why is there no event listener for cancel? (v3)
-                const f = () => setIsUploading(false);
-                fileInputRef.current?.addEventListener("cancel", f, {
-                  once: true,
-                });
-              }}
-            >
-              {isUploading ? (
-                <LoadingSpinner hideLoadingText className="h-4 w-4" />
-              ) : (
-                <ImagePlus className="h-4 w-4" />
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              {clubId && (
+                <label
+                  className="flex items-center gap-2 text-sm"
+                  htmlFor="isMembersOnly"
+                >
+                  <input
+                    type="checkbox"
+                    id="isMembersOnly"
+                    name="isMembersOnly"
+                  />
+                  Restrict post to members only
+                </label>
               )}
-              <input
-                id="file"
-                name="file"
-                type="file"
-                accept=".png, .jpg, .jpeg"
-                className="hidden"
-                onChange={(e) => {
-                  handleFileUpload(e.target.files?.[0]);
+            </div>
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="file"
+                className="w-fit hover:cursor-pointer"
+                onClick={() => {
+                  if (isUploading) {
+                    return;
+                  }
+                  setIsUploading(true);
+
+                  // why is there no event listener for cancel? (v3)
+                  const f = () => setIsUploading(false);
+                  fileInputRef.current?.addEventListener("cancel", f, {
+                    once: true,
+                  });
                 }}
-                ref={fileInputRef}
-                disabled={isPending}
-              />
-            </label>
-            <Button variant={ButtonVariant.Special} isPending={isPending}>
-              Post
-            </Button>
+              >
+                {isUploading ? (
+                  <LoadingSpinner hideLoadingText className="h-4 w-4" />
+                ) : (
+                  <ImagePlus className="h-4 w-4" />
+                )}
+                <input
+                  id="file"
+                  name="file"
+                  type="file"
+                  accept=".png, .jpg, .jpeg"
+                  className="hidden"
+                  onChange={(e) => {
+                    handleFileUpload(e.target.files?.[0]);
+                  }}
+                  ref={fileInputRef}
+                  disabled={isPending}
+                />
+              </label>
+              <Button variant={ButtonVariant.Special} isPending={isPending}>
+                Post
+              </Button>
+            </div>
           </div>
           {msg && <p className="px-4 pb-4 text-red-500">{msg}</p>}
         </form>

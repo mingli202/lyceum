@@ -82,7 +82,6 @@ export const createNewUser = mutation({
       city: args.city,
       academicYear: args.academicYear,
       isPrivate: false,
-      isOnline: true,
     });
 
     return "ok" as const;
@@ -717,9 +716,14 @@ export const removeBannerPicture = mutation({
 });
 
 export const newUserPost = mutation({
-  args: { description: v.string(), imageId: v.optional(v.id("_storage")) },
+  args: {
+    description: v.string(),
+    imageId: v.optional(v.id("_storage")),
+    clubId: v.optional(v.id("clubs")),
+    isMembersOnly: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
-    const { description, imageId } = args;
+    const { description, imageId, clubId, isMembersOnly } = args;
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
     if (!authenticatedUser) {
@@ -742,33 +746,63 @@ export const newUserPost = mutation({
       likes: {},
     });
 
-    await ctx.db.insert("userPosts", {
-      userId: authenticatedUser._id,
-      postId,
-    });
+    if (clubId) {
+      await ctx.db.insert("clubPosts", {
+        authorId: authenticatedUser._id,
+        clubId,
+        postId,
+        isMembersOnly: isMembersOnly ?? false,
+      });
 
-    const followers = await ctx.db
-      .query("followingsInfo")
-      .withIndex("by_followingId", (q) =>
-        q.eq("followingId", authenticatedUser._id),
-      )
-      .collect();
+      const followersAndMembers = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_clubId", (q) => q.eq("clubId", clubId))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("status"), "member"),
+            q.eq(q.field("status"), "admin"),
+            q.eq(q.field("status"), "following"),
+          ),
+        )
+        .collect();
 
-    for (const follower of followers) {
-      if (follower.status === "accepted") {
+      for (const followerAndMember of followersAndMembers) {
         await ctx.db.insert("viewablePosts", {
-          userId: follower.userId,
+          userId: followerAndMember.userId,
           postId,
           authorId: authenticatedUser._id,
         });
       }
-    }
+    } else {
+      await ctx.db.insert("userPosts", {
+        userId: authenticatedUser._id,
+        postId,
+      });
 
-    await ctx.db.insert("viewablePosts", {
-      userId: authenticatedUser._id,
-      postId,
-      authorId: authenticatedUser._id,
-    });
+      const followers = await ctx.db
+        .query("followingsInfo")
+        .withIndex("by_followingId", (q) =>
+          q.eq("followingId", authenticatedUser._id),
+        )
+        .collect();
+
+      for (const follower of followers) {
+        if (follower.status === "accepted") {
+          await ctx.db.insert("viewablePosts", {
+            userId: follower.userId,
+            postId,
+            authorId: authenticatedUser._id,
+          });
+        }
+      }
+
+      // insert one viewable for the user themself
+      await ctx.db.insert("viewablePosts", {
+        userId: authenticatedUser._id,
+        postId,
+        authorId: authenticatedUser._id,
+      });
+    }
   },
 });
 

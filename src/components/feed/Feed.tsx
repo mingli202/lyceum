@@ -10,11 +10,11 @@ import { Footer } from "./Footer";
 import { Id } from "@convex/_generated/dataModel";
 
 type FeedProps = {
-  clubId?: Id<"clubs">;
   customScrollParent?: HTMLElement;
+  clubId?: Id<"clubs">;
 };
 
-export function Feed({ clubId, customScrollParent }: FeedProps) {
+export function Feed({ customScrollParent, clubId }: FeedProps) {
   const [now, setNow] = useState(Date.now());
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
 
@@ -31,7 +31,7 @@ export function Feed({ clubId, customScrollParent }: FeedProps) {
     loadMore,
   } = usePaginatedQuery(
     api.queries.getFeedData,
-    { now },
+    { now, clubId },
     { initialNumItems: 10 },
   );
 
@@ -48,9 +48,16 @@ export function Feed({ clubId, customScrollParent }: FeedProps) {
       data={posts}
       endReached={loadMoreCb}
       increaseViewportBy={200}
-      context={{ status, loadMore: loadMoreCb, refreshFeed }}
+      context={{ status, loadMore: loadMoreCb, refreshFeed, clubId }}
       className="h-full"
-      itemContent={(_, post) => <PostCard post={post} isFeed className="p-1" />}
+      itemContent={(_, post) => (
+        <PostCard
+          post={post}
+          isFeed
+          className="p-1"
+          isClub={clubId !== undefined}
+        />
+      )}
       components={{ Header: NewPost, Footer }}
       customScrollParent={scrollParent ?? undefined}
     />

@@ -116,6 +116,9 @@ export const ProfileData = v.object({
   bannerUrl: v.optional(v.string()),
 });
 
+export const ClubUserStatus =
+  schema.tables.userClubsInfo.validator.fields.status;
+
 export const UserPostPreviewInfo = v.object({
   postId: v.id("posts"),
   author: v.object({
@@ -142,6 +145,14 @@ export const ClubPostPreviewInfo = v.object({
     pictureUrl: v.optional(v.string()),
     name: v.string(),
   }),
+  author: v.object({
+    authorId: v.id("users"),
+    pictureUrl: v.optional(v.string()),
+    firstName: v.string(),
+    lastName: v.optional(v.string()),
+    username: v.string(),
+    status: ClubUserStatus,
+  }),
   nComments: v.number(),
   nReplies: v.number(),
   nLikes: v.number(),
@@ -152,8 +163,16 @@ export const ClubPostPreviewInfo = v.object({
   isMembersOnly: v.boolean(),
 });
 
-export const ClubUserStatus =
-  schema.tables.userClubsInfo.validator.fields.status;
+export const UserOrClubPost = v.union(
+  v.object({
+    type: v.literal("user"),
+    post: UserPostPreviewInfo,
+  }),
+  v.object({
+    type: v.literal("club"),
+    post: ClubPostPreviewInfo,
+  }),
+);
 
 export const ClubCategory = v.union(
   v.literal("Academic"),
@@ -205,17 +224,6 @@ export const UserCardInfo = v.object({
   firstName: v.string(),
   username: v.string(),
 });
-
-export const UserOrClubPost = v.union(
-  v.object({
-    type: v.literal("user"),
-    post: UserPostPreviewInfo,
-  }),
-  v.object({
-    type: v.literal("club"),
-    post: ClubPostPreviewInfo,
-  }),
-);
 
 export const PostComment = v.object({
   nLikes: v.number(),

@@ -671,12 +671,6 @@ export const _getPostData = internalQuery({
             .withIndex("by_postId", (q) => q.eq("postId", post._id))
             .collect()
         ).length,
-        // nReplies: (
-        //   await ctx.db
-        //     .query("replies")
-        //     .withIndex("by_postId", (q) => q.eq("postId", post._id))
-        //     .collect()
-        // ).length,
         nReplies: 0,
         hasLiked: post.likes[authenticatedUserId] ? true : false,
         nLikes: Object.keys(post.likes).length,
@@ -712,6 +706,31 @@ export const _getPostData = internalQuery({
         pictureUrl = (await ctx.storage.getUrl(club.pictureId)) ?? undefined;
       }
 
+      const author = await ctx.db.get(clubPost.authorId);
+      if (!author) {
+        return null;
+      }
+
+      const userClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", author._id).eq("clubId", club._id),
+        )
+        .unique()
+        .catch(() => null);
+
+      if (!userClubInfo) {
+        return null;
+      }
+
+      if (
+        clubPost.isMembersOnly &&
+        userClubInfo.status !== "member" &&
+        userClubInfo.status !== "admin"
+      ) {
+        return null;
+      }
+
       const clubPostPreviewInfo: ClubPostPreviewInfo = {
         postId: post._id,
         club: {
@@ -719,18 +738,20 @@ export const _getPostData = internalQuery({
           pictureUrl,
           name: club.name,
         },
+        author: {
+          authorId: author._id,
+          pictureUrl: author.pictureUrl,
+          firstName: author.givenName,
+          lastName: author.familyName,
+          username: author.username,
+          status: userClubInfo.status,
+        },
         nComments: (
           await ctx.db
             .query("comments")
             .withIndex("by_postId", (q) => q.eq("postId", post._id))
             .collect()
         ).length,
-        // nReplies: (
-        //   await ctx.db
-        //     .query("replies")
-        //     .withIndex("by_postId", (q) => q.eq("postId", post._id))
-        //     .collect()
-        // ).length,
         nReplies: 0,
         nLikes: Object.keys(post.likes).length,
         hasLiked: post.likes[authenticatedUserId] ? true : false,
@@ -746,7 +767,11 @@ export const _getPostData = internalQuery({
 });
 
 export const getFeedData = query({
-  args: { paginationOpts: paginationOptsValidator, now: v.number() },
+  args: {
+    paginationOpts: paginationOptsValidator,
+    now: v.number(),
+    clubId: v.optional(v.id("clubs")),
+  },
   handler: async (ctx, args): Promise<PaginationResult<UserOrClubPost>> => {
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
@@ -754,12 +779,25 @@ export const getFeedData = query({
       return { page: [], continueCursor: "", isDone: true };
     }
 
+    const { now, clubId } = args;
+
+    if (clubId) {
+      return await ctx.runQuery(internal.queries._getClubPosts, {
+        clubId,
+        now,
+        paginationOpts: args.paginationOpts,
+      });
+    }
+
     const postsInfo: UserOrClubPost[] = [];
 
-    const viewablePosts = await ctx.db
-      .query("viewablePosts")
-      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
-      .filter((q) => q.lte(q.field("_creationTime"), args.now))
+    const query = ctx.db.query("viewablePosts");
+    const posts = query.withIndex("by_userId", (q) =>
+      q.eq("userId", authenticatedUser._id),
+    );
+
+    const viewablePosts = await posts
+      .filter((q) => q.lte(q.field("_creationTime"), now))
       .order("desc")
       .paginate(args.paginationOpts);
 
@@ -1124,5 +1162,48 @@ export const getClubRequests = query({
     }
 
     return clubMembersInfo;
+  },
+});
+
+export const _getClubPosts = internalQuery({
+  args: {
+    clubId: v.id("clubs"),
+    now: v.number(),
+    paginationOpts: paginationOptsValidator,
+  },
+  async handler(ctx, args): Promise<PaginationResult<UserOrClubPost>> {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Can't find user");
+    }
+
+    const { clubId, now } = args;
+
+    const postsInfo: UserOrClubPost[] = [];
+
+    const results = await ctx.db
+      .query("clubPosts")
+      .withIndex("by_clubId", (q) => q.eq("clubId", clubId))
+      .filter((q) => q.lte(q.field("_creationTime"), now))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    for (const clubPost of results.page) {
+      const postInfo = await ctx.runQuery(internal.queries._getPostData, {
+        isAuthor: authenticatedUser._id === clubPost.authorId,
+        postId: clubPost.postId,
+        authenticatedUserId: authenticatedUser._id,
+      });
+
+      if (postInfo) {
+        postsInfo.push(postInfo);
+      }
+    }
+
+    return {
+      ...results,
+      page: postsInfo,
+    };
   },
 });

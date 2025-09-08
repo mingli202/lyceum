@@ -69,7 +69,6 @@ export default defineSchema({
     city: v.optional(v.string()),
     academicYear: v.number(),
     isPrivate: v.boolean(),
-    isOnline: v.boolean(),
     lastSeenAt: v.optional(v.number()),
     bannerId: v.optional(v.id("_storage")),
   }).index("by_userId", ["userId"]),
@@ -102,6 +101,7 @@ export default defineSchema({
   clubPosts: defineTable({
     clubId: v.id("clubs"),
     postId: v.id("posts"),
+    authorId: v.id("users"),
     isMembersOnly: v.boolean(),
   })
     .index("by_clubId", ["clubId"])
