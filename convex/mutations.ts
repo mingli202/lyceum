@@ -1370,6 +1370,11 @@ export const disbandClub = mutation({
     for await (const memberClubInfo of ctx.db
       .query("userClubsInfo")
       .withIndex("by_clubId", (q) => q.eq("clubId", club._id))) {
+      await ctx.runMutation(internal.mutations._cleanupClubLeaveOrUnfollow, {
+        clubId: club._id,
+        leavingUserId: memberClubInfo.userId,
+      });
+
       await ctx.db.delete(memberClubInfo._id);
     }
 
