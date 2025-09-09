@@ -82,6 +82,7 @@ export const createNewUser = mutation({
       city: args.city,
       academicYear: args.academicYear,
       isPrivate: false,
+      lastSeenAt: Date.now(),
     });
 
     return "ok" as const;
