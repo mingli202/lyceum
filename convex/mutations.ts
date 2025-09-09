@@ -525,7 +525,7 @@ export const setLoginStats = mutation({
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
     if (!authenticatedUser) {
-      throw new Error("User not found");
+      return;
     }
 
     const profile = await ctx.db
@@ -535,7 +535,7 @@ export const setLoginStats = mutation({
       .catch(() => null);
 
     if (!profile) {
-      throw new Error("User profile not found");
+      return;
     }
 
     await ctx.db.patch(profile._id, {
