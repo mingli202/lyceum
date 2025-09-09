@@ -12,9 +12,10 @@ import { Id } from "@convex/_generated/dataModel";
 type FeedProps = {
   customScrollParent?: HTMLElement;
   clubId?: Id<"clubs">;
+  allowed?: boolean;
 };
 
-export function Feed({ customScrollParent, clubId }: FeedProps) {
+export function Feed({ customScrollParent, clubId, allowed }: FeedProps) {
   const [now, setNow] = useState(Date.now());
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
 
@@ -48,15 +49,16 @@ export function Feed({ customScrollParent, clubId }: FeedProps) {
       data={posts}
       endReached={loadMoreCb}
       increaseViewportBy={200}
-      context={{ status, loadMore: loadMoreCb, refreshFeed, clubId }}
+      context={{
+        status,
+        loadMore: loadMoreCb,
+        refreshFeed,
+        clubId,
+        allowed,
+      }}
       className="h-full"
       itemContent={(_, post) => (
-        <PostCard
-          post={post}
-          isFeed
-          className="p-1"
-          isClub={clubId !== undefined}
-        />
+        <PostCard post={post} className="p-1" isClub={clubId !== undefined} />
       )}
       components={{ Header: NewPost, Footer }}
       customScrollParent={scrollParent ?? undefined}

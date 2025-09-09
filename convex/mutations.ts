@@ -800,7 +800,7 @@ export const newUserPost = mutation({
           throw new Error("Club not found");
         }
 
-        if (!club.allowMemberPost) {
+        if (!club.allowMemberPost || userClubInfo.status !== "member") {
           throw new Error("Not allowed!");
         }
       }

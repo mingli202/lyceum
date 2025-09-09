@@ -47,7 +47,16 @@ export default function ClubTabs({ data, customScrollParent }: ClubTabsProps) {
       <Chat chatId={data.memberInfo.chatId} className="h-[calc(100vh-10rem)]" />
     ) : null,
     [Tab.Posts]: (
-      <Feed clubId={data.clubId} customScrollParent={customScrollParent} />
+      <Feed
+        clubId={data.clubId}
+        customScrollParent={customScrollParent}
+        allowed={
+          data.memberInfo
+            ? data.memberInfo.userStatus === "admin" ||
+              (data.allowMemberPost && data.memberInfo.userStatus === "member")
+            : false
+        }
+      />
     ),
   };
   const iconMap: Record<Tab, React.ReactNode> = {};

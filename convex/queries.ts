@@ -759,6 +759,7 @@ export const _getPostData = internalQuery({
         description: post.description,
         imageUrl,
         isMembersOnly: clubPost.isMembersOnly,
+        isOwner: clubPost.authorId === authenticatedUserId,
       };
 
       return { type: "club", post: clubPostPreviewInfo } as const;

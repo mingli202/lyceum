@@ -20,19 +20,20 @@ type PostCardProps = {
   post: UserOrClubPost;
   isFeed?: boolean;
   isClub?: boolean;
+  refreshFeed?: () => void;
 } & HTMLAttributes<HTMLDivElement>;
 export function PostCard({
   post: p,
-  isFeed,
   isClub,
   className,
+  refreshFeed,
   ...props
 }: PostCardProps) {
   const { type, post } = p;
-  const isOwner = type === "user" && post.isOwner;
+  const isOwner =
+    post.isOwner || (type === "club" && post.author.status === "admin");
 
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
-  const router = useRouter();
 
   const deletePost = useMutation(api.mutations.deletePost);
   const likePost = useMutation(api.mutations.likePost);
@@ -96,11 +97,12 @@ export function PostCard({
                 ({parseTimestamp(post.createdAt)})
               </p>
             </div>
-            {isOwner && !isFeed && (
+            {isOwner && (
               <Button
-                className="p-0 text-red-500"
+                className="text-muted-foreground p-0"
                 onClick={async () => {
                   await deletePost({ postId: post.postId });
+                  refreshFeed?.();
                 }}
               >
                 <Trash className="h-4 w-4" />

@@ -17,9 +17,9 @@ import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 export function NewPost({
-  context: { refreshFeed, clubId },
+  context: { refreshFeed, clubId, allowed },
 }: {
-  context: { refreshFeed: () => void; clubId?: Id<"clubs"> };
+  context: { refreshFeed: () => void; clubId?: Id<"clubs">; allowed?: boolean };
 }) {
   const user = useQuery(api.queries.getUser, {});
   const newUserPost = useMutation(api.mutations.newUserPost);
@@ -75,6 +75,18 @@ export function NewPost({
     refreshFeed();
   });
 
+  useEffect(() => {
+    return () => {
+      if (localFileUrl) {
+        URL.revokeObjectURL(localFileUrl);
+      }
+    };
+  }, [localFileUrl]);
+
+  if (!allowed) {
+    return null;
+  }
+
   async function handleFileUpload(uploadedFile?: File) {
     setIsUploading(false);
 
@@ -95,14 +107,6 @@ export function NewPost({
 
     file.current = uploadedFile;
   }
-
-  useEffect(() => {
-    return () => {
-      if (localFileUrl) {
-        URL.revokeObjectURL(localFileUrl);
-      }
-    };
-  }, [localFileUrl]);
 
   return (
     <div className="flex w-full justify-center p-1">

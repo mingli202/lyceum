@@ -160,6 +160,7 @@ export const ClubPostPreviewInfo = v.object({
   createdAt: v.number(),
   description: v.string(),
   imageUrl: v.optional(v.string()),
+  isOwner: v.boolean(),
   isMembersOnly: v.boolean(),
 });
 
