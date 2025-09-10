@@ -764,16 +764,6 @@ export const newUserPost = mutation({
       throw new Error("User not found");
     }
 
-    const user = await ctx.db.get(authenticatedUser._id);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    if (user.state !== "active") {
-      throw new Error("User not active");
-    }
-
     const postId = await ctx.db.insert("posts", {
       description,
       imageId,
@@ -801,7 +791,7 @@ export const newUserPost = mutation({
         }
 
         if (!club.allowMemberPost || userClubInfo.status !== "member") {
-          throw new Error("Not allowed!");
+          return "Not allowed!";
         }
       }
 
