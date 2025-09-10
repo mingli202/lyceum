@@ -11,7 +11,7 @@ export default function FeedPage() {
       className="flex h-screen w-full flex-col justify-center py-4"
       ref={containerRef}
     >
-      <Feed customScrollParent={containerRef.current} />
+      <Feed customScrollParent={containerRef.current} allowed />
     </div>
   );
 }

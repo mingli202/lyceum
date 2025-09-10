@@ -719,14 +719,22 @@ export const _getPostData = internalQuery({
         .unique()
         .catch(() => null);
 
+      const authenticatedUserClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", authenticatedUserId).eq("clubId", club._id),
+        )
+        .unique()
+        .catch(() => null);
+
       if (!userClubInfo) {
         return null;
       }
 
       if (
         clubPost.isMembersOnly &&
-        userClubInfo.status !== "member" &&
-        userClubInfo.status !== "admin"
+        authenticatedUserClubInfo?.status !== "member" &&
+        authenticatedUserClubInfo?.status !== "admin"
       ) {
         return null;
       }
@@ -759,7 +767,9 @@ export const _getPostData = internalQuery({
         description: post.description,
         imageUrl,
         isMembersOnly: clubPost.isMembersOnly,
-        isOwner: clubPost.authorId === authenticatedUserId,
+        isOwner:
+          clubPost.authorId === authenticatedUserId ||
+          authenticatedUserClubInfo?.status === "admin",
       };
 
       return { type: "club", post: clubPostPreviewInfo } as const;

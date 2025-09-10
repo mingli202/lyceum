@@ -414,6 +414,14 @@ export const _cleanupClubLeaveOrUnfollow = internalMutation({
       return;
     }
 
+    for await (const viewablePost of ctx.db
+      .query("viewablePosts")
+      .withIndex("by_userId_authorId", (q) =>
+        q.eq("userId", leavingUserId).eq("authorId", clubId),
+      )) {
+      await ctx.db.delete(viewablePost._id);
+    }
+
     const userClubInfo = await ctx.db
       .query("userClubsInfo")
       .withIndex("by_userId_clubId", (q) =>
@@ -422,16 +430,8 @@ export const _cleanupClubLeaveOrUnfollow = internalMutation({
       .unique()
       .catch(() => null);
 
-    if (!userClubInfo) {
-      return;
-    }
-
-    for await (const viewablePost of ctx.db
-      .query("viewablePosts")
-      .withIndex("by_userId_authorId", (q) =>
-        q.eq("userId", leavingUserId).eq("authorId", clubId),
-      )) {
-      await ctx.db.delete(viewablePost._id);
+    if (userClubInfo) {
+      await ctx.db.delete(userClubInfo._id);
     }
   },
 });
@@ -1110,9 +1110,22 @@ export const joinClub = mutation({
       if (userClubInfo.status === "banned") {
         throw new Error("Banned");
       } else if (userClubInfo.status !== "admin") {
-        await ctx.db.delete(userClubInfo._id);
+        await ctx.runMutation(internal.mutations._cleanupClubLeaveOrUnfollow, {
+          clubId: clubId as Id<"clubs">,
+          leavingUserId: authenticatedUser._id,
+        });
       }
     } else {
+      for await (const clubPost of ctx.db
+        .query("clubPosts")
+        .withIndex("by_clubId", (q) => q.eq("clubId", club._id))) {
+        await ctx.db.insert("viewablePosts", {
+          userId: authenticatedUser._id,
+          postId: clubPost.postId,
+          authorId: club._id,
+        });
+      }
+
       await ctx.db.insert("userClubsInfo", {
         userId: authenticatedUser._id,
         clubId: club._id,
@@ -1276,8 +1289,6 @@ export const leaveClub = mutation({
         .catch(() => null);
 
       if (otherUserClubInfo) {
-        console.log("hello world");
-
         if (isBanningUser) {
           if (otherUserClubInfo.status === "banned") {
             await ctx.db.patch(otherUserClubInfo._id, {
@@ -1289,7 +1300,13 @@ export const leaveClub = mutation({
             });
           }
         } else {
-          await ctx.db.delete(otherUserClubInfo._id);
+          await ctx.runMutation(
+            internal.mutations._cleanupClubLeaveOrUnfollow,
+            {
+              clubId: clubId as Id<"clubs">,
+              leavingUserId: otherUserClubInfo.userId,
+            },
+          );
         }
       }
     } else {
@@ -1325,7 +1342,10 @@ export const leaveClub = mutation({
         }
       }
 
-      await ctx.db.delete(userClubInfo._id);
+      await ctx.runMutation(internal.mutations._cleanupClubLeaveOrUnfollow, {
+        clubId: clubId as Id<"clubs">,
+        leavingUserId: userClubInfo.userId,
+      });
     }
   },
 });
@@ -1364,8 +1384,6 @@ export const disbandClub = mutation({
         clubId: club._id,
         leavingUserId: memberClubInfo.userId,
       });
-
-      await ctx.db.delete(memberClubInfo._id);
     }
 
     await ctx.runMutation(internal.mutations._deleteChat, {

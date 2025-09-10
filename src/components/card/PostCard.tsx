@@ -1,7 +1,7 @@
 "use client";
 
 import { UserOrClubPost } from "@convex/types";
-import { Forward, Heart, MessageCircle, Trash } from "lucide-react";
+import { Forward, Heart, Lock, MessageCircle, Trash } from "lucide-react";
 import { ProfilePicture } from "../profile";
 import parseTimestamp from "@/utils/parseTimestamp";
 import Image from "next/image";
@@ -18,20 +18,18 @@ import Link from "next/link";
 
 type PostCardProps = {
   post: UserOrClubPost;
-  isFeed?: boolean;
-  isClub?: boolean;
+  isViewingPostInTheClubPage?: boolean;
   refreshFeed?: () => void;
 } & HTMLAttributes<HTMLDivElement>;
 export function PostCard({
   post: p,
-  isClub,
+  isViewingPostInTheClubPage,
   className,
   refreshFeed,
   ...props
 }: PostCardProps) {
   const { type, post } = p;
-  const isOwner =
-    post.isOwner || (type === "club" && post.author.status === "admin");
+  const isOwner = post.isOwner;
 
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
 
@@ -56,7 +54,7 @@ export function PostCard({
   return (
     <div className={cn("flex w-full justify-center", className)} {...props}>
       <Card className="w-full max-w-2xl flex-row">
-        {type === "user" || isClub ? (
+        {type === "user" || isViewingPostInTheClubPage ? (
           <Link href={`/user?id=${post.author.authorId}`}>
             <ProfilePicture
               src={post.author.pictureUrl}
@@ -74,16 +72,16 @@ export function PostCard({
         )}
         <div className="w-full space-y-1">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <Link
                 href={
-                  type === "user" || isClub
+                  type === "user" || isViewingPostInTheClubPage
                     ? `/user?id=${post.author.authorId}`
                     : `/club?id=${post.club.clubId}`
                 }
                 className="font-bold hover:cursor-pointer hover:underline"
               >
-                {type === "user" || isClub
+                {type === "user" || isViewingPostInTheClubPage
                   ? post.author.firstName
                   : post.club.name}
               </Link>
@@ -96,6 +94,12 @@ export function PostCard({
                 </Link>{" "}
                 ({parseTimestamp(post.createdAt)})
               </p>
+              {type === "club" && post.isMembersOnly && (
+                <div className="bg-muted-foreground/10 flex items-center gap-1 rounded-full px-2 py-0.5 text-xs">
+                  <Lock className="h-3 w-3" />
+                  restricted
+                </div>
+              )}
             </div>
             {isOwner && (
               <Button

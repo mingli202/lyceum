@@ -58,7 +58,11 @@ export function Feed({ customScrollParent, clubId, allowed }: FeedProps) {
       }}
       className="h-full"
       itemContent={(_, post) => (
-        <PostCard post={post} className="p-1" isClub={clubId !== undefined} />
+        <PostCard
+          post={post}
+          className="p-1"
+          isViewingPostInTheClubPage={clubId !== undefined}
+        />
       )}
       components={{ Header: NewPost, Footer }}
       customScrollParent={scrollParent ?? undefined}
