@@ -59,10 +59,10 @@ export function NewPost({
       imageId,
       clubId,
       isMembersOnly,
-    }).catch(() => null);
+    }).catch(() => "Something went wrong, try again.");
 
     if (res) {
-      return "Something went wrong, try again.";
+      return res;
     }
 
     form.reset();
