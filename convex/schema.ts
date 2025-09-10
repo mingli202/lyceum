@@ -31,7 +31,7 @@ export default defineSchema({
   classes: defineTable({
     code: v.string(),
 
-    chat: v.id("chats"),
+    chatId: v.id("chats"),
 
     title: v.string(),
     professor: v.string(),
@@ -69,7 +69,6 @@ export default defineSchema({
     city: v.optional(v.string()),
     academicYear: v.number(),
     isPrivate: v.boolean(),
-    isOnline: v.boolean(),
     lastSeenAt: v.optional(v.number()),
     bannerId: v.optional(v.id("_storage")),
   }).index("by_userId", ["userId"]),
@@ -91,7 +90,7 @@ export default defineSchema({
   viewablePosts: defineTable({
     userId: v.id("users"),
     postId: v.id("posts"),
-    authorId: v.id("users"),
+    authorId: v.union(v.id("users"), v.id("clubs")),
   })
     .index("by_userId", ["userId"])
     .index("by_postId", ["postId"])
@@ -102,6 +101,7 @@ export default defineSchema({
   clubPosts: defineTable({
     clubId: v.id("clubs"),
     postId: v.id("posts"),
+    authorId: v.id("users"),
     isMembersOnly: v.boolean(),
   })
     .index("by_clubId", ["clubId"])
@@ -163,9 +163,12 @@ export default defineSchema({
   }).index("by_clubId", ["clubId"]),
 
   clubs: defineTable({
+    chatId: v.id("chats"),
+    bannerId: v.optional(v.id("_storage")),
+    pictureId: v.optional(v.id("_storage")),
+
     name: v.string(),
     description: v.string(),
-    pictureUrl: v.optional(v.string()),
     allowMemberPost: v.boolean(),
     isPrivate: v.boolean(),
     category: v.union(
@@ -182,7 +185,6 @@ export default defineSchema({
 
   chats: defineTable({
     title: v.string(),
-    members: v.array(v.id("users")),
   }),
 
   messages: defineTable({

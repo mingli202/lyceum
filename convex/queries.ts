@@ -16,10 +16,11 @@ import {
   UserOrClubPost,
   PostComment,
   MessageInfo,
+  ClubPageData,
 } from "./types";
 import schema from "./schema";
 import { authorize, getUserFromClerkId } from "./utils";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
 
 export const _getUserFromClerkId = internalQuery({
@@ -435,14 +436,26 @@ export const getUserClubs = query({
 
       const members = await ctx.db
         .query("userClubsInfo")
-        .withIndex("by_clubId")
+        .withIndex("by_clubId", (q) => q.eq("clubId", club._id))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("status"), "member"),
+            q.eq(q.field("status"), "admin"),
+          ),
+        )
         .collect();
+
+      let pictureUrl;
+
+      if (club.pictureId) {
+        pictureUrl = (await ctx.storage.getUrl(club.pictureId)) ?? undefined;
+      }
 
       const clubPreviewInfo: ClubPreviewInfo = {
         category: club.category,
         clubId: club._id,
         description: club.description,
-        pictureUrl: club.pictureUrl,
+        pictureUrl,
         name: club.name,
         isPrivate: club.isPrivate,
         nMembers: members.length,
@@ -496,7 +509,7 @@ export const getClassPageData = query({
 
     const classPageData: ClassPageData = {
       classId: classInfo._id,
-      chatId: classInfo.chat,
+      chatId: classInfo.chatId,
       title: classInfo.title,
       professor: classInfo.professor,
       code: classInfo.code,
@@ -658,12 +671,6 @@ export const _getPostData = internalQuery({
             .withIndex("by_postId", (q) => q.eq("postId", post._id))
             .collect()
         ).length,
-        // nReplies: (
-        //   await ctx.db
-        //     .query("replies")
-        //     .withIndex("by_postId", (q) => q.eq("postId", post._id))
-        //     .collect()
-        // ).length,
         nReplies: 0,
         hasLiked: post.likes[authenticatedUserId] ? true : false,
         nLikes: Object.keys(post.likes).length,
@@ -689,17 +696,63 @@ export const _getPostData = internalQuery({
       }
 
       let imageUrl;
+      let pictureUrl;
 
       if (post.imageId) {
         imageUrl = (await ctx.storage.getUrl(post.imageId)) ?? undefined;
+      }
+
+      if (club.pictureId) {
+        pictureUrl = (await ctx.storage.getUrl(club.pictureId)) ?? undefined;
+      }
+
+      const author = await ctx.db.get(clubPost.authorId);
+      if (!author) {
+        return null;
+      }
+
+      const userClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", author._id).eq("clubId", club._id),
+        )
+        .unique()
+        .catch(() => null);
+
+      const authenticatedUserClubInfo = await ctx.db
+        .query("userClubsInfo")
+        .withIndex("by_userId_clubId", (q) =>
+          q.eq("userId", authenticatedUserId).eq("clubId", club._id),
+        )
+        .unique()
+        .catch(() => null);
+
+      if (!userClubInfo) {
+        return null;
+      }
+
+      if (
+        clubPost.isMembersOnly &&
+        authenticatedUserClubInfo?.status !== "member" &&
+        authenticatedUserClubInfo?.status !== "admin"
+      ) {
+        return null;
       }
 
       const clubPostPreviewInfo: ClubPostPreviewInfo = {
         postId: post._id,
         club: {
           clubId: club._id,
-          pictureUrl: club.pictureUrl,
+          pictureUrl,
           name: club.name,
+        },
+        author: {
+          authorId: author._id,
+          pictureUrl: author.pictureUrl,
+          firstName: author.givenName,
+          lastName: author.familyName,
+          username: author.username,
+          status: userClubInfo.status,
         },
         nComments: (
           await ctx.db
@@ -707,12 +760,6 @@ export const _getPostData = internalQuery({
             .withIndex("by_postId", (q) => q.eq("postId", post._id))
             .collect()
         ).length,
-        // nReplies: (
-        //   await ctx.db
-        //     .query("replies")
-        //     .withIndex("by_postId", (q) => q.eq("postId", post._id))
-        //     .collect()
-        // ).length,
         nReplies: 0,
         nLikes: Object.keys(post.likes).length,
         hasLiked: post.likes[authenticatedUserId] ? true : false,
@@ -720,6 +767,9 @@ export const _getPostData = internalQuery({
         description: post.description,
         imageUrl,
         isMembersOnly: clubPost.isMembersOnly,
+        isOwner:
+          clubPost.authorId === authenticatedUserId ||
+          authenticatedUserClubInfo?.status === "admin",
       };
 
       return { type: "club", post: clubPostPreviewInfo } as const;
@@ -728,7 +778,11 @@ export const _getPostData = internalQuery({
 });
 
 export const getFeedData = query({
-  args: { paginationOpts: paginationOptsValidator, now: v.number() },
+  args: {
+    paginationOpts: paginationOptsValidator,
+    now: v.number(),
+    clubId: v.optional(v.id("clubs")),
+  },
   handler: async (ctx, args): Promise<PaginationResult<UserOrClubPost>> => {
     const authenticatedUser = await getUserFromClerkId(ctx, args);
 
@@ -736,12 +790,25 @@ export const getFeedData = query({
       return { page: [], continueCursor: "", isDone: true };
     }
 
+    const { now, clubId } = args;
+
+    if (clubId) {
+      return await ctx.runQuery(internal.queries._getClubPosts, {
+        clubId,
+        now,
+        paginationOpts: args.paginationOpts,
+      });
+    }
+
     const postsInfo: UserOrClubPost[] = [];
 
-    const viewablePosts = await ctx.db
-      .query("viewablePosts")
-      .withIndex("by_userId", (q) => q.eq("userId", authenticatedUser._id))
-      .filter((q) => q.lte(q.field("_creationTime"), args.now))
+    const query = ctx.db.query("viewablePosts");
+    const posts = query.withIndex("by_userId", (q) =>
+      q.eq("userId", authenticatedUser._id),
+    );
+
+    const viewablePosts = await posts
+      .filter((q) => q.lte(q.field("_creationTime"), now))
       .order("desc")
       .paginate(args.paginationOpts);
 
@@ -908,6 +975,246 @@ export const getChatMessages = query({
     return {
       ...messages,
       page: messagesInfo,
+    };
+  },
+});
+
+export const getClubPage = query({
+  args: { clubId: v.optional(v.string()) },
+  returns: v.union(ClubPageData, v.string()),
+  async handler(ctx, args): Promise<ClubPageData | string> {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Unauthenticated");
+    }
+
+    const { clubId } = args;
+
+    const clubInfo = await ctx.db.get(clubId as Id<"clubs">).catch(() => null);
+
+    if (!clubInfo) {
+      return "Club does not exist!";
+    }
+
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_userId_clubId", (q) =>
+        q
+          .eq("userId", authenticatedUser._id)
+          .eq("clubId", clubId as Id<"clubs">),
+      )
+      .unique()
+      .catch(() => null);
+
+    if (userClubInfo && userClubInfo.status === "banned") {
+      return "Banned";
+    }
+
+    const members = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("status"), "member"),
+          q.eq(q.field("status"), "admin"),
+        ),
+      )
+      .collect();
+
+    const followers = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", clubId as Id<"clubs">))
+      .filter((q) => q.eq(q.field("status"), "following"))
+      .collect();
+
+    let pictureUrl;
+    let bannerUrl;
+
+    if (clubInfo.pictureId) {
+      pictureUrl = (await ctx.storage.getUrl(clubInfo.pictureId)) ?? undefined;
+    }
+
+    if (clubInfo.bannerId) {
+      bannerUrl = (await ctx.storage.getUrl(clubInfo.bannerId)) ?? undefined;
+    }
+
+    return {
+      clubId: clubInfo._id,
+      name: clubInfo.name,
+      category: clubInfo.category,
+      nMembers: members.length,
+      nFollowers: followers.length,
+      description: clubInfo.description,
+      isPrivate: clubInfo.isPrivate,
+      allowMemberPost: clubInfo.allowMemberPost,
+      pictureUrl,
+      bannerUrl,
+      memberInfo: userClubInfo
+        ? {
+            userStatus: userClubInfo.status,
+            chatId: clubInfo.chatId,
+            userId: userClubInfo.userId,
+          }
+        : null,
+    } satisfies ClubPageData;
+  },
+});
+
+export const getClubMembers = query({
+  args: { clubId: v.id("clubs") },
+  returns: v.array(
+    v.object({
+      userInfo: UserCardInfo,
+      status: schema.tables.userClubsInfo.validator.fields.status,
+    }),
+  ),
+  async handler(
+    ctx,
+    args,
+  ): Promise<
+    {
+      userInfo: UserCardInfo;
+      status: Doc<"userClubsInfo">["status"];
+    }[]
+  > {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Unauthenticated");
+    }
+
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", args.clubId))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("status"), "member"),
+          q.eq(q.field("status"), "admin"),
+          q.eq(q.field("status"), "banned"),
+        ),
+      )
+      .collect();
+
+    const clubMembersInfo: {
+      userInfo: UserCardInfo;
+      status: Doc<"userClubsInfo">["status"];
+    }[] = [];
+
+    let authenticatedUserInfo:
+      | {
+          userInfo: UserCardInfo;
+          status: Doc<"userClubsInfo">["status"];
+        }
+      | undefined;
+
+    for (const userClub of userClubInfo) {
+      const user = await ctx.db.get(userClub.userId);
+
+      if (!user) {
+        continue;
+      }
+
+      const info = {
+        userInfo: {
+          userId: user._id,
+          pictureUrl: user.pictureUrl,
+          firstName: user.givenName,
+          username: user.username,
+        },
+        status: userClub.status,
+      };
+
+      if (user._id === authenticatedUser._id) {
+        authenticatedUserInfo = info;
+        continue;
+      }
+
+      clubMembersInfo.push(info);
+    }
+
+    clubMembersInfo.sort((a, b) =>
+      a.userInfo.firstName.localeCompare(b.userInfo.firstName),
+    );
+
+    if (authenticatedUserInfo) {
+      return [authenticatedUserInfo, ...clubMembersInfo];
+    }
+
+    return clubMembersInfo;
+  },
+});
+
+export const getClubRequests = query({
+  args: { clubId: v.id("clubs") },
+  returns: v.array(UserCardInfo),
+  async handler(ctx, args): Promise<UserCardInfo[]> {
+    const userClubInfo = await ctx.db
+      .query("userClubsInfo")
+      .withIndex("by_clubId", (q) => q.eq("clubId", args.clubId))
+      .filter((q) => q.eq(q.field("status"), "requested"))
+      .collect();
+
+    const clubMembersInfo: UserCardInfo[] = [];
+
+    for (const userClub of userClubInfo) {
+      const user = await ctx.db.get(userClub.userId);
+
+      if (!user) {
+        continue;
+      }
+
+      clubMembersInfo.push({
+        userId: user._id,
+        pictureUrl: user.pictureUrl,
+        firstName: user.givenName,
+        username: user.username,
+      });
+    }
+
+    return clubMembersInfo;
+  },
+});
+
+export const _getClubPosts = internalQuery({
+  args: {
+    clubId: v.id("clubs"),
+    now: v.number(),
+    paginationOpts: paginationOptsValidator,
+  },
+  async handler(ctx, args): Promise<PaginationResult<UserOrClubPost>> {
+    const authenticatedUser = await getUserFromClerkId(ctx, args);
+
+    if (!authenticatedUser) {
+      throw new Error("Can't find user");
+    }
+
+    const { clubId, now } = args;
+
+    const postsInfo: UserOrClubPost[] = [];
+
+    const results = await ctx.db
+      .query("clubPosts")
+      .withIndex("by_clubId", (q) => q.eq("clubId", clubId))
+      .filter((q) => q.lte(q.field("_creationTime"), now))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    for (const clubPost of results.page) {
+      const postInfo = await ctx.runQuery(internal.queries._getPostData, {
+        isAuthor: authenticatedUser._id === clubPost.authorId,
+        postId: clubPost.postId,
+        authenticatedUserId: authenticatedUser._id,
+      });
+
+      if (postInfo) {
+        postsInfo.push(postInfo);
+      }
+    }
+
+    return {
+      ...results,
+      page: postsInfo,
     };
   },
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { UserOrClubPost } from "@convex/types";
-import { Forward, Heart, MessageCircle, Trash } from "lucide-react";
+import { Forward, Heart, Lock, MessageCircle, Trash } from "lucide-react";
 import { ProfilePicture } from "../profile";
 import parseTimestamp from "@/utils/parseTimestamp";
 import Image from "next/image";
@@ -14,22 +14,24 @@ import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { cn } from "@/utils/cn";
 import useFormState from "@/hooks/useFormState";
+import Link from "next/link";
 
 type PostCardProps = {
   post: UserOrClubPost;
-  isFeed?: boolean;
+  isViewingPostInTheClubPage?: boolean;
+  refreshFeed?: () => void;
 } & HTMLAttributes<HTMLDivElement>;
 export function PostCard({
   post: p,
-  isFeed,
+  isViewingPostInTheClubPage,
   className,
+  refreshFeed,
   ...props
 }: PostCardProps) {
   const { type, post } = p;
-  const isOwner = type === "user" && post.isOwner;
+  const isOwner = post.isOwner;
 
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
-  const router = useRouter();
 
   const deletePost = useMutation(api.mutations.deletePost);
   const likePost = useMutation(api.mutations.likePost);
@@ -52,52 +54,59 @@ export function PostCard({
   return (
     <div className={cn("flex w-full justify-center", className)} {...props}>
       <Card className="w-full max-w-2xl flex-row">
-        {type === "user" ? (
-          <ProfilePicture
-            src={post.author.pictureUrl}
-            displayName={post.author.firstName}
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(`/user?id=${post.author.authorId}`);
-            }}
-          />
+        {type === "user" || isViewingPostInTheClubPage ? (
+          <Link href={`/user?id=${post.author.authorId}`}>
+            <ProfilePicture
+              src={post.author.pictureUrl}
+              displayName={post.author.firstName}
+            />
+          </Link>
         ) : (
-          <ProfilePicture
-            src={post.club.pictureUrl}
-            displayName={post.club.name}
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(`/club?id=${post.club.clubId}`);
-            }}
-            className="hover:cursor-pointer"
-          />
+          <Link href={`/club?id=${post.club.clubId}`}>
+            <ProfilePicture
+              src={post.club.pictureUrl}
+              displayName={post.club.name}
+              className="hover:cursor-pointer"
+            />
+          </Link>
         )}
         <div className="w-full space-y-1">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-1">
-              <p
+            <div className="flex items-center gap-1">
+              <Link
+                href={
+                  type === "user" || isViewingPostInTheClubPage
+                    ? `/user?id=${post.author.authorId}`
+                    : `/club?id=${post.club.clubId}`
+                }
                 className="font-bold hover:cursor-pointer hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (type === "user") {
-                    router.push(`/user?id=${post.author.authorId}`);
-                  } else {
-                    router.push(`/club?id=${post.club.clubId}`);
-                  }
-                }}
               >
-                {type === "user" ? post.author.firstName : post.club.name}
-              </p>
+                {type === "user" || isViewingPostInTheClubPage
+                  ? post.author.firstName
+                  : post.club.name}
+              </Link>
               <p className="text-muted-foreground">
-                {type === "user" && `@${post.author.username} `}(
-                {parseTimestamp(post.createdAt)})
+                <Link
+                  href={`/user?id=${post.author.authorId}`}
+                  className="hover:cursor-pointer hover:underline"
+                >
+                  @{post.author.username}
+                </Link>{" "}
+                ({parseTimestamp(post.createdAt)})
               </p>
+              {type === "club" && post.isMembersOnly && (
+                <div className="bg-muted-foreground/10 flex items-center gap-1 rounded-full px-2 py-0.5 text-xs">
+                  <Lock className="h-3 w-3" />
+                  restricted
+                </div>
+              )}
             </div>
-            {isOwner && !isFeed && (
+            {isOwner && (
               <Button
-                className="p-0 text-red-500"
+                className="text-muted-foreground p-0"
                 onClick={async () => {
                   await deletePost({ postId: post.postId });
+                  refreshFeed?.();
                 }}
               >
                 <Trash className="h-4 w-4" />

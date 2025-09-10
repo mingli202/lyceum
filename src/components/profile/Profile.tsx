@@ -113,6 +113,7 @@ export function Profile({ data, currentClerkId, canView }: ProfileProps) {
             src={data.pictureUrl}
             displayName={data.firstName}
             className="absolute top-0 left-6 h-34 w-34 -translate-y-1/2"
+            displayRing
           />
 
           {isOwner ? (

@@ -116,6 +116,9 @@ export const ProfileData = v.object({
   bannerUrl: v.optional(v.string()),
 });
 
+export const ClubUserStatus =
+  schema.tables.userClubsInfo.validator.fields.status;
+
 export const UserPostPreviewInfo = v.object({
   postId: v.id("posts"),
   author: v.object({
@@ -142,6 +145,14 @@ export const ClubPostPreviewInfo = v.object({
     pictureUrl: v.optional(v.string()),
     name: v.string(),
   }),
+  author: v.object({
+    authorId: v.id("users"),
+    pictureUrl: v.optional(v.string()),
+    firstName: v.string(),
+    lastName: v.optional(v.string()),
+    username: v.string(),
+    status: ClubUserStatus,
+  }),
   nComments: v.number(),
   nReplies: v.number(),
   nLikes: v.number(),
@@ -149,11 +160,20 @@ export const ClubPostPreviewInfo = v.object({
   createdAt: v.number(),
   description: v.string(),
   imageUrl: v.optional(v.string()),
+  isOwner: v.boolean(),
   isMembersOnly: v.boolean(),
 });
 
-export const ClubUserStatus =
-  schema.tables.userClubsInfo.validator.fields.status;
+export const UserOrClubPost = v.union(
+  v.object({
+    type: v.literal("user"),
+    post: UserPostPreviewInfo,
+  }),
+  v.object({
+    type: v.literal("club"),
+    post: ClubPostPreviewInfo,
+  }),
+);
 
 export const ClubCategory = v.union(
   v.literal("Academic"),
@@ -206,17 +226,6 @@ export const UserCardInfo = v.object({
   username: v.string(),
 });
 
-export const UserOrClubPost = v.union(
-  v.object({
-    type: v.literal("user"),
-    post: UserPostPreviewInfo,
-  }),
-  v.object({
-    type: v.literal("club"),
-    post: ClubPostPreviewInfo,
-  }),
-);
-
 export const PostComment = v.object({
   nLikes: v.number(),
   postId: v.id("posts"),
@@ -246,6 +255,28 @@ export const MessageInfo = v.object({
   createdAt: v.number(),
 });
 
+export const ClubPageData = v.object({
+  clubId: v.id("clubs"),
+  name: v.string(),
+  category: ClubCategory,
+  nMembers: v.number(),
+  nFollowers: v.number(),
+  pictureUrl: v.optional(v.string()),
+  bannerUrl: v.optional(v.string()),
+  description: v.string(),
+  isPrivate: v.boolean(),
+  allowMemberPost: v.boolean(),
+
+  memberInfo: v.union(
+    v.object({
+      chatId: v.id("chats"),
+      userStatus: ClubUserStatus,
+      userId: v.id("users"),
+    }),
+    v.null(),
+  ),
+});
+
 export type ClassInfo = typeof ClassInfo.type;
 export type DashboardData = typeof DashboardData.type;
 export type CreateNewUserArgs = typeof CreateNewUserArgs.type;
@@ -263,3 +294,4 @@ export type ClubPostPreviewInfo = typeof ClubPostPreviewInfo.type;
 export type UserOrClubPost = typeof UserOrClubPost.type;
 export type PostComment = Infer<typeof PostComment>;
 export type MessageInfo = Infer<typeof MessageInfo>;
+export type ClubPageData = typeof ClubPageData.type;

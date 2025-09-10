@@ -109,11 +109,11 @@ export default function UserActivity({
             ))}
           {selectedTab === "Clubs" &&
             (clubs && clubs.length > 0 ? (
-              <div className="flex w-full flex-col gap-2">
+              <Grid>
                 {clubs?.map((club) => (
                   <ClubCard club={club} key={club.clubId} />
                 ))}
-              </div>
+              </Grid>
             ) : (
               <div className="flex w-full flex-col items-center justify-center p-6">
                 <Volleyball className="text-muted-foreground h-20 w-20 stroke-1" />

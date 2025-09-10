@@ -26,7 +26,7 @@ export default function Page() {
       <h1 className="text-3xl font-bold">Welcome to Campus Clip</h1>
       <p>The plateform that clips together every area of your life!</p>
       <SignInButton>
-        <p className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
+        <p className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:cursor-pointer hover:bg-blue-700">
           Sign in to get started
         </p>
       </SignInButton>

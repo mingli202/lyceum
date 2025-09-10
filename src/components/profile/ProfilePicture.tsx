@@ -6,18 +6,21 @@ type ProfilePictureProps = {
   src?: string;
   displayName: string;
   imageRef?: RefObject<HTMLImageElement | null>;
+  displayRing?: boolean;
 } & HTMLProps<HTMLDivElement>;
 export function ProfilePicture({
   src,
   displayName,
   className,
   imageRef,
+  displayRing,
   ...props
 }: ProfilePictureProps) {
   return (
     <div
       className={cn(
         "relative h-11 w-11 shrink-0 overflow-hidden rounded-full",
+        displayRing && "outline-background outline-4",
         className,
       )}
       {...props}

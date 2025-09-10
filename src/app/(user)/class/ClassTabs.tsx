@@ -1,4 +1,4 @@
-import { Button, ButtonVariant, UserCard } from "@/components";
+import { Button, ButtonVariant, Chat, UserCard } from "@/components";
 import { RecordValues } from "@/types";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
@@ -7,7 +7,6 @@ import { ClipboardList, MessageCircle, Users } from "lucide-react";
 import { useState } from "react";
 import Tasks from "./Tasks";
 import { Grid } from "@/components/ui/Grid";
-import Chat from "./Chat";
 
 const Tab = {
   Tasks: "Tasks",

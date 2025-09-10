@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Button,
   ButtonVariant,
@@ -12,14 +14,14 @@ import { MessageInfo } from "@convex/types";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { SendHorizonal, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useRef } from "react";
+import { ComponentProps, useCallback, useRef } from "react";
 import { Virtuoso } from "react-virtuoso";
 
 type ChatProps = {
   chatId: Id<"chats">;
-};
+} & ComponentProps<"div">;
 
-export default function Chat({ chatId }: ChatProps) {
+export function Chat({ chatId, className, ...props }: ChatProps) {
   const newMessage = useMutation(api.mutations.newChatMessage);
 
   const containerRef = useRef<HTMLDivElement>(null!);
@@ -61,7 +63,13 @@ export default function Chat({ chatId }: ChatProps) {
   const orderedMessages = messages.toReversed();
 
   return (
-    <div className="bg-background ring-foreground/10 flex h-full w-full flex-col rounded-lg ring-1">
+    <div
+      className={cn(
+        "bg-background ring-foreground/10 flex h-full w-full flex-col rounded-lg ring-1",
+        className,
+      )}
+      {...props}
+    >
       <div
         className="w-full basis-full overflow-x-hidden overflow-y-auto"
         ref={containerRef}
